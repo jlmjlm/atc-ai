@@ -1,0 +1,38 @@
+#define _XOPEN_SOURCE
+
+#include <unistd.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+
+#include "atc-ai.h"
+
+#define PTMX "/dev/ptmx"
+
+
+int get_ptm() {
+    int ptm = open(PTMX, O_RDWR|O_NOCTTY);
+    grantpt(ptm);
+    unlockpt(ptm);
+    return ptm;
+}
+
+int spawn(char *cmd, char *args[], int ptm) {
+    fflush(stderr);
+    int pid = fork();
+    if (pid == 0) {
+	int pts = open(ptsname(ptm), O_RDWR);
+	close(ptm);
+	dup2(pts, 0);
+	dup2(pts, 1);
+	dup2(pts, 2);
+	args[0] = cmd;
+	execvp(cmd, args);
+	fprintf(stderr, "exec of %s failed: %s\n", cmd, strerror(errno));
+    	fflush(stderr);
+	_exit(-1);
+    }
+    return pid;
+}
