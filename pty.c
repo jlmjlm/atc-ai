@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/ioctl.h>
 
 #include "atc-ai.h"
 
@@ -13,9 +14,12 @@
 
 
 int get_ptm() {
+    struct winsize ws;
     int ptm = open(PTMX, O_RDWR|O_NOCTTY);
     grantpt(ptm);
     unlockpt(ptm);
+    ioctl(0, TIOCGWINSZ, &ws);
+    ioctl(ptm, TIOCSWINSZ, &ws);
     return ptm;
 }
 
