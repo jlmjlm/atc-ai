@@ -1,4 +1,4 @@
-#define _XOPEN_SOURCE
+#define _XOPEN_SOURCE 700
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -27,6 +27,8 @@ int spawn(char *cmd, char *args[], int ptm) {
     fflush(stderr);
     int pid = fork();
     if (pid == 0) {
+	setenv("TERM", "vt100", 1);
+	unsetenv("TERMCAP");
 	int pts = open(ptsname(ptm), O_RDWR);
 	close(ptm);
 	dup2(pts, 0);
