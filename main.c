@@ -14,6 +14,7 @@
 
 
 FILE *logff;
+FILE *outf;
 
 static int atc_pid;
 static struct termios orig_termio;
@@ -42,6 +43,8 @@ static void terminate(int signo) {
 }
 
 static void interrupt(int signo) {
+    fprintf(logff, "Caught interrupt signal.  Contents of the display:\n%*s\n",
+	    screen_height*screen_width, display);
     kill(atc_pid, signo);
     write(ptm, "y", 1);
 }

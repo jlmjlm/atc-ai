@@ -57,7 +57,57 @@ void update_display(char c) {
 
 	if (esc[1] == '[' && isalpha(c)) {
 	    // control sequence
-	    // XXX
+	    int rv;
+
+	    switch (c) {
+		default:
+		    fprintf(logff, "warning: Unknown escape sequence [\\33");
+		    display_esc_seq(logff);
+		    fprintf(logff, "], ignoring.\n");
+		    break;
+		case 'm': // display attributes (inverse, bold, etc.) -- ignore
+		case 'r': // scrolling region -- ignore
+		case 'h': // terminal mode -- ignore
+		case 'l': // terminal mode reset -- ignore
+		case 'J': case 'K': // erase -- ignore
+		    break;
+		case 'H': // cursor position
+		    if (esc_size == 3) {
+			cur_row = cur_col = 0;
+			break;
+		    }
+		    rv = sscanf(esc+2, "%d;%d", &cur_row, &cur_col);
+		    if (rv != 2) {
+			fprintf(stderr,
+			        "\nInvalid cursor position sequence [\\33");
+			display_esc_seq(stderr);
+			fprintf(stderr, "]\n");
+			exit('H');
+		    }
+		    // VT100 positions are 1-origin, not 0-origin.
+		    cur_row--; cur_col--;
+		    break;
+		case 'A': // move cursor up
+		case 'B': // move cursor down
+		case 'C': // move cursor right
+		case 'D':; // move cursor left
+		    int drow[4] = { -1, 1, 0, 0 };
+		    int dcol[4] = { 0, 0, 1, -1 };
+		    rv = 1;
+		    sscanf(esc+2, "%d", &rv);
+		    cur_row += rv * drow[c-'A'];
+		    cur_col += rv * dcol[c-'A'];
+		    if (cur_row >= screen_height)
+			cur_row = screen_height-1;
+		    if (cur_row < 0)
+			cur_row = 0;
+		    if (cur_col >= screen_width)
+			cur_col = screen_width-1;
+		    if (cur_col < 0)
+			cur_col = 0;
+		    break;
+	    }
+    
 	    esc_size = 0;
 	    return;
 	}
@@ -81,6 +131,13 @@ void update_display(char c) {
 	    cur_col = 0;
 	    return;
 
+	// BS
+	case '\b':
+	    cur_col--;
+	    if (cur_col < 0)
+		cur_col = 0;
+	    return;
+
 	// normal text
 	default:
     	    D(cur_row, cur_col) = c;
@@ -88,6 +145,7 @@ void update_display(char c) {
     	    	cur_col++;
 		return;
 	    }
+	    // ... else wrap to next line
 	    cur_col = 0;
 	    // Fallthrough
 
