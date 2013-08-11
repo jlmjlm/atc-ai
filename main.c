@@ -84,7 +84,6 @@ static void handle_input(char c) {
     	raise(SIGINT);
     	return;
     }
-    output_display(1);
     write(ptm, &c, 1);
 }
 
