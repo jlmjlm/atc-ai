@@ -8,3 +8,6 @@ main.o: main.c atc-ai.h
 pty.o: pty.c atc-ai.h
 
 vty.o: vty.c atc-ai.h
+
+clean:
+	rm atc-ai *.o
