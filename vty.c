@@ -156,7 +156,3 @@ void update_display(char c) {
 	    return;
     }
 }
-
-void output_display(int fd) {
-    write(fd, display, screen_height*screen_width);
-}

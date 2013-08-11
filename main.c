@@ -11,6 +11,7 @@
 
 #define BUFSIZE 100
 #define LOGFILE "atc-ai.log"
+#define DEF_DELAY_MS 500
 
 
 FILE *logff;
@@ -20,14 +21,20 @@ static int atc_pid;
 static struct termios orig_termio;
 static int sigpipe;
 static int ptm;
+static int delay_ms = DEF_DELAY_MS;
 
-static void restore_termio() {
+static void cleanup() {
+    // Restore termio
     tcsetattr(1, TCSAFLUSH, &orig_termio);
+
+    // Kill atc
+    if (atc_pid)
+        kill(atc_pid, SIGTERM);
 }
 
 static void raw_mode() {
     tcgetattr(1, &orig_termio);
-    atexit(&restore_termio);
+    atexit(&cleanup);
     struct termios new_termio = orig_termio;
     new_termio.c_lflag &= ~(ECHO | ICANON | IEXTEN);
     new_termio.c_iflag &= ~(ICRNL | ISTRIP | IXON);
@@ -43,7 +50,7 @@ static void terminate(int signo) {
 }
 
 static void interrupt(int signo) {
-    fprintf(logff, "Caught interrupt signal.  Contents of the display:\n%*s\n",
+    fprintf(logff, "Caught interrupt signal.  Contents of the display:\n%.*s\n",
 	    screen_height*screen_width, display);
     kill(atc_pid, signo);
     write(ptm, "y", 1);
@@ -100,10 +107,12 @@ static void mainloop(int pfd) {
     FD_ZERO(&fds);
 
     for (;;) {
+        struct timeval tv = { .tv_sec = delay_ms / 1000,
+			      .tv_usec = (delay_ms % 1000) * 1000 };
         add_fd(0, &fds, &maxfd);
         add_fd(ptm, &fds, &maxfd);
         add_fd(pfd, &fds, &maxfd);
-	int rv = select(maxfd+1, &fds, NULL, NULL, NULL);
+	int rv = select(maxfd+1, &fds, NULL, NULL, &tv);
 	if (rv == -1) {
 	    if (errno == EINTR) {
 		errno = 0;
@@ -111,6 +120,10 @@ static void mainloop(int pfd) {
 	    }
 	    fprintf(stderr, "\nselect failed: %s\n", strerror(errno));
 	    exit(errno);
+	}
+	if (rv == 0) {	// timeout
+	    update_board();
+	    continue;
 	}
 	if (FD_ISSET(ptm, &fds))
 	    process_data(ptm, BUFSIZE, &update_display);
