@@ -1,5 +1,6 @@
+atc-ai
 .*.swp
 *.o
-atc-ai
 *.st
 *.out
+*.log

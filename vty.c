@@ -12,11 +12,33 @@ int screen_height, screen_width;
 char *display;
 
 void update_display(char c) {
-    write(1, &c, 1);
-
     static int cur_row, cur_col;
     static int esc_size;
     static char esc[ESC_MAX];
+
+    void display_esc_seq(FILE *out) {
+	for (int i = 1; i < esc_size; i++) {
+	    if (isgraph(esc[i]))
+	        fprintf(out, " %c", esc[i]);
+	    else
+	        fprintf(out, " \\%o", esc[i]);
+	}
+    }
+
+
+    write(1, &c, 1);
+
+    // ESC
+    if (c == '\33') {	// An ESC aborts any seqs which are partial
+	if (esc_size) {
+	    fprintf(logff, "warning: Escape sequence [\\33");
+	    display_esc_seq(logff);
+	    fprintf(logff, "] aborted by an ESC\n");
+	}
+	esc[0] = c;
+	esc_size = 1;
+	return;
+    }
 
     if (esc_size) {	// An escape sequence in progress
 	esc[esc_size++] = c;
@@ -26,7 +48,13 @@ void update_display(char c) {
 	    esc_size = 0;
 	    return;
 	}
-	
+
+	if (esc[1] == '>' && esc_size == 2) {
+	    // keypad -- ignore
+	    esc_size = 0;
+            return;
+        }
+
 	if (esc[1] == '[' && isalpha(c)) {
 	    // control sequence
 	    // XXX
@@ -36,12 +64,7 @@ void update_display(char c) {
 
 	if (esc_size == ESC_MAX) {
 	    fprintf(stderr, "\nUnknown escape sequence \\33");
-	    for (int i = 0; i < ESC_MAX; i++) {
-	   	if (isgraph(esc[i]))
-		    fprintf(stderr, " %c", esc[i]);
-		else
-		    fprintf(stderr, " \\%o", esc[i]);
-	    }
+	    display_esc_seq(stderr);
 	    fprintf(stderr, "\n");
 	    exit('\33');
 	}
@@ -54,14 +77,11 @@ void update_display(char c) {
 	case '\a': case 15: return;
 
 	// CR
-	case '\r': cur_col = 0; return;
-
-	// ESC
-	case '\33':
-	    esc[0] = c;
-	    esc_size = 1;
+	case '\r':
+	    cur_col = 0;
 	    return;
 
+	// normal text
 	default:
     	    D(cur_row, cur_col) = c;
 	    if (cur_col+1 < screen_width) {

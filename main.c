@@ -10,6 +10,10 @@
 #include "atc-ai.h"
 
 #define BUFSIZE 100
+#define LOGFILE "atc-ai.log"
+
+
+FILE *logff;
 
 static int atc_pid;
 static struct termios orig_termio;
@@ -136,6 +140,7 @@ static void mainloop(int pfd) {
 int main(int argc, char **argv) {
     int pipefd[2];
 
+    logff = fopen(LOGFILE, "w");
     pipe(pipefd);
     sigpipe = pipefd[1];
     ptm = get_ptm();
