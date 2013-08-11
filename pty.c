@@ -20,6 +20,10 @@ int get_ptm() {
     unlockpt(ptm);
     ioctl(0, TIOCGWINSZ, &ws);
     ioctl(ptm, TIOCSWINSZ, &ws);
+    screen_height = ws.ws_row;
+    screen_width = ws.ws_col;
+    display = malloc(screen_height*screen_width);
+    memset(display, ' ', screen_height*screen_width);
     return ptm;
 }
 
