@@ -10,6 +10,9 @@ static int frame_no;
 static const char timestr[] = " Time: ";
 static const int timesize = sizeof(timestr)-1;
 
+// For when a plane begins in the top-right corner
+static const char alttimestr[] = "7Time: ";  
+
 struct exitspec exits[EXIT_MAX];
 int n_exits = 0;
 
@@ -71,12 +74,12 @@ static void find_airports() {
 }
 
 static void board_init() {
-    char *spc = memchr(display, ' ', screen_width);
+    char *spc = memchr(display, 'T', screen_width);
     if (spc == NULL) {
 	fprintf(stderr, "\nCan't determine board width.\n");
 	exit(' ');
     }
-    board_width = spc - display;
+    board_width = spc - display - 1;
     if (board_width % 2 == 0) {
 	fprintf(stderr, "\nInvalid width of %d.5 chars.\n", board_width/2);
 	exit(2);
@@ -112,7 +115,8 @@ static void board_init() {
 	fprintf(stderr, "\nCan't find lower left corner of board.\n");
 	exit('L');
     }
-    if (memcmp(display + 2*board_width - 1, timestr, timesize)) {
+    if (memcmp(display + 2*board_width - 1, timestr, timesize) &&
+	    memcmp(display + 2*board_width - 1, alttimestr, timesize)) {
 	fprintf(stderr, "\nCan't find frame number.\n");
 	fprintf(stderr, "Got '%.*s' instead of '%.*s'\n", 
 		timesize, display + 2*board_width,

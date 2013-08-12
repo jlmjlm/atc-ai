@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
+#include <time.h>
 #include <errno.h>
 #include <termios.h>
 #include <signal.h>
@@ -109,7 +111,7 @@ static void mainloop(int pfd) {
     for (;;) {
         struct timeval tv = { .tv_sec = delay_ms / 1000,
 			      .tv_usec = (delay_ms % 1000) * 1000 };
-        add_fd(0, &fds, &maxfd);
+        //add_fd(0, &fds, &maxfd);
         add_fd(ptm, &fds, &maxfd);
         add_fd(pfd, &fds, &maxfd);
 	int rv = select(maxfd+1, &fds, NULL, NULL, &tv);
@@ -153,6 +155,13 @@ static void mainloop(int pfd) {
     }
 }
 
+static char **make_args(int seed) {
+    static char buf[30];
+    static char *args[4] = { "atc", "-r", buf, NULL };
+    sprintf(buf, "%d", seed);
+    return args;
+}
+
 int main(int argc, char **argv) {
     int pipefd[2];
 
@@ -161,7 +170,10 @@ int main(int argc, char **argv) {
     sigpipe = pipefd[1];
     ptm = get_ptm();
     reg_sighandler();
-    atc_pid = spawn("atc", argv, ptm);
+    int seed = (argc == 2 && isdigit(argv[1][0])) ? atoi(argv[1]) : time(NULL);
+    fprintf(logff, "Using RNG seed of %d\n", seed);
+    char **args = make_args(seed);
+    atc_pid = spawn("atc", args, ptm);
 
     raw_mode();
     mainloop(pipefd[0]);
