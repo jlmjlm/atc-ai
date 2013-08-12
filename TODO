@@ -10,11 +10,23 @@ flag to skip ahead ('press enter')
 logfile option
 exit after specified #frames, real time, or saved planes
 expand tabs, remove trailing spaces
-secondary targets
+secondary targets for airports
 print out (to the log) all planes' courses if get stuck in a loop.
-option to use time() for the random seed
+option to use time() for the random seed; option to not pass 'atc' a seed
 store revision ID (hash) in the object?
 "Press space" when get a game over.
+Handle rogue planes which were shrouded by other planes
+	- figure out bearing based on neighboring shadowed squares from 
+			last turn and directions which lead directly
+			from an exit
+	- turn plane in a direction compatible with all poss. bearings
+ 	- guess based on proximity of exits
+Recalculate other planes' courses if they're interfering with
+	a new plane's.
+Landing consumes the plane.  See if you can take off from the airport
+	on that turn too.  (If a prop, taking off at even/odd turn matters.
+	Props move only on even turns.)  It seems to work just fine.
+Watch memory usage over a long run to check for leaks.
 
 Interesting seeds:
 	1376278304 plane begins at NE corner, but not in the exit (1 interior

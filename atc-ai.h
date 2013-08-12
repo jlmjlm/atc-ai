@@ -46,7 +46,33 @@ struct airport {
     int bearing;
     int row, col;
     int trow, tcol;   // target
+    int strow1, stcol1, strow2, stcol2;	// secondary targets
     struct xy exc[6]; // exclusion zone
 };
 extern struct airport airports[AIRPORT_MAX];
 extern int n_airports;
+
+struct course {
+    int frame_no;
+    struct xyz pos;
+    int bearing;
+    struct course *prev, *next;
+};
+
+struct plane {
+    char id;
+    _Bool isjet;
+    int bearing;
+    int target_num;
+    _Bool target_airport;
+    _Bool cleared_exit;
+    struct course *start, *end;
+    int course_len;
+    int start_tm, end_tm;
+    struct plane *prev, *next;
+};
+
+// The board's dynamic state.
+extern int frame_no;
+extern int n_planes;
+extern struct plane *plstart, *plend;

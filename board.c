@@ -6,7 +6,6 @@
 #include "atc-ai.h"
 
 static int board_width, board_height;
-static int frame_no;
 static const char timestr[] = " Time: ";
 static const int timesize = sizeof(timestr)-1;
 
@@ -18,6 +17,12 @@ int n_exits = 0;
 
 struct airport airports[AIRPORT_MAX];
 int n_airports = 0;
+
+
+// The board's dynamic state.
+int frame_no = 0;
+int n_planes = 0;
+struct plane *plstart = NULL, *plend = NULL;
 
 
 static int get_bearing(char code) {
