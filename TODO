@@ -1,0 +1,14 @@
+A errexit or something to fix up the terminal then emit the error message.
+Trigger updates when it's been a while since the last read from atc,
+	and then wait indefinitely for a read after the update
+	is complete or frame_no was unchanged.
+License, readme, INSTALL
+Show full end-of-game output when exiting.
+atc & atc-ai args (+ usage msg)
+flag to skip ahead ('press enter')
++/- to speed-up & slow down (say by 100ms or so)
+logfile option
+exit after specified #frames, real time, or saved planes
+expand tabs
+secondary targets
+print out (to the log) all planes' courses if get stuck in a loop.

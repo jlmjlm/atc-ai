@@ -11,8 +11,64 @@ static const char timestr[] = " Time: ";
 static const int timesize = sizeof(timestr)-1;
 
 struct exitspec exits[EXIT_MAX];
-int n_exits;
+int n_exits = 0;
 
+struct airport airports[AIRPORT_MAX];
+int n_airports = 0;
+
+
+static int get_bearing(char code) {
+    for (int i = 0; i < 8; i++) {
+	if (bearings[i].aircode == code)
+	    return i;
+    }
+    return -1;
+}
+
+static void new_airport(int row, int col, int bearing, int id) {
+    if (n_airports == AIRPORT_MAX) {
+	fprintf(stderr, "\nToo many airports.\n");
+	exit('a');
+    }
+    struct airport *airport = airports + (n_airports++);
+    airport->num = id;
+    airport->bearing = bearing;
+    airport->row = row;
+    airport->col = col;
+    struct xy xy = apply(row, col, (bearing+4)&7);
+    airport->trow = xy.row;
+    airport->tcol = xy.col;
+    for (int i = -2; i <= 2; i++) {
+	airport->exc[i+2] = apply(row, col, (bearing+i)&7);
+    }
+    airport->exc[5].row = row;
+    airport->exc[5].col = col;
+    fprintf(logff, "Found airport #%d at (%d, %d) bearing %s\n",
+	    id, row, col, bearings[bearing].longname);
+}
+
+static void find_airports() {
+    int r, c;
+    for (r = 1; r < board_height-1; r++) {
+	for (c = 1; c < board_width-1; c++) {
+	    if (isdigit(D(r, 2*c+1)) && D(r, 2*c) != '*' &&
+		    !isalpha(D(r, 2*c))) {
+		fprintf(logff, "Found '%c%c' at (%d, %d)\n",
+			D(r, 2*c), D(r, 2*c+1), r, c);
+		int bearing = get_bearing(D(r, 2*c));
+		new_airport(r, c, bearing, D(r, 2*c+1) - '0');
+	    }
+	}
+    }
+    fprintf(logff, "D(board_height-3, board_width-10) = '%c%c'\n",
+	    D(board_height-3, (board_width-10)*2),
+	    D(board_height-3, (board_width-10)*2+1));
+    r = board_height-3;
+    c = board_width-10;
+    fprintf(logff, "r = %d; c = %d; D(r, 2*c) = '%c'; D(r, 2*c+1) = '%c'; "
+		   "isdigit(D(r, 2*c+1)) = %d\n", r, c, D(r, 2*c),
+		   D(r, 2*c+1), isdigit(D(r, 2*c+1)));
+}
 
 static void board_init() {
     char *spc = memchr(display, ' ', screen_width);
@@ -73,7 +129,7 @@ static void board_init() {
 	exit('t');
     }
 
-    //XXX Find airports
+    find_airports();
     fprintf(logff, "Board is %d by %d.\n", board_width, board_height);
 }
 
