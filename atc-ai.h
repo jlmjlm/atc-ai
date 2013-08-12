@@ -56,16 +56,17 @@ struct course {
     int frame_no;
     struct xyz pos;
     int bearing;
+    _Bool cleared_exit;
     struct course *prev, *next;
 };
 
 struct plane {
     char id;
     _Bool isjet;
+    _Bool target_airport;
+    _Bool bearing_set;
     int bearing;
     int target_num;
-    _Bool target_airport;
-    _Bool cleared_exit;
     struct course *start, *end;
     int course_len;
     int start_tm, end_tm;
