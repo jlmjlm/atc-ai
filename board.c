@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <assert.h>
 
 #include "atc-ai.h"
 
@@ -78,6 +79,24 @@ static void find_airports() {
 		   D(r, 2*c+1), isdigit(D(r, 2*c+1)));
 }
 
+static int get_frame_no() {
+    int fnum;
+    if (memcmp(display + 2*board_width - 1, timestr, timesize) &&
+	    memcmp(display + 2*board_width - 1, alttimestr, timesize)) {
+	fprintf(stderr, "\nCan't find frame number.\n");
+	fprintf(stderr, "Got '%.*s' instead of '%.*s'\n", 
+		timesize, display + 2*board_width,
+		timesize, timestr);
+	exit('t');
+    }
+    int rv = sscanf(display+(2*board_width-1)+timesize, "%d", &fnum);
+    if (rv != 1) {
+	fprintf(stderr, "\nCan't read frame number.\n");
+	exit('t');
+    }
+    return fnum;
+}
+
 static void board_init() {
     char *spc = memchr(display, 'T', screen_width);
     if (spc == NULL) {
@@ -120,21 +139,9 @@ static void board_init() {
 	fprintf(stderr, "\nCan't find lower left corner of board.\n");
 	exit('L');
     }
-    if (memcmp(display + 2*board_width - 1, timestr, timesize) &&
-	    memcmp(display + 2*board_width - 1, alttimestr, timesize)) {
-	fprintf(stderr, "\nCan't find frame number.\n");
-	fprintf(stderr, "Got '%.*s' instead of '%.*s'\n", 
-		timesize, display + 2*board_width,
-		timesize, timestr);
-	exit('t');
-    }
-    int rv = sscanf(display+(2*board_width-1)+timesize, "%d", &frame_no);
-    if (rv != 1) {
-	fprintf(stderr, "\nCan't read frame number.\n");
-	exit('t');
-    }
-    if (frame_no != 1) {
-	fprintf(stderr, "\nStarting at frame %d instead of 1.\n", frame_no);
+    int fnum = get_frame_no();
+    if (fnum != 1) {
+	fprintf(stderr, "\nStarting at frame %d instead of 1.\n", fnum);
 	exit('t');
     }
 
@@ -189,12 +196,146 @@ static void check_for_exits() {
     }
 }
 
+struct course *free_course_entry(struct course *ci) {
+    struct course *rv = ci->next;
+    assert(ci->prev == NULL);
+    if (ci->next)
+	ci->next->prev = ci->prev;
+    free(ci);
+    return rv;
+}
+
+static struct plane *remove_plane(struct plane *p) {
+    struct plane *rv = p->next;
+    for (struct course *c = p->start; c; c = free_course_entry(c))
+	;
+    if (p->prev)
+	p->prev->next = p->next;
+    else {
+	assert(plstart == p);
+	plstart = p->next;
+    }
+    if (p->next)
+	p->next->prev = p->prev;
+    else {
+	assert(plend == p);
+	plend = p->prev;
+    }
+    free(p);
+    return rv;
+}
+
+static void verify_planes() {
+    for (struct plane *i = plstart; i; i = i->next) {
+	// Remove any finished planes.
+	while (i && i->end_tm == frame_no+1) {
+	    i = remove_plane(i);
+	}
+	if (i == NULL) {
+	    return;
+	}
+	assert(i->start_tm == frame_no);
+	i->start_tm++;
+	i->start = free_course_entry(i->start);
+	i->course_len--;
+	char code = D(i->start->pos.row, i->start->pos.col*2);
+	char alt = D(i->start->pos.row, i->start->pos.col*2+1);
+	if (!isalpha(code) || !isdigit(alt)) {
+	    fprintf(stderr, "\nFound '%c%c' where expected to find a plane.\n",
+		    code, alt);
+	    exit('p');
+	}
+	if (code == i->id && alt-'0' != i->start->pos.alt) {
+	    fprintf(stderr, "\nFound plane %c at altitude %c=%d where "
+		            "expected to find it at altitude %d.\n",
+		    code, alt, alt-'0', i->start->pos.alt);
+	    exit('a');
+	}
+    }
+}
+
+static void handle_found_plane(char code, int alt, int row, int col) {
+    // See if the plane's ID matches any existing ones.
+    for (struct plane *i = plstart; i; i = i->next) {
+	if (i->id == code) {
+	    struct xyz pos = i->start->pos;
+	    if (pos.alt != alt || pos.row != row || pos.col != col) {
+		fprintf(stderr, "\nExpected to find plane %c at (%d, %d, %d) "
+				"but actually at (%d, %d, %d).\n",
+			code, pos.row, pos.col, pos.alt, row, col, alt);
+		exit('E');
+	    }
+	    // Plane's position is A-OK.
+	    return;
+	}
+    }
+
+    // It's a new plane.
+    if (alt != 7) {
+	fprintf(stderr, "\nNew plane %c found at flight level %d != 7.\n",
+		code, alt);
+	exit('7');
+    }
+
+    fprintf(logff, "New plane '%c' found at (%d, %d, %d).\n",
+	    code, row, col, alt);
+    struct plane *p = malloc(sizeof(*p));
+    p->id = code;
+    p->isjet = islower(code);
+    // XXX: target, course, etc.
+    p->start = p->end = NULL;
+    p->start_tm = frame_no;
+    p->end_tm = frame_no+1;
+
+    p->next = NULL;
+    p->prev = plend;
+    if (plend) {
+	plend->next = p;
+    } else {
+	plstart = p;
+    }
+    plend = p;
+}
+
+static void find_new_planes() {
+    int r, c;
+    for (r = 0; r < board_height; r++) {	
+	for (c = 0; c < board_width; c++) {
+	    char code = D(r, 2*c);
+	    char alt = D(r, 2*c+1);
+	    if (!isalpha(code))
+		continue;
+	    if (!isdigit(alt)) {
+		fprintf(stderr, "\n\"Plane\" '%c%c' has bad altitude.\n",
+			code, alt);
+		exit('A');
+	    }
+	    handle_found_plane(code, alt-'0', r, c);
+	}
+    }
+}
+
 void update_board() {
     if (frame_no == 0)
 	board_init();
 
+    int new_frame_no = get_frame_no();
+    if (new_frame_no == frame_no) {
+	// Clock hasn't ticked, no-op.
+	return;
+    }
+
+    if (new_frame_no != frame_no+1) {
+	fprintf(stderr, "\nFrame number jumped from %d to %d.\n", frame_no,
+		new_frame_no);
+	exit('f');
+    }
+
     if (frame_no <= 3)
 	check_for_exits();
 
-    // XXX Verify everything is where we expect it, and check for new planes.
+    verify_planes();
+    frame_no = new_frame_no;
+
+    find_new_planes();
 }
