@@ -14,7 +14,8 @@ secondary targets for airports
 print out (to the log) all planes' courses if get stuck in a loop.
 option to use time() for the random seed; option to not pass 'atc' a seed
 store revision ID (hash) in the object?
-"Press space" when get a game over.
+Notice when we get a game over and "Press space".
+Figure out exits' directions by letting planes glide if safe.
 Handle rogue planes which were shrouded by other planes
 	- figure out bearing based on neighboring shadowed squares from 
 			last turn and directions which lead directly
@@ -27,6 +28,11 @@ Landing consumes the plane.  See if you can take off from the airport
 	on that turn too.  (If a prop, taking off at even/odd turn matters.
 	Props move only on even turns.)  It seems to work just fine.
 Watch memory usage over a long run to check for leaks.
+'make dist'
+A different "err log" for bugs.
+When blocked by a plane, don't match its heading & speed unless also
+	 changing alt.
+Recalc on a low-fuel ind.  (Just how far can a plane go?)
 
 Interesting seeds:
 	1376278304 plane begins at NE corner, but not in the exit (1 interior
@@ -38,6 +44,11 @@ Interesting seeds:
 
 	1376279911 has a lot cf planes at the start
 
-When blocked by a plane, don't match its heading & speed unless also changing
-alt.
-Recalc on a low-fuel ind.  (How far can a plane go?)
+	1376508107 something goes wrong with the new plane 'D' at the UL
+		corner 
+	1376515486 similar
+	1376535757 On turn 23 produces a plane at (0, 29, 7)
+		[upper right corner].  Also, something weird with plane 'C'
+		which appears at the North exit on time 34 or so.
+		It 'illegally left the flight arena' on its first move.
+		Huh?

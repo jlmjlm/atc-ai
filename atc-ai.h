@@ -23,8 +23,11 @@ extern struct exitspec exits[EXIT_MAX];
 extern int n_exits;
 extern struct exitspec *get_exit(int);
 
+extern int board_width, board_height;
+
+
 struct bearing {
-    int degrees;
+    int degree;
     int drow, dcol;
     char key;
     char aircode;
@@ -53,27 +56,32 @@ extern struct airport airports[AIRPORT_MAX];
 extern int n_airports;
 
 struct course {
-    int frame_no;
     struct xyz pos;
     int bearing;
     _Bool cleared_exit;
     struct course *prev, *next;
 };
 
+extern struct course *free_course_entry(struct course *);
+
 struct plane {
     char id;
     _Bool isjet;
     _Bool target_airport;
     _Bool bearing_set;
-    int bearing;
     int target_num;
     struct course *start, *end;
-    int course_len;
     int start_tm, end_tm;
     struct plane *prev, *next;
 };
 
+extern void plot_course(struct plane *, int row, int col, int alt);
+
 // The board's dynamic state.
 extern int frame_no;
-extern int n_planes;
 extern struct plane *plstart, *plend;
+
+
+extern void order_new_bearing(char id, int bearing);
+extern void order_new_altitude(char id, int alt);
+extern void land_at_airport(char id, int airport_num);

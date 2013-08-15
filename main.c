@@ -166,6 +166,7 @@ int main(int argc, char **argv) {
     int pipefd[2];
 
     logff = fopen(LOGFILE, "w");
+    setvbuf(logff, NULL, _IOLBF, 0);
     pipe(pipefd);
     sigpipe = pipefd[1];
     ptm = get_ptm();
@@ -176,6 +177,8 @@ int main(int argc, char **argv) {
     atc_pid = spawn("atc", args, ptm);
 
     raw_mode();
+    outf = fdopen(ptm, "w");
+    setvbuf(outf, NULL, _IOLBF, 0);
     mainloop(pipefd[0]);
     return 0;
 }
