@@ -37,3 +37,7 @@ Interesting seeds:
 			-- looking like it -- nope)
 
 	1376279911 has a lot cf planes at the start
+
+When blocked by a plane, don't match its heading & speed unless also changing
+alt.
+Recalc on a low-fuel ind.  (How far can a plane go?)
