@@ -1,12 +1,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #include <ctype.h>
 #include <assert.h>
 
 #include "atc-ai.h"
 
-static int board_width, board_height;
+int board_width, board_height;
 static const char timestr[] = " Time: ";
 static const int timesize = sizeof(timestr)-1;
 
@@ -236,8 +237,11 @@ static void verify_planes() {
 	}
 	assert(i->start_tm == frame_no);
 	i->start_tm++;
+	if (i->start->next && i->start->bearing != i->start->next->bearing)
+	    order_new_bearing(i->id, i->start->next->bearing);
+	if (i->start->next && i->start->pos.alt != i->start->next->pos.alt)
+	    order_new_altitude(i->id, i->start->next->pos.alt);
 	i->start = free_course_entry(i->start);
-	i->course_len--;
 	char code = D(i->start->pos.row, i->start->pos.col*2);
 	char alt = D(i->start->pos.row, i->start->pos.col*2+1);
 	if (!isalpha(code) || !isdigit(alt)) {
@@ -277,15 +281,17 @@ static void handle_found_plane(char code, int alt, int row, int col) {
 	exit('7');
     }
 
-    fprintf(logff, "New plane '%c' found at (%d, %d, %d).\n",
-	    code, row, col, alt);
+    fprintf(logff, "New plane '%c' found at (%d, %d, %d) on turn %d.\n",
+	    code, row, col, alt, frame_no);
     struct plane *p = malloc(sizeof(*p));
     p->id = code;
     p->isjet = islower(code);
-    // XXX: target, course, etc.
-    p->start = p->end = NULL;
-    p->start_tm = frame_no;
-    p->end_tm = frame_no+1;
+    // XXX: target
+    plot_course(p, row, col, alt);
+    if (p->start) {
+        order_new_bearing(p->id, p->start->bearing);
+	p->bearing_set = true;
+    }
 
     p->next = NULL;
     p->prev = plend;

@@ -5,7 +5,7 @@ INSTALLDIR = /usr/local/bin
 
 CFLAGS += -Wall -std=gnu99
 
-atc-ai: main.o pty.o vty.o board.o orders.o
+atc-ai: main.o pty.o vty.o board.o orders.o pathfind.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 main.o: main.c atc-ai.h
