@@ -227,25 +227,31 @@ static struct plane *remove_plane(struct plane *p) {
 }
 
 static void verify_planes() {
-    for (struct plane *i = plstart; i; i = i->next) {
-	// Remove any finished planes.
-	while (i && i->end_tm == frame_no+1) {
-	    i = remove_plane(i);
-	}
-	if (i == NULL) {
-	    return;
-	}
+    for (struct plane *i = plstart; i; ) {
 	assert(i->start_tm == frame_no);
-	i->start_tm++;
-	if (i->start->next && i->start->bearing != i->start->next->bearing)
-	    order_new_bearing(i->id, i->start->next->bearing);
-	if (i->start->next && i->start->pos.alt != i->start->next->pos.alt)
-	    order_new_altitude(i->id, i->start->next->pos.alt);
-	i->start = free_course_entry(i->start);
+	struct course *next = i->start->next;
+	if (!next) {
+	    assert(i->end_tm == frame_no);
+	    i = remove_plane(i);
+	    continue;
+	}
+	if (next->pos.alt == -2)
+	    land_at_airport(i->id, i->target_num);
+	else {
+	    if (i->start->bearing != next->bearing)
+            	order_new_bearing(i->id, next->bearing);
+	    if (i->start->pos.alt != next->pos.alt)
+            	order_new_altitude(i->id, next->pos.alt);
+	}
+
 	char code = D(i->start->pos.row, i->start->pos.col*2);
 	char alt = D(i->start->pos.row, i->start->pos.col*2+1);
 	if (!isalpha(code) || !isdigit(alt)) {
 	    fprintf(stderr, "\nFound '%c%c' where expected to find a plane.\n",
+		    code, alt);
+	    fprintf(stderr, "[Tick %d] Expected to find plane '%c' at "
+		            "(%d, %d) but instead found '%c%c'\n",
+		    frame_no, i->id, i->start->pos.row, i->start->pos.col,
 		    code, alt);
 	    exit('p');
 	}
@@ -253,9 +259,41 @@ static void verify_planes() {
 	    fprintf(stderr, "\nFound plane %c at altitude %c=%d where "
 		            "expected to find it at altitude %d.\n",
 		    code, alt, alt-'0', i->start->pos.alt);
+	    fprintf(logff, "Found plane '%c' at altitude %c=%d where "
+		           "expected to find it at altitude %d\n",
+		    code, alt, alt-'0', i->start->pos.alt);
 	    exit('a');
 	}
+	i = i->next;
     }
+}
+
+static void target(struct plane *p) {
+    char id = p->id;
+    static const char pls1[] = " pl dt  comm ";
+    static const char pls2[] = "7pl dt  comm ";
+    char *base = &D(2, 2*board_width-1);
+    if (memcmp(base, pls1, sizeof(pls1)-1) &&
+	    memcmp(base, pls2, sizeof(pls2)-1)) {
+	fprintf(stderr, "\nExpected \"%s\" but found \"%.*s\"\n",
+		pls1, sizeof(pls1)-1, base);
+	exit('P');
+    }
+
+    for (int i = 3; i < screen_height && D(i, 2*board_width) != ' '; i++) {
+	if (D(i, 2*board_width) != id)
+	    continue;
+	char ttype = D(i, 2*board_width+3);
+	char tnum = D(i, 2*board_width+4);
+	assert(D(i, 2*board_width+5) == ':');
+	assert(isdigit(tnum) && (ttype == 'A' || ttype == 'E'));
+	p->target_airport = (ttype == 'A');
+	p->target_num = tnum-'0';
+	return;
+    }
+
+    fprintf(stderr, "\nUnable to find the target of plane %c\n", id);
+    exit('T');
 }
 
 static void handle_found_plane(char code, int alt, int row, int col) {
@@ -267,6 +305,10 @@ static void handle_found_plane(char code, int alt, int row, int col) {
 		fprintf(stderr, "\nExpected to find plane %c at (%d, %d, %d) "
 				"but actually at (%d, %d, %d).\n",
 			code, pos.row, pos.col, pos.alt, row, col, alt);
+		fprintf(logff, "[Tick %d] Expected to find plane '%c' at "
+			"(%d, %d, %d) but actually at (%d, %d, %d)\n",
+			frame_no, code, pos.row, pos.col, pos.alt, row, col,
+		        alt);
 		exit('E');
 	    }
 	    // Plane's position is A-OK.
@@ -286,11 +328,19 @@ static void handle_found_plane(char code, int alt, int row, int col) {
     struct plane *p = malloc(sizeof(*p));
     p->id = code;
     p->isjet = islower(code);
-    // XXX: target
+    target(p);
     plot_course(p, row, col, alt);
     if (p->start) {
-        order_new_bearing(p->id, p->start->bearing);
-	p->bearing_set = true;
+	assert(p->start->pos.alt == alt);
+	assert(p->start->pos.row == row);
+	assert(p->start->pos.col == col);
+	struct course *next = p->start->next;
+	if (next) {
+            order_new_bearing(p->id, next->bearing);
+	    p->bearing_set = true;
+	    if (next->pos.alt != alt)
+	        order_new_altitude(p->id, next->pos.alt);
+	}
     }
 
     p->next = NULL;
@@ -321,6 +371,13 @@ static void find_new_planes() {
     }
 }
 
+static void update_plane_courses() {
+    for (struct plane *p = plstart; p; p = p->next) {
+	p->start = free_course_entry(p->start);
+	p->start_tm++;
+    }
+}
+
 void update_board() {
     if (frame_no == 0)
 	board_init();
@@ -340,8 +397,8 @@ void update_board() {
     if (frame_no <= 3)
 	check_for_exits();
 
-    verify_planes();
     frame_no = new_frame_no;
-
+    verify_planes();
     find_new_planes();
+    update_plane_courses();
 }

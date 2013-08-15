@@ -33,8 +33,14 @@ int spawn(char *cmd, char *args[], int ptm) {
     if (pid == 0) {
 	setenv("TERM", "vt100", 1);
 	unsetenv("TERMCAP");
-	int pts = open(ptsname(ptm), O_RDWR);
-	close(ptm);
+	const char *ptsfn = ptsname(ptm);
+	close(ptm);  close(0);  close(1);  close(2);
+	int dt = open("/dev/tty", O_RDWR);
+	if (dt != -1) 
+	    ioctl(dt, TIOCNOTTY);
+	int pts = open(ptsfn, O_RDWR);
+	setsid();
+	ioctl(pts, TIOCSCTTY);
 	dup2(pts, 0);
 	dup2(pts, 1);
 	dup2(pts, 2);

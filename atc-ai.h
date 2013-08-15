@@ -27,7 +27,7 @@ extern int board_width, board_height;
 
 
 struct bearing {
-    int degrees;
+    int degree;
     int drow, dcol;
     char key;
     char aircode;
