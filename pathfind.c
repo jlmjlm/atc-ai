@@ -77,7 +77,7 @@ static int cdist(int r, int c, int alt, struct xyz target) {
 
 static bool in_airport_excl(struct xy rc, int airport_num) {
     struct airport *a = get_airport(airport_num);
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < EZ_SIZE; i++) {
 	if (a->exc[i].row == rc.row && a->exc[i].col == rc.col)
 	    return true;
     }

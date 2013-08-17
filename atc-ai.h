@@ -44,13 +44,14 @@ static inline struct xy apply(int row, int col, int bearing) {
 }
 
 
+#define EZ_SIZE 6
 struct airport {
     int num;
     int bearing;
     int row, col;
     int trow, tcol;   // target
     int strow1, stcol1, strow2, stcol2;	// secondary targets
-    struct xy exc[6]; // exclusion zone
+    struct xy exc[EZ_SIZE]; // exclusion zone
 };
 extern struct airport airports[AIRPORT_MAX];
 extern int n_airports;

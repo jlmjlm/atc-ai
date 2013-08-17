@@ -1,6 +1,3 @@
-Improve airport landings:
-	Have exclusion zone be only 3 squares in the airport's "wrong
-	way", and the target be the landing strip.
 A errexit or something to fix up the terminal then emit the error message.
 Trigger updates when it's been a while since the last read from atc,
 	and then wait indefinitely for a read after the update
@@ -33,7 +30,9 @@ A different "err log" for bugs.
 When blocked by a plane, don't match its heading & speed unless also
 	 changing alt.
 Recalc on a low-fuel ind.  (Just how far can a plane go?)
-Get out of a busy loop on SIGINT/SIGTERM.
+Get out of a busy loop on SIGINT/SIGTERM.  (Do calc in another thread?)
+Err if calc takes too long.
+Do I/O in its own thread?
 Read cmds from stdin (eg, + and - to incr. & decr. speed)
 Have airports/exits in their arrays in their number's position.
 
