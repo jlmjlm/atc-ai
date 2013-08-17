@@ -54,6 +54,7 @@ struct airport {
 };
 extern struct airport airports[AIRPORT_MAX];
 extern int n_airports;
+extern struct airport *get_airport(int n);
 
 struct course {
     struct xyz pos;
@@ -85,3 +86,4 @@ extern struct plane *plstart, *plend;
 extern void order_new_bearing(char id, int bearing);
 extern void order_new_altitude(char id, int alt);
 extern void land_at_airport(char id, int airport_num);
+extern void next_tick(void);

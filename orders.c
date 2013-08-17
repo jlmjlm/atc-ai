@@ -23,3 +23,7 @@ void order_new_altitude(char id, int alt) {
 void land_at_airport(char id, int airport_num) {
     fprintf(outf, "%ctta%d\n%ca0\n", id, airport_num, id);
 }
+
+void next_tick() {
+    putc('\n', outf);
+}

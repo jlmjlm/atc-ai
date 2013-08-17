@@ -33,6 +33,8 @@ A different "err log" for bugs.
 When blocked by a plane, don't match its heading & speed unless also
 	 changing alt.
 Recalc on a low-fuel ind.  (Just how far can a plane go?)
+Get out of a busy loop on SIGINT/SIGTERM.
+Read cmds from stdin (eg, + and - to incr. & decr. speed)
 
 Interesting seeds:
 	1376278304 plane begins at NE corner, but not in the exit (1 interior

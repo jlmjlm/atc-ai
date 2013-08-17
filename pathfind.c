@@ -76,24 +76,50 @@ static int cdist(int r, int c, int bearing, int alt, struct xyz target) {
     return dr*dr + dc*dc + da*da;
 }
 
+static bool in_airport_excl(struct xy rc, int airport_num) {
+    struct airport *a = get_airport(airport_num);
+    for (int i = 0; i < 6; i++) {
+	if (a->exc[i].row == rc.row && a->exc[i].col == rc.col)
+	    return true;
+    }
+    return false;
+}
+
 static void calc_next_move(struct plane *p, int row, int col, int *alt, 
 			   struct xyz target, int *bearing) {
-    //XXX: Avoid obstacles.
+    // Avoid obstacles.  Obstacles are:  The boundary except for the
+    // target exit at alt==9, adjacency with another plane (props have
+    // to check this at t+1 and t+2), within 2 of an exit at alt 6-8 if 
+    // it's cleared the exit, the exclusion area of an airport at alt <= 2,
+    // and matching the bearing/altitude/speed of a blocking airplane (because
+    // it'll just continue to block).
+
     //TODO: Backtrack.
     int turn;  int nalt;
     struct step cand[15];
     int i = 0;
     for (turn = -2; turn <= 2; turn++) {
 	int nb = (*bearing + turn) & 7;
+    	struct xy rc = apply(row, col, nb);
+	bool on_boundary = (rc.row == 0 || rc.row == board_height-1 ||
+			    rc.col == 0 || rc.col == board_width-1);
 	for (nalt = *alt-1; nalt <= *alt+1; nalt++) {
+	    if (nalt == 0 || nalt == 10)
+		continue;
+	    if (on_boundary && (nalt != 9 || rc.row != target.row ||
+					     rc.col != target.col))
+		continue;
+	    if (p->target_airport && nalt <= 2 &&
+		    in_airport_excl(rc, p->target_num))
+		continue;
 	    cand[i].bearing = nb;
 	    cand[i].alt = nalt;
 	    cand[i].distance = cdist(row, col, nb, nalt, target);
 	    i++;
 	}
     }
-    assert(i == 15);
-    qsort(cand, 15, sizeof(*cand), distcmp);
+    assert(i <= 15);
+    qsort(cand, i, sizeof(*cand), distcmp);
     *bearing = cand[0].bearing;
     *alt = cand[0].alt;
 }
@@ -106,12 +132,12 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 
     if (p->target_airport) {
 	target.alt = 1;
-	target.row = airports[p->target_num].row;
-	target.col = airports[p->target_num].col;
+	target.row = get_airport(p->target_num)->trow;
+	target.col = get_airport(p->target_num)->tcol;
     } else {
 	target.alt = 9;
-	target.row = exits[p->target_num].row;
-        target.col = exits[p->target_num].col;
+	target.row = get_exit(p->target_num)->row;
+        target.col = get_exit(p->target_num)->col;
     }
     fprintf(logff, "Plotting course from %d:(%d, %d, %d)@%d to (%d, %d, %d)\n",
 	    frame_no, row, col, alt, bearings[bearing].degree, 
@@ -144,8 +170,10 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	tick++;
     } 
     if (p->target_airport) {
-	if (!p->isjet)
+	if (!p->isjet) {
 	    add_course_elem(p, row, col, alt, bearing, cleared_exit);
+	    tick++;
+ 	}
 	add_course_elem(p, -1, -1, -2, -1, cleared_exit);
 	p->end_tm = tick;
     } else {

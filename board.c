@@ -150,6 +150,14 @@ static void board_init() {
     fprintf(logff, "Board is %d by %d.\n", board_width, board_height);
 }
 
+struct airport *get_airport(int n) {
+    for (int i = 0; i < n_airports; i++) {
+	if (airports[i].num == n)
+	    return &airports[i];
+    }
+    return NULL;
+}
+
 struct exitspec *get_exit(int n) {
     for (int i = 0; i < n_exits; i++) {
 	if (exits[i].num == n)
@@ -401,4 +409,5 @@ void update_board() {
     verify_planes();
     find_new_planes();
     update_plane_courses();
+    next_tick();
 }
