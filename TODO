@@ -1,3 +1,6 @@
+Improve airport landings:
+	Have exclusion zone be only 3 squares in the airport's "wrong
+	way", and the target be the landing strip.
 A errexit or something to fix up the terminal then emit the error message.
 Trigger updates when it's been a while since the last read from atc,
 	and then wait indefinitely for a read after the update
@@ -24,9 +27,6 @@ Handle rogue planes which were shrouded by other planes
  	- guess based on proximity of exits
 Recalculate other planes' courses if they're interfering with
 	a new plane's.
-Landing consumes the plane.  See if you can take off from the airport
-	on that turn too.  (If a prop, taking off at even/odd turn matters.
-	Props move only on even turns.)  It seems to work just fine.
 Watch memory usage over a long run to check for leaks.
 'make dist'
 A different "err log" for bugs.
@@ -35,6 +35,7 @@ When blocked by a plane, don't match its heading & speed unless also
 Recalc on a low-fuel ind.  (Just how far can a plane go?)
 Get out of a busy loop on SIGINT/SIGTERM.
 Read cmds from stdin (eg, + and - to incr. & decr. speed)
+Have airports/exits in their arrays in their number's position.
 
 Interesting seeds:
 	1376278304 plane begins at NE corner, but not in the exit (1 interior
