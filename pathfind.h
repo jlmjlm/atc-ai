@@ -13,8 +13,7 @@ struct frame {
 };
 
 
-// Testing functions
-extern void test_calc_next_move(void);
+// 'extern' for testing
 extern void calc_next_move(struct plane *p, int srow, int scol, int *alt,
                            struct xyz target, int *bearing, bool cleared_exit,
                            struct frame *frame);

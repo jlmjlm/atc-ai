@@ -199,8 +199,8 @@ void calc_next_move(struct plane *p, int srow, int scol, int *alt,
 	return;
     }
     qsort(frame->cand, frame->n_cand, sizeof(*frame->cand), distcmp);
-    *bearing = frame->cand[frame->n_cand].bearing;
-    *alt = frame->cand[frame->n_cand].alt;
+    *bearing = frame->cand[frame->n_cand-1].bearing;
+    *alt = frame->cand[frame->n_cand-1].alt;
 }
 
 static void new_op_course(const struct course *c,

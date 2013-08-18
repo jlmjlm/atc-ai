@@ -14,7 +14,7 @@ test: atc-test
 	./atc-test
 
 atc-test: atc-ai
-	ln atc-ai atc-test
+	ln -f atc-ai atc-test
 
 main.o: main.c atc-ai.h
 
