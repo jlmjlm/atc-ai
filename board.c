@@ -257,7 +257,18 @@ static void verify_planes() {
 
 	char code = D(i->start->pos.row, i->start->pos.col*2);
 	char alt = D(i->start->pos.row, i->start->pos.col*2+1);
-	if (!isalpha(code) || !isdigit(alt)) {
+	if (i->start->pos.alt == 0) {
+	    if (!isdigit(alt) || (!isalpha(code) && !memchr("<>^v", code, 4))) {
+	        fprintf(stderr, "\nFound '%c%c' where expected to find a "
+				"plane or airport.\n",
+		    	code, alt);
+	        fprintf(stderr, "[Tick %d] Expected to find plane '%c' at "
+		            "(%d, %d) but instead found '%c%c'\n",
+		    frame_no, i->id, i->start->pos.row, i->start->pos.col,
+		    code, alt);
+	        exit('p');
+	    }
+	} else if (!isalpha(code) || !isdigit(alt)) {
 	    fprintf(stderr, "\nFound '%c%c' where expected to find a plane.\n",
 		    code, alt);
 	    fprintf(stderr, "[Tick %d] Expected to find plane '%c' at "
