@@ -1,3 +1,12 @@
+#ifdef TEST
+  #define tstatic /*nothing*/
+  #define textern(decl) extern decl
+#else
+  #define tstatic static
+  #define textern(decl) /*nothing*/
+#endif
+
+
 extern int get_ptm(void);
 extern int spawn(char *cmd, char *args[], int ptm);
 extern void update_display(char);
@@ -35,6 +44,7 @@ struct bearing {
     const char *longname;
 };
 extern const struct bearing bearings[8];
+extern int bearing_of(const char *s);
 
 static inline struct xy apply(int row, int col, int bearing) {
     row += bearings[bearing].drow;
