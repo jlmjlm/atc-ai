@@ -50,8 +50,6 @@ Interesting seeds:
 		corner 
 	1376515486 similar
 	1376535757 On turn 23 produces a plane at (0, 29, 7)
-		[upper right corner].  Also, something weird with plane 'C'
-		which appears at the North exit on time 34 or so.
-		It 'illegally left the flight arena' on its first move.
-		It looks like it's targeting its own entry point.  
-		[Plotting course from 35:(0, 12, 7)@180 to (0, 12, 9)]  Huh?
+		[upper right corner].  
+		This also has plane 'w' follow blocking place 's' at about
+		frame 150 on.

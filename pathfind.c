@@ -89,27 +89,28 @@ struct op_courses {
     struct op_courses *prev, *next;
 };
 
+static bool pos_adjacent(struct xyz pos, struct xy rc, int alt) {
+    if (pos.alt == 0)
+	return false;
+
+    return abs(pos.row - rc.row) < 2 && abs(pos.col - rc.col) < 2 &&
+	   abs(pos.alt - alt) < 2;
+}
+
 static bool adjacent_another_plane(struct xy rc, int alt,
-				   const struct op_courses *opc, bool trace) {
+				   const struct op_courses *opc, bool isprop) {
     for ( ; opc; opc = opc->next) {
 	if (!opc->c)
 	    continue;
-	if (trace)
-	    fprintf(logff, "checking (%d, %d, %d) against (%d, %d, %d): ",
-		    rc.row, rc.col, alt, opc->c->pos.row,
-		    opc->c->pos.col, opc->c->pos.alt);
- 	if (abs(opc->c->pos.row - rc.row) < 2 &&
-		abs(opc->c->pos.col - rc.col) < 2 &&
-		abs(opc->c->pos.alt - alt) < 2) {
-	    if (trace)
-	        fprintf(logff, "too close\n");
+	struct xyz pos = opc->c->pos;
+	if (pos_adjacent(pos, rc, alt))
 	    return true;
+	if (isprop && opc->c->next) {
+	    pos = opc->c->next->pos;
+	    if (pos_adjacent(pos, rc, alt))
+		return true;
 	}
-	if (trace)
-	    fprintf(logff, "OK\n");
     }
-    if (trace)
-        fprintf(logff, "All OK.\n");
     return false;
 }
 
@@ -121,12 +122,25 @@ static void calc_next_move(struct plane *p, int srow, int scol, int *alt,
     // to check this at t+1 and t+2), within 2 of an exit at alt 6-8 if 
     // it's cleared the exit, the exclusion area of an airport at alt <= 2,
     // and matching the bearing/altitude/speed of a blocking airplane (because
-    // it'll just continue to block).
+    // it'll just continue to block).  [TODO: The last of those]
 
-    //TODO: Backtrack.
+    //FIXME: Backtrack.
     int turn;  int nalt;
     struct step cand[15];
     int i = 0;
+
+    // If the plane's at the airport, it can only hold or take off.
+    if (*alt == 0) {
+    	struct xy rc = apply(srow, scol, *bearing);
+	if (adjacent_another_plane(rc, 1, opc_start, !p->isjet)) {
+	    // Hold.
+	    return;
+	} else {
+	    *alt = 1;
+	    return;
+	}
+    }
+   
     for (turn = -2; turn <= 2; turn++) {
 	int nb = (*bearing + turn) & 7;
     	struct xy rc = apply(srow, scol, nb);
@@ -144,7 +158,7 @@ static void calc_next_move(struct plane *p, int srow, int scol, int *alt,
 	    if (p->target_airport && nalt <= 2 &&
 		    in_airport_excl(rc, p->target_num))
 		continue;
-	    if (adjacent_another_plane(rc, nalt, opc_start, p->id == 'w'))
+	    if (adjacent_another_plane(rc, nalt, opc_start, !p->isjet))
 		continue;
 	    cand[i].bearing = nb;
 	    cand[i].alt = nalt;
@@ -181,10 +195,20 @@ static void incr_opc(struct op_courses **st, struct op_courses **end) {
     }
 }
 
+static struct airport *get_airport_xy(int r, int c) {
+    for (int i = 0; i < n_airports; i++) {
+	if (airports[i].row == r && airports[i].col == c)
+	    return &airports[i];
+    }
+
+    return NULL;
+}
+
 void plot_course(struct plane *p, int row, int col, int alt) {
     struct op_courses *opc_start = NULL, *opc_end = NULL;
-    assert(alt == 7);	//XXX: handle planes at airports (alt == 0)
-    int bearing = calc_bearing(&p->bearing_set, row, col);
+    assert(alt == 7 || alt == 0);
+    int bearing = alt ? calc_bearing(&p->bearing_set, row, col)
+		      : get_airport_xy(row, col)->bearing;
     bool cleared_exit = false;
     struct xyz target;
 
@@ -224,8 +248,10 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	    continue;
 	}
 	calc_next_move(p, row, col, &alt, target, &bearing, opc_start);
-        row += bearings[bearing].drow;
-        col += bearings[bearing].dcol;
+	if (alt) {
+            row += bearings[bearing].drow;
+            col += bearings[bearing].dcol;
+	}
 	
 	fprintf(logff, "\t%d:", tick);
 	add_course_elem(p, row, col, alt, bearing, cleared_exit);
@@ -235,7 +261,7 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	}
 	tick++;
 	incr_opc(&opc_start, &opc_end);
-    } 
+    }
     if (p->target_airport) {
 	if (!p->isjet) {
 	    add_course_elem(p, row, col, alt, bearing, cleared_exit);
@@ -246,5 +272,10 @@ void plot_course(struct plane *p, int row, int col, int alt) {
     } else {
 	// For an exit, the plane disappears at reaching it.
         p->end_tm = tick-1;
+    }
+
+    for (struct op_courses *o = opc_start; o; o = opc_start) {
+	opc_start = o->next;
+	free(o);
     }
 }
