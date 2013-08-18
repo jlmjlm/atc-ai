@@ -35,6 +35,7 @@ Err if calc takes too long.
 Do I/O in its own thread?
 Read cmds from stdin (eg, + and - to incr. & decr. speed)
 Have airports/exits in their arrays in their number's position.
+Deal with exit clearance better, esp. for border-hugging routes.
 
 Interesting seeds:
 	1376278304 plane begins at NE corner, but not in the exit (1 interior

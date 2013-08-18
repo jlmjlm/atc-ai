@@ -85,7 +85,7 @@ static int cdist(int r, int c, int alt, struct xyz target) {
 
 static bool in_airport_excl(struct xy rc, int alt, int airport_num) {
     struct airport *a = get_airport(airport_num);
-#if 1
+
     if (alt >= 3)
 	return false;
 
@@ -98,15 +98,6 @@ static bool in_airport_excl(struct xy rc, int alt, int airport_num) {
 	return sgn(rc.col - a->col) == bearings[a->bearing].dcol;
     else
 	return sgn(rc.row - a->row) == bearings[a->bearing].drow;
-
-#else
-    if (sgn(rc.col - a->col) == bearings[a->bearing].dcol &&
-	    sgn(rc.row - a->row) == bearings[a->bearing].drow &&
-	    alt == 1) {
-	return true;
-    }
-#endif
-    return false;
 }
 
 struct op_courses {
@@ -140,7 +131,7 @@ static bool adjacent_another_plane(struct xy rc, int alt,
 }
 
 static void calc_next_move(struct plane *p, int srow, int scol, int *alt, 
-			   struct xyz target, int *bearing,
+			   struct xyz target, int *bearing, bool cleared_exit,
 			   struct op_courses *opc_start) {
     // Avoid obstacles.  Obstacles are:  The boundary except for the
     // target exit at alt==9, adjacency with another plane (props have
@@ -184,6 +175,10 @@ static void calc_next_move(struct plane *p, int srow, int scol, int *alt,
 		continue;
 	    if (adjacent_another_plane(rc, nalt, opc_start, !p->isjet))
 		continue;
+	    /*if (cleared_exit && nalt >= 6 && nalt <= 8 && (
+		    rc.row <= 2 || rc.row >= board_height - 3 ||
+		    rc.col <= 2 || rc.col >= board_width - 3))
+		continue;*/
 	    cand[i].bearing = nb;
 	    cand[i].alt = nalt;
 	    cand[i].distance = cdist(rc.row, rc.col, nalt, target);
@@ -276,7 +271,8 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	    incr_opc(&opc_start, &opc_end);
 	    continue;
 	}
-	calc_next_move(p, row, col, &alt, target, &bearing, opc_start);
+	calc_next_move(p, row, col, &alt, target, &bearing, cleared_exit,
+		       opc_start);
 	if (alt) {
             row += bearings[bearing].drow;
             col += bearings[bearing].dcol;
@@ -284,8 +280,8 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	
 	fprintf(logff, "\t%d:", tick);
 	add_course_elem(p, row, col, alt, bearing, cleared_exit);
-	if (!cleared_exit && row > 2 && row < board_height-3 &&
-		col > 2 && col < board_width-3) {
+	if (!cleared_exit && ((row > 2 && row < board_height-3 &&
+		col > 2 && col < board_width-3) || alt < 6 || alt == 9)) {
 	    cleared_exit = true;
 	}
 	tick++;
