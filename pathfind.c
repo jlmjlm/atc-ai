@@ -5,6 +5,14 @@
 #include <assert.h>
 #include "atc-ai.h"
 
+static inline int sgn(int x) {
+    if (x > 0)
+	return 1;
+    if (x < 0)
+	return -1;
+    return 0;
+}
+
 int bearing_of(const char *s) {
     for (int i = 0; i < 8; i++) {
 	if (!strcmp(bearings[i].shortname, s))
@@ -75,12 +83,29 @@ static int cdist(int r, int c, int alt, struct xyz target) {
     return dr*dr + dc*dc + da*da;
 }
 
-static bool in_airport_excl(struct xy rc, int airport_num) {
+static bool in_airport_excl(struct xy rc, int alt, int airport_num) {
     struct airport *a = get_airport(airport_num);
+#if 1
+    if (alt >= 3)
+	return false;
+
     for (int i = 0; i < EZ_SIZE; i++) {
-	if (a->exc[i].row == rc.row && a->exc[i].col == rc.col)
-	    return true;
+        if (a->exc[i].row == rc.row && a->exc[i].col == rc.col)
+            return true;
     }
+
+    if (bearings[a->bearing].dcol)
+	return sgn(rc.col - a->col) == bearings[a->bearing].dcol;
+    else
+	return sgn(rc.row - a->row) == bearings[a->bearing].drow;
+
+#else
+    if (sgn(rc.col - a->col) == bearings[a->bearing].dcol &&
+	    sgn(rc.row - a->row) == bearings[a->bearing].drow &&
+	    alt == 1) {
+	return true;
+    }
+#endif
     return false;
 }
 
@@ -155,8 +180,7 @@ static void calc_next_move(struct plane *p, int srow, int scol, int *alt,
 	    if (on_boundary && (nalt != 9 || rc.row != target.row ||
 					     rc.col != target.col))
 		continue;
-	    if (p->target_airport && nalt <= 2 &&
-		    in_airport_excl(rc, p->target_num))
+	    if (p->target_airport && in_airport_excl(rc, nalt, p->target_num))
 		continue;
 	    if (adjacent_another_plane(rc, nalt, opc_start, !p->isjet))
 		continue;
@@ -237,6 +261,11 @@ void plot_course(struct plane *p, int row, int col, int alt) {
     p->start_tm = frame_no;
     int tick = frame_no+1;
     while (row != target.row || col != target.col || alt != target.alt) {
+	if (tick > frame_no+400) {
+	    fprintf(stderr, "\nPlane %c stuck in an infinite loop.\n", p->id);
+	    exit('8');
+	}
+
 	// Plane doesn't move if it's a prop and the tick is odd...
 	// ...except that a prop plane in an exit will pop out of it.
 	if (!p->isjet && tick%2 == 1 && row != 0 && col != 0 &&
