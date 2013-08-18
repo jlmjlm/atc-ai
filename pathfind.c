@@ -137,9 +137,9 @@ static bool adjacent_another_plane(struct xy rc, int alt,
     return false;
 }
 
-tstatic void calc_next_move(struct plane *p, int srow, int scol, int *alt, 
-			    struct xyz target, int *bearing, bool cleared_exit,
-			    struct frame *frame) {
+void calc_next_move(struct plane *p, int srow, int scol, int *alt, 
+		    struct xyz target, int *bearing, bool cleared_exit,
+		    struct frame *frame) {
     // Avoid obstacles.  Obstacles are:  The boundary except for the
     // target exit at alt==9, adjacency with another plane (props have
     // to check this at t+1 and t+2), within 2 of an exit at alt 6-8 if 

@@ -7,15 +7,14 @@ CFLAGS += -Wall -std=gnu99
 
 all: test atc-ai
 
-atc-ai: main.o pty.o vty.o board.o orders.o pathfind.o
+atc-ai: main.o pty.o vty.o board.o orders.o pathfind.o testpath.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 test: atc-test
 	./atc-test
 
-atc-test: CFLAGS += -DTEST
-atc-test: pathfind_test.o testpath.o
-	$(CC) $(CFLAGS) -o $@ $^
+atc-test: atc-ai
+	ln atc-ai atc-test
 
 main.o: main.c atc-ai.h
 
@@ -27,11 +26,9 @@ board.o: board.c atc-ai.h
 
 pathfind.o: pathfind.c atc-ai.h pathfind.h
 
-pathfind_test.o: pathfind_test.c atc-ai.h pathfind.h
-
 orders.o: orders.c atc-ai.h
 
-testpath.o: testpath.c atc-ai.h
+testpath.o: testpath.c atc-ai.h pathfind.h
 
 clean:
 	rm atc-ai atc-test *.o > /dev/null 2>&1

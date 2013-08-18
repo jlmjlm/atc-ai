@@ -5,10 +5,6 @@
 #include "pathfind.h"
 
 
-int board_width = 20;
-int board_height = 20;
-
-
 static void w_blocked(void);
 
 
@@ -66,7 +62,10 @@ static void w_blocked() {
     //XXX: Test being fully blocked.
 }
 
-int main() {
+int testmain() {
+    board_width = 20;
+    board_height = 20;
+
     test_calc_next_move();
     printf("PASS\n");
     return 0;

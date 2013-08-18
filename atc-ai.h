@@ -1,16 +1,8 @@
-#ifdef TEST
-  #define tstatic /*nothing*/
-  #define textern(decl) extern decl
-#else
-  #define tstatic static
-  #define textern(decl) /*nothing*/
-#endif
-
-
 extern int get_ptm(void);
 extern int spawn(char *cmd, char *args[], int ptm);
 extern void update_display(char);
 extern void update_board(void);
+extern int testmain(void);
 
 extern int screen_height, screen_width;
 extern char *display;

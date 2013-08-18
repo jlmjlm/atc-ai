@@ -7,7 +7,6 @@ main.c
 orders.c
 pathfind.c
 pathfind.h
-pathfind_test.c
 pty.c
 testpath.c
 vty.c

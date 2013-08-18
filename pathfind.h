@@ -14,8 +14,8 @@ struct frame {
 
 
 // Testing functions
-textern(void test_calc_next_move(void);)
-textern(void calc_next_move(struct plane *p, int srow, int scol, int *alt,
-                            struct xyz target, int *bearing, bool cleared_exit,
-                            struct frame *frame);)
+extern void test_calc_next_move(void);
+extern void calc_next_move(struct plane *p, int srow, int scol, int *alt,
+                           struct xyz target, int *bearing, bool cleared_exit,
+                           struct frame *frame);
 
