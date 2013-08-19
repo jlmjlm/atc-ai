@@ -147,6 +147,7 @@ static void test_plot_course() {
     assert(!c);
 
     //FIXME: Test a double backtrack.
+    //FIXME: Test a prop backtrack.
 }
 
 int testmain() {
