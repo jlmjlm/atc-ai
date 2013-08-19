@@ -44,8 +44,8 @@ static void test_blocked() {
 
     assert(fr.n_cand == 9);
     for (int i = fr.n_cand-1; i >= 0; i--) {
-	printf("#%d: bearing %d at alt %d\n", i, 
-	       bearings[fr.cand[i].bearing].degree, fr.cand[i].alt);
+	fprintf(logff, "#%d: bearing %d at alt %d\n", i, 
+	        bearings[fr.cand[i].bearing].degree, fr.cand[i].alt);
     }
     assert(bearing == bearing_of("N"));
     assert(alt == 7);
@@ -88,9 +88,9 @@ static void test_plot_course() {
     /*     0123456789abc
 	  0-------------
 	  1|......G....|
-	  2|......2....|
-	  3|....**3....|
-	  4|....*a3....|
+	  2|......1....|
+	  3|....***1...|
+	  4|....*a*2...|
 	  5|..****3**..|
 	  6|..*c*2*b*..|
 	  7|..***1***..|
@@ -99,15 +99,17 @@ static void test_plot_course() {
 
     board_height = 10;  board_width = 0xD;
     const int srow = 8, scol = 6;
-    #define EXC_LEN 7
+    #define EXC_LEN 9
     struct xyz excr[EXC_LEN] = {
+	{ .row = 8, .col = 6, .alt = 0 },
 	{ .row = 7, .col = 6, .alt = 1 },
 	{ .row = 6, .col = 6, .alt = 2 },
 	{ .row = 5, .col = 7, .alt = 3 },
-	{ .row = 4, .col = 7, .alt = 3 },
-	{ .row = 3, .col = 7, .alt = 3 },
-	{ .row = 2, .col = 7, .alt = 2 },
-	{ .row = 1, .col = 7, .alt = 1 }
+	{ .row = 4, .col = 8, .alt = 2 },
+	{ .row = 3, .col = 8, .alt = 1 },
+	{ .row = 2, .col = 7, .alt = 1 },
+	{ .row = 1, .col = 7, .alt = 1 },
+	{ .row = -1, .col = -1, .alt = -2 },
     };
     struct course c1 = { .pos = { .row = 4, .col = 6, .alt = 1 },
 			 .prev = &c1, .next = &c1 };
@@ -143,6 +145,8 @@ static void test_plot_course() {
 	c = c->next;
     }
     assert(!c);
+
+    //FIXME: Test a double backtrack.
 }
 
 int testmain() {
