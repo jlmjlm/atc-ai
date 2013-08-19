@@ -205,6 +205,13 @@ void calc_next_move(struct plane *p, int srow, int scol, int *alt,
     qsort(frame->cand, frame->n_cand, sizeof(*frame->cand), distcmp);
     *bearing = frame->cand[frame->n_cand-1].bearing;
     *alt = frame->cand[frame->n_cand-1].alt;
+    if (srow == 1 && scol == 7) {
+	for (int n = frame->n_cand-1; n >= 0; n--) {
+	    fprintf(logff, "#%d: bearing %d alt %d\n", n, 
+		    bearings[frame->cand[n].bearing].degree, 
+		    frame->cand[n].alt);
+	}
+    }
 }
 
 static void new_op_course(const struct course *c,
@@ -313,9 +320,34 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 
 	calc_next_move(p, row, col, &alt, target, &bearing, cleared_exit,
 		       frend);
-	if (alt < 0) {//FIXME
-	    fprintf(stderr, "\nAieee!  Need to backtrack.\n");
-	    exit('X');
+	if (alt < 0) {
+	    fprintf(logff, "Backtracing at step %d tick %d\n", steps, tick);
+	    tick--;
+	    struct course *prev = p->end->prev;
+	    if (prev == NULL) {
+	 	fprintf(stderr, "\nAieee.  Plane %c is impossible.\n", p->id);
+		exit('x');
+	    }
+	    struct xyz pos = prev->pos;
+	    row = pos.row;  col = pos.col;
+	    cleared_exit = prev->cleared_exit;
+	    free(p->end);
+	    p->end = prev;
+	    prev->next = NULL;
+
+	    struct frame *fr = frend;
+	    frend = fr->prev;
+	    frend->next = NULL;
+	    free(fr);
+	    //FIXME: Need to free() the op_courses?
+
+	    //XXX: Check for a prop. plane's non-move.
+	    if (--frend->n_cand <= 0) {//FIXME
+		fprintf(stderr, "\nAieee.  Need to backtrack 2 or more.\n");
+		exit('F');
+	    }
+	    alt = frend->cand[frend->n_cand-1].alt;
+	    bearing = frend->cand[frend->n_cand-1].bearing;
 	}
 	if (alt) {
             row += bearings[bearing].drow;
@@ -345,7 +377,7 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 		frstart->opc_start = o->next;
 		free(o);
     	    }
-	    //XXX: Free the frames
+	    //FIXME: Free the frames
 	    return;
 	}
 

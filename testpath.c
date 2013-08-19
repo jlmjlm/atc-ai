@@ -86,32 +86,34 @@ static inline bool xyz_eq(struct xyz a, struct xyz b) {
 static void test_plot_course() {
     // Test a course where have to backtrack.
     /*     0123456789abc
-	  0.......G.....
-	  1.......2.....
-	  2.....**3.....
-	  3.....*a3.....
-	  4...****3**...
-	  5...*c*2*b*...
-	  6...***1***...
-	  7......S......	*/
+	  0-------------
+	  1|......G....|
+	  2|......2....|
+	  3|....**3....|
+	  4|....*a3....|
+	  5|..****3**..|
+	  6|..*c*2*b*..|
+	  7|..***1***..|
+	  8|.....S.....|	
+	  9-------------	*/
 
-    board_height = 8;  board_width = 0xD;
-    const int srow = 7, scol = 6;
+    board_height = 10;  board_width = 0xD;
+    const int srow = 8, scol = 6;
     #define EXC_LEN 7
     struct xyz excr[EXC_LEN] = {
-	{ .row = 6, .col = 6, .alt = 1 },
-	{ .row = 5, .col = 6, .alt = 2 },
+	{ .row = 7, .col = 6, .alt = 1 },
+	{ .row = 6, .col = 6, .alt = 2 },
+	{ .row = 5, .col = 7, .alt = 3 },
 	{ .row = 4, .col = 7, .alt = 3 },
 	{ .row = 3, .col = 7, .alt = 3 },
-	{ .row = 2, .col = 7, .alt = 3 },
-	{ .row = 1, .col = 7, .alt = 2 },
-	{ .row = 0, .col = 7, .alt = 1 }
+	{ .row = 2, .col = 7, .alt = 2 },
+	{ .row = 1, .col = 7, .alt = 1 }
     };
-    struct course c1 = { .pos = { .row = 3, .col = 6, .alt = 1 },
+    struct course c1 = { .pos = { .row = 4, .col = 6, .alt = 1 },
 			 .prev = &c1, .next = &c1 };
-    struct course c2 = { .pos = { .row = 5, .col = 8, .alt = 1 },
+    struct course c2 = { .pos = { .row = 6, .col = 8, .alt = 1 },
 			 .prev = &c2, .next = &c2 };
-    struct course c3 = { .pos = { .row = 5, .col = 4, .alt = 1 },
+    struct course c3 = { .pos = { .row = 6, .col = 4, .alt = 1 },
 			 .prev = &c3, .next = &c3 };
     struct plane pls[4] = {
       { .id = 'a', .start = &c1, .end = &c1, .prev = NULL, .next = &pls[1] },
@@ -122,8 +124,8 @@ static void test_plot_course() {
 	.prev = &pls[2], .next = NULL } };
     plstart = pls;  plend = &pls[3];
     n_airports = 2;
-    struct airport G = { .num = 0, .row = 0, .col = 7,
-			 .trow = 0, .tcol = 7, .bearing = bearing_of("N") };
+    struct airport G = { .num = 0, .row = 1, .col = 7,
+			 .trow = 1, .tcol = 7, .bearing = bearing_of("N") };
     struct airport S = { .num = 1, .row = srow, .col = scol,
 			 .bearing = bearing_of("N") };
     for (int i = 0; i < EZ_SIZE; i++) {
