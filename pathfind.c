@@ -113,8 +113,8 @@ static bool in_airport_excl(struct xy rc, int alt, int airport_num) {
 }
 
 static bool pos_adjacent(struct xyz pos, struct xy rc, int alt) {
-    fprintf(logff, "[Checking if (%d, %d, %d) adjacent to (%d, %d, %d)]\n",
-	    pos.row, pos.col, pos.alt, rc.row, rc.col, alt);
+    //fprintf(logff, "[Checking if (%d, %d, %d) adjacent to (%d, %d, %d)]\n",
+    //        pos.row, pos.col, pos.alt, rc.row, rc.col, alt);
 
     if (pos.alt == 0)
 	return false;
@@ -167,6 +167,7 @@ void calc_next_move(struct plane *p, int srow, int scol, int *alt,
 	return;
     }
    
+    frame->n_cand = 0;
     for (turn = -2; turn <= 2; turn++) {
 	int nb = (*bearing + turn) & 7;
     	struct xy rc = apply(srow, scol, nb);
@@ -306,6 +307,7 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	    add_course_elem(p, row, col, alt, bearing, cleared_exit);
 	    tick++;
 	    make_new_fr(&frend);
+	    frend->n_cand = -1;
 	    continue;
 	}
 
@@ -322,7 +324,9 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	
 	fprintf(logff, "\t%d:", tick);
 	add_course_elem(p, row, col, alt, bearing, cleared_exit);
-	if (row && target.row && col == target.col && alt == target.alt) {
+	tick++;
+
+	if (row == target.row && col == target.col && alt == target.alt) {
 	    // We've reached the target.  Clean-up and return.
     	    if (p->target_airport) {
 		if (!p->isjet) {
@@ -349,7 +353,7 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 		col > 2 && col < board_width-3) || alt < 6 || alt == 9)) {
 	    cleared_exit = true;
 	}
-	tick++;
+
 	make_new_fr(&frend);
     }
 }

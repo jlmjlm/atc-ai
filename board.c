@@ -242,6 +242,8 @@ static void verify_planes() {
 	assert(i->start_tm == frame_no);
 	struct course *next = i->start->next;
 	if (!next) {
+	    fprintf(logff, "Plane '%c' safe at tick %d frame %d\n",
+		    i->id, i->end_tm, frame_no);
 	    assert(i->end_tm == frame_no);
 	    i = remove_plane(i);
 	    continue;
