@@ -113,6 +113,9 @@ static bool in_airport_excl(struct xy rc, int alt, int airport_num) {
 }
 
 static bool pos_adjacent(struct xyz pos, struct xy rc, int alt) {
+    fprintf(logff, "[Checking if (%d, %d, %d) adjacent to (%d, %d, %d)]\n",
+	    pos.row, pos.col, pos.alt, rc.row, rc.col, alt);
+
     if (pos.alt == 0)
 	return false;
 
@@ -217,6 +220,15 @@ static void new_op_course(const struct course *c,
     *end = ne;
 }
 
+static struct op_courses *next_opc(const struct op_courses *o) {
+    struct op_courses *st = NULL, *end = NULL;
+    while (o) {
+	new_op_course(o->c ? o->c->next : NULL, &st, &end);
+	o = o->next;
+    }
+    return st;
+}
+
 static void incr_opc(struct op_courses *st) {
     for (struct op_courses *o = st; o; o = o->next) {
         if (o->c)
@@ -232,6 +244,8 @@ static struct airport *get_airport_xy(int r, int c) {
 
     return NULL;
 }
+
+static void make_new_fr(struct frame **endp);
 
 void plot_course(struct plane *p, int row, int col, int alt) {
     struct frame *frstart = malloc(sizeof *frstart);
@@ -278,12 +292,11 @@ void plot_course(struct plane *p, int row, int col, int alt) {
      *    (C) If not, step back to parent frame and remove the cand and
      *	      return to (B).
      */
-    get_frame:
+    for (;;) {
 	if (++steps > 200) {
 	    fprintf(stderr, "\nPlane %c stuck in an infinite loop.\n", p->id);
 	    exit('8');
 	}
-	
 
 	// Plane doesn't move if it's a prop and the tick is odd...
 	// ...except that a prop plane in an exit will pop out of it.
@@ -292,40 +305,61 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	    fprintf(logff, "\t%d:", tick);
 	    add_course_elem(p, row, col, alt, bearing, cleared_exit);
 	    tick++;
-	    incr_opc(frstart->opc_start);//XXX
-	    //XXXcontinue;
+	    make_new_fr(&frend);
+	    continue;
 	}
+
 	calc_next_move(p, row, col, &alt, target, &bearing, cleared_exit,
-		       frstart);
+		       frend);
+	if (alt < 0) {//FIXME
+	    fprintf(stderr, "\nAieee!  Need to backtrack.\n");
+	    exit('X');
+	}
 	if (alt) {
             row += bearings[bearing].drow;
             col += bearings[bearing].dcol;
 	}
-    //while (row != target.row || col != target.col || alt != target.alt) {
 	
 	fprintf(logff, "\t%d:", tick);
 	add_course_elem(p, row, col, alt, bearing, cleared_exit);
+	if (row && target.row && col == target.col && alt == target.alt) {
+	    // We've reached the target.  Clean-up and return.
+    	    if (p->target_airport) {
+		if (!p->isjet) {
+	    	    add_course_elem(p, row, col, alt, bearing, cleared_exit);
+	    	    tick++;
+ 		}
+		add_course_elem(p, -1, -1, -2, -1, cleared_exit);
+		p->end_tm = tick;
+    	    } else {
+	 	// For an exit, the plane disappears at reaching it.
+        	p->end_tm = tick-1;
+    	    }
+
+            for (struct op_courses *o = frstart->opc_start; o;
+		     o = frstart->opc_start) {
+		frstart->opc_start = o->next;
+		free(o);
+    	    }
+	    //XXX: Free the frames
+	    return;
+	}
+
 	if (!cleared_exit && ((row > 2 && row < board_height-3 &&
 		col > 2 && col < board_width-3) || alt < 6 || alt == 9)) {
 	    cleared_exit = true;
 	}
 	tick++;
-	incr_opc(frstart->opc_start);
-    //}
-    if (p->target_airport) {
-	if (!p->isjet) {
-	    add_course_elem(p, row, col, alt, bearing, cleared_exit);
-	    tick++;
- 	}
-	add_course_elem(p, -1, -1, -2, -1, cleared_exit);
-	p->end_tm = tick;
-    } else {
-	// For an exit, the plane disappears at reaching it.
-        p->end_tm = tick-1;
+	make_new_fr(&frend);
     }
+}
 
-    for (struct op_courses *o = frstart->opc_start; o; o = frstart->opc_start) {
-	frstart->opc_start = o->next;
-	free(o);
-    }
+static void make_new_fr(struct frame **endp) {
+    struct frame *newfr = malloc(sizeof *newfr);
+    newfr->opc_start = next_opc((*endp)->opc_start);
+    newfr->prev = *endp;
+    newfr->next = NULL;
+    assert((*endp)->next == NULL);
+    (*endp)->next = newfr;
+    *endp = newfr;
 }

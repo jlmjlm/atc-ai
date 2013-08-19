@@ -120,13 +120,17 @@ static void test_plot_course() {
       { .id = 's', .isjet = true, .target_airport = true,
 	.bearing_set = true, .target_num = 0, .start = NULL, .end = NULL,
 	.prev = &pls[2], .next = NULL } };
-    n_airports = 1;
+    plstart = pls;  plend = &pls[3];
+    n_airports = 2;
     struct airport G = { .num = 0, .row = 0, .col = 7,
 			 .trow = 0, .tcol = 7, .bearing = bearing_of("N") };
+    struct airport S = { .num = 1, .row = srow, .col = scol,
+			 .bearing = bearing_of("N") };
     for (int i = 0; i < EZ_SIZE; i++) {
 	G.exc[i].row = G.exc[i].col = 0;
     }
     airports[0] = G;
+    airports[1] = S;
 
     int alt = 0;
     plot_course(&pls[3], srow, scol, alt);
