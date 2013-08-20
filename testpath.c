@@ -83,7 +83,7 @@ static inline bool xyz_eq(struct xyz a, struct xyz b) {
     return a.row == b.row && a.col == b.col && a.alt == b.alt;
 }
 
-static void test_plot_course() {
+static void test_plot_course(bool isprop) {
     // Test a course where have to backtrack.
     /*     0123456789abc
 	  0-------------
@@ -121,7 +121,7 @@ static void test_plot_course() {
       { .id = 'a', .start = &c1, .end = &c1, .prev = NULL, .next = &pls[1] },
       { .id = 'b', .start = &c2, .end = &c2, .prev = &pls[0], .next = &pls[2] },
       { .id = 'c', .start = &c3, .end = &c3, .prev = &pls[1], .next = &pls[3] },
-      { .id = 's', .isjet = true, .target_airport = true,
+      { .id = isprop ? 'S' : 's', .isjet = !isprop, .target_airport = true,
 	.bearing_set = true, .target_num = 0, .start = NULL, .end = NULL,
 	.prev = &pls[2], .next = NULL } };
     plstart = pls;  plend = &pls[3];
@@ -137,22 +137,28 @@ static void test_plot_course() {
     airports[1] = S;
 
     int alt = 0;
+    frame_no = 1;
     plot_course(&pls[3], srow, scol, alt);
     struct course *c = pls[3].start;
     for (int i = 0; i < EXC_LEN; i++) {
 	assert(c);
 	assert(xyz_eq(c->pos, excr[i]));
 	c = c->next;
+	if (isprop && i && i != EXC_LEN-1) {
+	    assert(c);
+	    assert(xyz_eq(c->pos, excr[i]));
+            c = c->next;
+	}
     }
     assert(!c);
 
     //FIXME: Test a double backtrack.
-    //FIXME: Test a prop backtrack.
 }
 
 int testmain() {
     test_calc_next_move();
-    test_plot_course();
+    test_plot_course(false);
+    test_plot_course(true);
     printf("PASS\n");
     return 0;
 }

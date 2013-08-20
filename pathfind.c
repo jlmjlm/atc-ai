@@ -253,6 +253,33 @@ static struct airport *get_airport_xy(int r, int c) {
     return NULL;
 }
 
+static struct xyz backtrack(int *tick, bool *cleared_exit,
+			    struct course **cend,
+			    struct frame **lfrend) {
+    --*tick;
+    struct course *prev = (*cend)->prev;
+    if (prev == NULL) {
+	struct xyz pos = (*cend)->pos;
+        fprintf(stderr, "\nAieee.  Plane at (%d, %d, %d) is impossible.\n",
+		pos.row, pos.col, pos.alt);
+        exit('x');
+    }
+    struct xyz rv = prev->pos;
+    *cleared_exit = prev->cleared_exit;
+    free(*cend);
+    *cend = prev;
+    prev->next = NULL;
+
+    struct frame *fr = *lfrend;
+    *lfrend = fr->prev;
+    (*lfrend)->next = NULL;
+    free(fr);
+    //FIXME: Need to free() the op_courses?
+
+    return rv;
+}
+
+
 static void make_new_fr(struct frame **endp);
 
 void plot_course(struct plane *p, int row, int col, int alt) {
@@ -313,8 +340,8 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	    fprintf(logff, "\t%d:", tick);
 	    add_course_elem(p, row, col, alt, bearing, cleared_exit);
 	    tick++;
+	    frend->n_cand = -3;
 	    make_new_fr(&frend);
-	    frend->n_cand = -1;
 	    continue;
 	}
 
@@ -322,26 +349,23 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 		       frend);
 	if (alt < 0) {
 	    fprintf(logff, "Backtracing at step %d tick %d\n", steps, tick);
-	    tick--;
-	    struct course *prev = p->end->prev;
-	    if (prev == NULL) {
-	 	fprintf(stderr, "\nAieee.  Plane %c is impossible.\n", p->id);
-		exit('x');
+	    struct xyz bt_pos = backtrack(&tick, &cleared_exit, &p->end,
+					  &frend);
+
+	    // Check for a prop. plane's non-move.
+	    if (frend->n_cand == -3) {
+		fprintf(logff, "Backtracing over prop's non-move at tick %d",
+			tick);
+		assert(!p->isjet);
+		bt_pos = backtrack(&tick, &cleared_exit, &p->end, &frend);
+		assert(frend->n_cand != -3);
 	    }
-	    struct xyz pos = prev->pos;
-	    row = pos.row;  col = pos.col;
-	    cleared_exit = prev->cleared_exit;
-	    free(p->end);
-	    p->end = prev;
-	    prev->next = NULL;
 
-	    struct frame *fr = frend;
-	    frend = fr->prev;
-	    frend->next = NULL;
-	    free(fr);
-	    //FIXME: Need to free() the op_courses?
+	    row = bt_pos.row;  col = bt_pos.col;
+	    fprintf(logff, "After backtracing:  %d: pos(%d, %d, %d) and %d "
+			   "remaining candidates\n", tick, bt_pos.row, 
+		    bt_pos.col, bt_pos.alt, frend->n_cand - 1);
 
-	    //XXX: Check for a prop. plane's non-move.
 	    if (--frend->n_cand <= 0) {//FIXME
 		fprintf(stderr, "\nAieee.  Need to backtrack 2 or more.\n");
 		exit('F');
