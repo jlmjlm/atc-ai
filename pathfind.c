@@ -354,7 +354,7 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 
 	    // Check for a prop. plane's non-move.
 	    if (frend->n_cand == -3) {
-		fprintf(logff, "Backtracing over prop's non-move at tick %d",
+		fprintf(logff, "Backtracing over prop's non-move at tick %d\n",
 			tick);
 		assert(!p->isjet);
 		bt_pos = backtrack(&tick, &cleared_exit, &p->end, &frend);
