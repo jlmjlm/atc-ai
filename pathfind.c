@@ -7,7 +7,8 @@
 #include "pathfind.h"
 
 
-const struct bearing bearings[8] = {
+const struct bearing bearings__[9] = {
+    { 666, 0, 0, '\0', '\0', "O", "stationary" },
     { 0, -1, 0, 'w', '^', "N", "north" },
     { 45, -1, 1, 'e', '\0', "NE", "northeast" },
     { 90, 0, 1, 'd', '>', "E", "east" },
@@ -16,7 +17,8 @@ const struct bearing bearings[8] = {
     { 225, 1, -1, 'z', '\0', "SW", "southwest" },
     { 270, 0, -1, 'a', '<', "W", "west" },
     { 315, -1, -1, 'q', '\0', "NW", "northwest" },
-};  
+};
+const struct bearing *bearings = bearings__ + 1;
 
 
 static inline int sgn(int x) {
@@ -347,7 +349,8 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 
 	calc_next_move(p, row, col, &alt, target, &bearing, cleared_exit,
 		       frend);
-	if (alt < 0) {
+   	assert((alt < 0) == (frend->n_cand <= 0));
+	while (frend->n_cand <= 0) {
 	    fprintf(logff, "Backtracing at step %d tick %d\n", steps, tick);
 	    struct xyz bt_pos = backtrack(&tick, &cleared_exit, &p->end,
 					  &frend);
@@ -366,12 +369,15 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 			   "remaining candidates\n", tick, bt_pos.row, 
 		    bt_pos.col, bt_pos.alt, frend->n_cand - 1);
 
-	    if (--frend->n_cand <= 0) {//FIXME
-		fprintf(stderr, "\nAieee.  Need to backtrack 2 or more.\n");
-		exit('F');
+	    if (--frend->n_cand > 0) {
+		// We've found a new candidate that's available after
+	   	// backtracking, so stop backtracing and get on with it.
+	        alt = frend->cand[frend->n_cand-1].alt;
+	        bearing = frend->cand[frend->n_cand-1].bearing;
+		break;
 	    }
-	    alt = frend->cand[frend->n_cand-1].alt;
-	    bearing = frend->cand[frend->n_cand-1].bearing;
+	    fprintf(logff, "No new candidates found at tick %d.  Backtracking "
+			   "again.\n", tick);
 	}
 	if (alt) {
             row += bearings[bearing].drow;

@@ -4,6 +4,9 @@
 #include "atc-ai.h"
 #include "pathfind.h"
 
+static void check_course(struct course *c, struct xyz *excr, int exlen,
+			 bool isprop);
+
 
 // Verify the behavior of 'calc_next_move':
 //    - If headed for something to the NW, but blocked from the W, head
@@ -91,20 +94,36 @@ static void test_plot_course(bool isprop) {
 	  2|......1....|
 	  3|....***1...|
 	  4|....*a*2...|
-	  5|..****3**..|
+	  5|..***d3**..|
 	  6|..*c*2*b*..|
 	  7|..***1***..|
-	  8|.....S.....|	
-	  9-------------	*/
+	  8|.....1.....|	
+	  9|.....S.....|	
+	  a-------------	*/
 
-    board_height = 10;  board_width = 0xD;
-    const int srow = 8, scol = 6;
-    #define EXC_LEN 9
+    board_height = 11;  board_width = 0xD;
+    const int srow = 9, scol = 6;
+    #define EXC_LEN 10
     struct xyz excr[EXC_LEN] = {
-	{ .row = 8, .col = 6, .alt = 0 },
+	{ .row = 9, .col = 6, .alt = 0 },
+	{ .row = 8, .col = 6, .alt = 1 },
 	{ .row = 7, .col = 6, .alt = 1 },
 	{ .row = 6, .col = 6, .alt = 2 },
 	{ .row = 5, .col = 7, .alt = 3 },
+	{ .row = 4, .col = 8, .alt = 2 },
+	{ .row = 3, .col = 8, .alt = 1 },
+	{ .row = 2, .col = 7, .alt = 1 },
+	{ .row = 1, .col = 7, .alt = 1 },
+	{ .row = -1, .col = -1, .alt = -2 },
+    };
+    #define EXC_LEN_B 11
+    struct xyz excr2[EXC_LEN_B] = {
+	{ .row = 9, .col = 6, .alt = 0 },
+	{ .row = 8, .col = 6, .alt = 1 },
+	{ .row = 7, .col = 6, .alt = 2 },
+	{ .row = 7, .col = 7, .alt = 3 },
+	{ .row = 6, .col = 8, .alt = 3 },
+	{ .row = 5, .col = 8, .alt = 3 },
 	{ .row = 4, .col = 8, .alt = 2 },
 	{ .row = 3, .col = 8, .alt = 1 },
 	{ .row = 2, .col = 7, .alt = 1 },
@@ -117,13 +136,19 @@ static void test_plot_course(bool isprop) {
 			 .prev = &c2, .next = &c2 };
     struct course c3 = { .pos = { .row = 6, .col = 4, .alt = 1 },
 			 .prev = &c3, .next = &c3 };
-    struct plane pls[4] = {
+    struct course c4 = { .pos = { .row = 5, .col = 6, .alt = 4 },
+			 .prev = &c4, .next = &c4 };
+    struct plane pls[5] = {
       { .id = 'a', .start = &c1, .end = &c1, .prev = NULL, .next = &pls[1] },
       { .id = 'b', .start = &c2, .end = &c2, .prev = &pls[0], .next = &pls[2] },
-      { .id = 'c', .start = &c3, .end = &c3, .prev = &pls[1], .next = &pls[3] },
+      { .id = 'c', .start = &c3, .end = &c3, .prev = &pls[1], .next = &pls[4] },
+      { .id = 'd', .start = &c4, .end = &c4, .prev = &pls[2], .next = &pls[4] },
       { .id = isprop ? 'S' : 's', .isjet = !isprop, .target_airport = true,
 	.bearing_set = true, .target_num = 0, .start = NULL, .end = NULL,
 	.prev = &pls[2], .next = NULL } };
+    void add_plane_d() {
+	pls[2].next = &pls[3];  pls[4].prev = &pls[3];
+    }
     plstart = pls;  plend = &pls[3];
     n_airports = 2;
     struct airport G = { .num = 0, .row = 1, .col = 7,
@@ -138,21 +163,29 @@ static void test_plot_course(bool isprop) {
 
     int alt = 0;
     frame_no = 1;
-    plot_course(&pls[3], srow, scol, alt);
-    struct course *c = pls[3].start;
-    for (int i = 0; i < EXC_LEN; i++) {
+    plot_course(&pls[4], srow, scol, alt);
+    check_course(pls[4].start, excr, EXC_LEN, isprop);
+
+    // Test a double backtrack.
+    add_plane_d();
+    alt = 0;
+    plot_course(&pls[4], srow, scol, alt);
+    check_course(pls[4].start, excr2, EXC_LEN_B, isprop);
+}
+
+static void check_course(struct course *c, struct xyz *excr, int exlen,
+			 bool isprop) {
+    for (int i = 0; i < exlen; i++) {
 	assert(c);
 	assert(xyz_eq(c->pos, excr[i]));
 	c = c->next;
-	if (isprop && i && i != EXC_LEN-1) {
+	if (isprop && i && i != exlen-1) {
 	    assert(c);
 	    assert(xyz_eq(c->pos, excr[i]));
             c = c->next;
 	}
     }
     assert(!c);
-
-    //FIXME: Test a double backtrack.
 }
 
 int testmain() {
