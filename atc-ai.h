@@ -2,6 +2,7 @@ extern int get_ptm(void);
 extern int spawn(char *cmd, char *args[], int ptm);
 extern void update_display(char);
 extern void update_board(void);
+extern int testmain(void);
 
 extern int screen_height, screen_width;
 extern char *display;
@@ -34,7 +35,8 @@ struct bearing {
     const char *shortname;
     const char *longname;
 };
-extern const struct bearing bearings[8];
+extern const struct bearing *bearings;
+extern int bearing_of(const char *s);
 
 static inline struct xy apply(int row, int col, int bearing) {
     row += bearings[bearing].drow;

@@ -39,18 +39,25 @@ Deal with exit clearance better, esp. for border-hugging routes.
 Have a mode where the operator "types" slow enough to see.
 
 Interesting seeds:
-	1376278304 plane begins at NE corner, but not in the exit (1 interior
-			to it).  Later two other planes begins at exit 3,
-			not in the exit but 1 in from it
+	1376278304 prop needs to backtrack tick ~1331.
 
-	1376278778 plane begins *in* the exit (is this a jets vs. props thing?
-			-- looking like it -- nope)
+	1376278778 prop needs to backtrack tick 1114.
 
 	1376279911 has a lot cf planes at the start
+		At around 1200, a bunch of planes around the same exit
+		push one to FL 7.
 
 	1376508107 something goes wrong with the new plane 'D' at the UL
-		corner 
+		corner (Fixed)
+		Planes "M" and "N" "trap" each other around time 840.
+		Hits a prop backtrack at 1021.
 	1376515486 similar
+		Around time 225, crowding around exit 1 pulls planes to FL 7.
+		Hits prop backtrack at t==600.
+		Looks awesome around time 3000.
+		Plane 'G' blocks plane 'H' from about 3500 on.
+		Another blockage around exit 0 stops a plane targeting exit
+		1 at ~11450.
 	1376535757 On turn 23 produces a plane at (0, 29, 7)
 		[upper right corner].  
 		This also has plane 'w' follow blocking place 's' at about
@@ -58,3 +65,4 @@ Interesting seeds:
 		~800 a plane goes into exit 3 climbing from alt 8 to 9.
 		At ~1914, a jet takes off after a prop has committed to
 		takeoff on the next turn, forcing a collision.
+	1376893850	prop backtrack at tick 117.

@@ -4,6 +4,22 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "atc-ai.h"
+#include "pathfind.h"
+
+
+const struct bearing bearings__[9] = {
+    { 666, 0, 0, '\0', '\0', "O", "stationary" },
+    { 0, -1, 0, 'w', '^', "N", "north" },
+    { 45, -1, 1, 'e', '\0', "NE", "northeast" },
+    { 90, 0, 1, 'd', '>', "E", "east" },
+    { 135, 1, 1, 'c', '\0', "SE", "southeast" },
+    { 180, 1, 0, 'x', 'v', "S", "south" },
+    { 225, 1, -1, 'z', '\0', "SW", "southwest" },
+    { 270, 0, -1, 'a', '<', "W", "west" },
+    { 315, -1, -1, 'q', '\0', "NW", "northwest" },
+};
+const struct bearing *bearings = bearings__ + 1;
+
 
 static inline int sgn(int x) {
     if (x > 0)
@@ -68,9 +84,7 @@ static void add_course_elem(struct plane *p, int row, int col, int alt,
     }
 }
 
-struct step { int bearing, alt, distance; };
-
-static int distcmp(const void *a, const void *b) {
+static int distcmp(const void *b, const void *a) {
     const struct step *aa = a;
     const struct step *bb = b;
     return aa->distance - bb->distance;
@@ -100,12 +114,10 @@ static bool in_airport_excl(struct xy rc, int alt, int airport_num) {
 	return sgn(rc.row - a->row) == bearings[a->bearing].drow;
 }
 
-struct op_courses {
-    const struct course *c;
-    struct op_courses *prev, *next;
-};
-
 static bool pos_adjacent(struct xyz pos, struct xy rc, int alt) {
+    //fprintf(logff, "[Checking if (%d, %d, %d) adjacent to (%d, %d, %d)]\n",
+    //        pos.row, pos.col, pos.alt, rc.row, rc.col, alt);
+
     if (pos.alt == 0)
 	return false;
 
@@ -130,9 +142,9 @@ static bool adjacent_another_plane(struct xy rc, int alt,
     return false;
 }
 
-static void calc_next_move(struct plane *p, int srow, int scol, int *alt, 
-			   struct xyz target, int *bearing, bool cleared_exit,
-			   struct op_courses *opc_start) {
+void calc_next_move(struct plane *p, int srow, int scol, int *alt, 
+		    struct xyz target, int *bearing, bool cleared_exit,
+		    struct frame *frame) {
     // Avoid obstacles.  Obstacles are:  The boundary except for the
     // target exit at alt==9, adjacency with another plane (props have
     // to check this at t+1 and t+2), within 2 of an exit at alt 6-8 if 
@@ -140,23 +152,24 @@ static void calc_next_move(struct plane *p, int srow, int scol, int *alt,
     // and matching the bearing/altitude/speed of a blocking airplane (because
     // it'll just continue to block).  [TODO: The last of those]
 
-    //FIXME: Backtrack.
     int turn;  int nalt;
-    struct step cand[15];
-    int i = 0;
 
     // If the plane's at the airport, it can only hold or take off.
     if (*alt == 0) {
     	struct xy rc = apply(srow, scol, *bearing);
-	if (adjacent_another_plane(rc, 1, opc_start, !p->isjet)) {
-	    // Hold.
-	    return;
+	frame->cand[0].bearing = frame->cand[1].bearing = *bearing;
+	frame->cand[0].alt = 0;  frame->cand[1].alt = 1;
+	if (adjacent_another_plane(rc, 1, frame->opc_start, !p->isjet)) {
+	    // Can't take off, can only hold.
+	    frame->n_cand = 1;
 	} else {
 	    *alt = 1;
-	    return;
+	    frame->n_cand = 2;
 	}
+	return;
     }
    
+    frame->n_cand = 0;
     for (turn = -2; turn <= 2; turn++) {
 	int nb = (*bearing + turn) & 7;
     	struct xy rc = apply(srow, scol, nb);
@@ -173,24 +186,34 @@ static void calc_next_move(struct plane *p, int srow, int scol, int *alt,
 		continue;
 	    if (p->target_airport && in_airport_excl(rc, nalt, p->target_num))
 		continue;
-	    if (adjacent_another_plane(rc, nalt, opc_start, !p->isjet))
+	    if (adjacent_another_plane(rc, nalt, frame->opc_start, !p->isjet))
 		continue;
 	    /*if (cleared_exit && nalt >= 6 && nalt <= 8 && (
 		    rc.row <= 2 || rc.row >= board_height - 3 ||
 		    rc.col <= 2 || rc.col >= board_width - 3))
 		continue;*/
-	    cand[i].bearing = nb;
-	    cand[i].alt = nalt;
-	    cand[i].distance = cdist(rc.row, rc.col, nalt, target);
-	    i++;
+	    int i = frame->n_cand++;
+	    frame->cand[i].bearing = nb;
+	    frame->cand[i].alt = nalt;
+	    frame->cand[i].distance = cdist(rc.row, rc.col, nalt, target);
 	}
     }
-    assert(i <= 15);
-    if (i == 0)
+    assert(frame->n_cand <= 15);
+    if (frame->n_cand == 0) {
 	fprintf(logff, "Warning: Can't find safe path for plane '%c'\n", p->id);
-    qsort(cand, i, sizeof(*cand), distcmp);
-    *bearing = cand[0].bearing;
-    *alt = cand[0].alt;
+	*alt = -1;
+	return;
+    }
+    qsort(frame->cand, frame->n_cand, sizeof(*frame->cand), distcmp);
+    *bearing = frame->cand[frame->n_cand-1].bearing;
+    *alt = frame->cand[frame->n_cand-1].alt;
+    if (srow == 1 && scol == 7) {
+	for (int n = frame->n_cand-1; n >= 0; n--) {
+	    fprintf(logff, "#%d: bearing %d alt %d\n", n, 
+		    bearings[frame->cand[n].bearing].degree, 
+		    frame->cand[n].alt);
+	}
+    }
 }
 
 static void new_op_course(const struct course *c,
@@ -207,8 +230,17 @@ static void new_op_course(const struct course *c,
     *end = ne;
 }
 
-static void incr_opc(struct op_courses **st, struct op_courses **end) {
-    for (struct op_courses *o = *st; o; o = o->next) {
+static struct op_courses *next_opc(const struct op_courses *o) {
+    struct op_courses *st = NULL, *end = NULL;
+    while (o) {
+	new_op_course(o->c ? o->c->next : NULL, &st, &end);
+	o = o->next;
+    }
+    return st;
+}
+
+static void incr_opc(struct op_courses *st) {
+    for (struct op_courses *o = st; o; o = o->next) {
         if (o->c)
     	    o->c = o->c->next;
     }
@@ -223,8 +255,42 @@ static struct airport *get_airport_xy(int r, int c) {
     return NULL;
 }
 
+static struct xyz backtrack(int *tick, bool *cleared_exit,
+			    struct course **cend,
+			    struct frame **lfrend) {
+    --*tick;
+    struct course *prev = (*cend)->prev;
+    if (prev == NULL) {
+	struct xyz pos = (*cend)->pos;
+        fprintf(stderr, "\nAieee.  Plane at (%d, %d, %d) is impossible.\n",
+		pos.row, pos.col, pos.alt);
+        exit('x');
+    }
+    struct xyz rv = prev->pos;
+    *cleared_exit = prev->cleared_exit;
+    free(*cend);
+    *cend = prev;
+    prev->next = NULL;
+
+    struct frame *fr = *lfrend;
+    *lfrend = fr->prev;
+    (*lfrend)->next = NULL;
+    free(fr);
+    //FIXME: Need to free() the op_courses?
+
+    return rv;
+}
+
+
+static void make_new_fr(struct frame **endp);
+
 void plot_course(struct plane *p, int row, int col, int alt) {
-    struct op_courses *opc_start = NULL, *opc_end = NULL;
+    struct frame *frstart = malloc(sizeof *frstart);
+    struct frame *frend = frstart;
+    frstart->prev = frstart->next = NULL;
+    frstart->opc_start = NULL;
+    struct op_courses *opc_end = NULL;
+
     assert(alt == 7 || alt == 0);
     int bearing = alt ? calc_bearing(&p->bearing_set, row, col)
 		      : get_airport_xy(row, col)->bearing;
@@ -234,9 +300,9 @@ void plot_course(struct plane *p, int row, int col, int alt) {
     for (struct plane *pi = plstart; pi; pi = pi->next) {
 	if (pi == p)
 	    continue;
-	new_op_course(pi->start, &opc_start, &opc_end);
+	new_op_course(pi->start, &frstart->opc_start, &opc_end);
     }
-    incr_opc(&opc_start, &opc_end);
+    incr_opc(frstart->opc_start);
 
     if (p->target_airport) {
 	target.alt = 1;
@@ -255,8 +321,16 @@ void plot_course(struct plane *p, int row, int col, int alt) {
     add_course_elem(p, row, col, alt, bearing, false);
     p->start_tm = frame_no;
     int tick = frame_no+1;
-    while (row != target.row || col != target.col || alt != target.alt) {
-	if (tick > frame_no+400) {
+    int steps = 0;
+
+    /* Operation of the "plotting course" machine:
+     *	  (A) Get a frame for the current pos'n.
+     * 	  (B) If frame has cands, step ahead to the best cand and return to (A).
+     *    (C) If not, step back to parent frame and remove the cand and
+     *	      return to (B).
+     */
+    for (;;) {
+	if (++steps > 200) {
 	    fprintf(stderr, "\nPlane %c stuck in an infinite loop.\n", p->id);
 	    exit('8');
 	}
@@ -268,11 +342,43 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	    fprintf(logff, "\t%d:", tick);
 	    add_course_elem(p, row, col, alt, bearing, cleared_exit);
 	    tick++;
-	    incr_opc(&opc_start, &opc_end);
+	    frend->n_cand = -3;
+	    make_new_fr(&frend);
 	    continue;
 	}
+
 	calc_next_move(p, row, col, &alt, target, &bearing, cleared_exit,
-		       opc_start);
+		       frend);
+   	assert((alt < 0) == (frend->n_cand <= 0));
+	while (frend->n_cand <= 0) {
+	    fprintf(logff, "Backtracing at step %d tick %d\n", steps, tick);
+	    struct xyz bt_pos = backtrack(&tick, &cleared_exit, &p->end,
+					  &frend);
+
+	    // Check for a prop. plane's non-move.
+	    if (frend->n_cand == -3) {
+		fprintf(logff, "Backtracing over prop's non-move at tick %d\n",
+			tick);
+		assert(!p->isjet);
+		bt_pos = backtrack(&tick, &cleared_exit, &p->end, &frend);
+		assert(frend->n_cand != -3);
+	    }
+
+	    row = bt_pos.row;  col = bt_pos.col;
+	    fprintf(logff, "After backtracing:  %d: pos(%d, %d, %d) and %d "
+			   "remaining candidates\n", tick, bt_pos.row, 
+		    bt_pos.col, bt_pos.alt, frend->n_cand - 1);
+
+	    if (--frend->n_cand > 0) {
+		// We've found a new candidate that's available after
+	   	// backtracking, so stop backtracing and get on with it.
+	        alt = frend->cand[frend->n_cand-1].alt;
+	        bearing = frend->cand[frend->n_cand-1].bearing;
+		break;
+	    }
+	    fprintf(logff, "No new candidates found at tick %d.  Backtracking "
+			   "again.\n", tick);
+	}
 	if (alt) {
             row += bearings[bearing].drow;
             col += bearings[bearing].dcol;
@@ -280,27 +386,46 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	
 	fprintf(logff, "\t%d:", tick);
 	add_course_elem(p, row, col, alt, bearing, cleared_exit);
+	tick++;
+
+	if (row == target.row && col == target.col && alt == target.alt) {
+	    // We've reached the target.  Clean-up and return.
+    	    if (p->target_airport) {
+		if (!p->isjet) {
+	    	    add_course_elem(p, row, col, alt, bearing, cleared_exit);
+	    	    tick++;
+ 		}
+		add_course_elem(p, -1, -1, -2, -1, cleared_exit);
+		p->end_tm = tick;
+    	    } else {
+	 	// For an exit, the plane disappears at reaching it.
+        	p->end_tm = tick-1;
+    	    }
+
+            for (struct op_courses *o = frstart->opc_start; o;
+		     o = frstart->opc_start) {
+		frstart->opc_start = o->next;
+		free(o);
+    	    }
+	    //FIXME: Free the frames
+	    return;
+	}
+
 	if (!cleared_exit && ((row > 2 && row < board_height-3 &&
 		col > 2 && col < board_width-3) || alt < 6 || alt == 9)) {
 	    cleared_exit = true;
 	}
-	tick++;
-	incr_opc(&opc_start, &opc_end);
-    }
-    if (p->target_airport) {
-	if (!p->isjet) {
-	    add_course_elem(p, row, col, alt, bearing, cleared_exit);
-	    tick++;
- 	}
-	add_course_elem(p, -1, -1, -2, -1, cleared_exit);
-	p->end_tm = tick;
-    } else {
-	// For an exit, the plane disappears at reaching it.
-        p->end_tm = tick-1;
-    }
 
-    for (struct op_courses *o = opc_start; o; o = opc_start) {
-	opc_start = o->next;
-	free(o);
+	make_new_fr(&frend);
     }
+}
+
+static void make_new_fr(struct frame **endp) {
+    struct frame *newfr = malloc(sizeof *newfr);
+    newfr->opc_start = next_opc((*endp)->opc_start);
+    newfr->prev = *endp;
+    newfr->next = NULL;
+    assert((*endp)->next == NULL);
+    (*endp)->next = newfr;
+    *endp = newfr;
 }

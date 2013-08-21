@@ -6,5 +6,7 @@ board.c
 main.c
 orders.c
 pathfind.c
+pathfind.h
 pty.c
+testpath.c
 vty.c

@@ -167,6 +167,12 @@ int main(int argc, char **argv) {
 
     logff = fopen(LOGFILE, "w");
     setvbuf(logff, NULL, _IOLBF, 0);
+
+    if (strstr(argv[0], "atc-test")) {
+	//TODO: Make this an option instead.
+	return testmain();
+    }
+
     pipe(pipefd);
     sigpipe = pipefd[1];
     ptm = get_ptm();
