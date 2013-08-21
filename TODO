@@ -53,6 +53,10 @@ Interesting seeds:
 	1376515486 similar
 		Around time 225, crowding around exit 1 pulls planes to FL 7.
 		Hits prop backtrack at t==600.
+		Looks awesome around time 3000.
+		Plane 'G' blocks plane 'H' from about 3500 on.
+		Another blockage around exit 0 stops a plane targeting exit
+		1 at ~11450.
 	1376535757 On turn 23 produces a plane at (0, 29, 7)
 		[upper right corner].  
 		This also has plane 'w' follow blocking place 's' at about
