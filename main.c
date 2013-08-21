@@ -162,6 +162,38 @@ static char **make_args(int seed) {
     return args;
 }
 
+static const char usage[] =
+    "Usage:  atc-ai <ai-args> [-- <atc-args>]\n"
+    "    AI args:\n"
+    "        -r|--seed <seed>\n"
+    "            Random seed for 'atc' (default is epoch time).\n"
+    "            Use '.' to not pass a seed to 'atc'.\n"
+    "        -d|--delay <ms>\n"
+    "            Milliseconds to wait after an 'atc' write before moving.\n"
+    "            (default 500)\n"
+    "        -s|--skip\n"
+    "            After moving, skip to the next tick.  (default)\n"
+    "        -S|--dont-skip\n"
+    "            After moving, wait for 'atc' to advance.\n"
+    "        -T|--self-test\n"
+    "            Run a self-test.\n"
+    "        -L|--logfile <filename>\n"
+    "            Log to write to.  (default \"atc-ai.log\")\n"
+    "        -f|--frames <frame number>\n"
+    "            Exit after this many frames.\n"
+    "        -p|--saved-planes <number of planes>\n"
+    "            Exit after \"saving\" this many planes.\n"
+    "        -D|--time <number of seconds>\n"
+    "            Exit after a duration of this many seconds.\n"
+    "        -t|--typing-delay <ms>\n"
+    "            Duration to pause between commands to 'atc' in milliseconds.\n"
+    "            (default 0)\n"
+    "        -h|--help\n"
+    "            Display this usage message instead of running.\n"
+    "        -a|--atc-cmd <command>\n"
+    "            Command to run.  (default \"atc\")\n";
+
+
 int main(int argc, char **argv) {
     int pipefd[2];
 

@@ -18,7 +18,7 @@ const struct bearing bearings__[9] = {
     { 270, 0, -1, 'a', '<', "W", "west" },
     { 315, -1, -1, 'q', '\0', "NW", "northwest" },
 };
-const struct bearing *bearings = bearings__ + 1;
+const struct bearing *const bearings = bearings__ + 1;
 
 
 static inline int sgn(int x) {
@@ -351,13 +351,13 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 		       frend);
    	assert((alt < 0) == (frend->n_cand <= 0));
 	while (frend->n_cand <= 0) {
-	    fprintf(logff, "Backtracing at step %d tick %d\n", steps, tick);
+	    fprintf(logff, "Backtracking at step %d tick %d\n", steps, tick);
 	    struct xyz bt_pos = backtrack(&tick, &cleared_exit, &p->end,
 					  &frend);
 
 	    // Check for a prop. plane's non-move.
 	    if (frend->n_cand == -3) {
-		fprintf(logff, "Backtracing over prop's non-move at tick %d\n",
+		fprintf(logff, "Backtracking over prop's non-move at tick %d\n",
 			tick);
 		assert(!p->isjet);
 		bt_pos = backtrack(&tick, &cleared_exit, &p->end, &frend);
@@ -365,7 +365,7 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	    }
 
 	    row = bt_pos.row;  col = bt_pos.col;
-	    fprintf(logff, "After backtracing:  %d: pos(%d, %d, %d) and %d "
+	    fprintf(logff, "After backtracking:  %d: pos(%d, %d, %d) and %d "
 			   "remaining candidates\n", tick, bt_pos.row, 
 		    bt_pos.col, bt_pos.alt, frend->n_cand - 1);
 

@@ -35,7 +35,7 @@ struct bearing {
     const char *shortname;
     const char *longname;
 };
-extern const struct bearing *bearings;
+extern const struct bearing *const bearings;
 extern int bearing_of(const char *s);
 
 static inline struct xy apply(int row, int col, int bearing) {
