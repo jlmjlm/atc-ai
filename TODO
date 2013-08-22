@@ -37,6 +37,16 @@ Read cmds from stdin (eg, + and - to incr. & decr. speed)
 Have airports/exits in their arrays in their number's position.
 Deal with exit clearance better, esp. for border-hugging routes.
 Have a mode where the operator "types" slow enough to see.
+Keep track of moves taken, so if a plane has "too long" of a route,
+we can recalculate routes by starting it off with a short route, and
+having others recalculate their routes constrained by it.
+-- That won't work for the 1377061305 case, though.  If 'c' calcs its 
+	route first ignoring 'b', then 'b' will find it has no first
+	moves which aren't adjacent to 'c'.  If 'b' calcs the route
+	first, then 'c''s route is too long, because it gets pushed into
+	the NW corner by 'b'.  We need to forbid 'c' from matching 'b''s
+	velocity, so it can figure out a way to go around it, earlier than
+	getting cornered and forcing the matter.
 
 Interesting seeds:
 	1376278304 prop needs to backtrack tick ~1331.
@@ -70,3 +80,6 @@ Interesting seeds:
 		At ~1914, a jet takes off after a prop has committed to
 		takeoff on the next turn, forcing a collision.
 	1376893850	prop backtrack at tick 117.
+	1377061305	plane 'c' runs out of fuel, after flying from
+		tick 13831 to 13884.  (Looks like a plane has 50 moves
+		of fuel?)
