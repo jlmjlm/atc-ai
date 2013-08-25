@@ -8,6 +8,7 @@
 #include "atc-ai.h"
 
 int board_width, board_height;
+bool skip_tick;
 static const char timestr[] = " Time: ";
 static const int timesize = sizeof(timestr)-1;
 
@@ -472,5 +473,6 @@ void update_board() {
     find_new_planes();
     new_airport_planes();
     update_plane_courses();
-    next_tick();
+    if (skip_tick)
+        next_tick();
 }

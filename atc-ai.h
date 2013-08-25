@@ -86,6 +86,8 @@ extern int frame_no;
 extern struct plane *plstart, *plend;
 
 
+extern _Bool skip_tick;
+
 extern void order_new_bearing(char id, int bearing);
 extern void order_new_altitude(char id, int alt);
 extern void land_at_airport(char id, int airport_num);

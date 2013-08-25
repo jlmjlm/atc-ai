@@ -47,6 +47,8 @@ having others recalculate their routes constrained by it.
 	the NW corner by 'b'.  We need to forbid 'c' from matching 'b''s
 	velocity, so it can figure out a way to go around it, earlier than
 	getting cornered and forcing the matter.
+-- Maybe a distance-score penalty for matching the direction & altitude
+	of a blocking plane will work better.
 
 Interesting seeds:
 	1376278304 prop needs to backtrack tick ~1331.

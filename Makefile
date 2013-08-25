@@ -10,11 +10,8 @@ all: test atc-ai
 atc-ai: main.o pty.o vty.o board.o orders.o pathfind.o testpath.o
 	$(CC) $(CFLAGS) -o $@ $^
 
-test: atc-test
-	./atc-test
-
-atc-test: atc-ai
-	ln -f atc-ai atc-test
+test: atc-ai
+	./atc-ai -T
 
 main.o: main.c atc-ai.h
 

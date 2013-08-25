@@ -2,12 +2,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <ctype.h>
 #include <time.h>
 #include <errno.h>
 #include <termios.h>
 #include <signal.h>
 #include <sys/select.h>
+#include <getopt.h>
 
 #include "atc-ai.h"
 
@@ -158,9 +160,36 @@ static void mainloop(int pfd) {
 static char **make_args(int seed) {
     static char buf[30];
     static char *args[4] = { "atc", "-r", buf, NULL };
-    sprintf(buf, "%d", seed);
+    if (seed == -1)
+	args[1] = NULL;
+    else
+        sprintf(buf, "%d", seed);
     return args;
 }
+
+static const struct option ai_opts[] = {
+    { .name = "seed", .has_arg = required_argument, .flag = NULL, .val = 'r' },
+    { .name = "delay", .has_arg = required_argument, .flag = NULL, .val = 'd' },
+    { .name = "skip", .has_arg = no_argument, .flag = NULL, .val = 's' },
+    { .name = "dont-skip", .has_arg = no_argument, .flag = NULL, .val = 'S' },
+    { .name = "self-test", .has_arg = no_argument, .flag = NULL, .val = 'T' },
+    { .name = "logfile", .has_arg = required_argument, .flag = NULL,
+	  .val = 'L' },
+    { .name = "frames", .has_arg = required_argument, .flag = NULL, .val = 'f'},
+    { .name = "saved-planes", .has_arg = required_argument, .flag = NULL,
+	  .val = 'p' },
+    { .name = "time", .has_arg = required_argument, .flag = NULL, .val = 'D' },
+    { .name = "typing-delay", .has_arg = required_argument, .flag = NULL,
+	  .val = 't' },
+    { .name = "help", .has_arg = no_argument, .flag = NULL, .val = 'h' },
+    { .name = "atc-cmd", .has_arg = required_argument, .flag = NULL,
+          .val = 'a' },
+    { .name = "interval", .has_arg = required_argument, .flag = NULL,
+          .val = 'i' },
+    { .name = NULL, .has_arg = 0, .flag = NULL, .val = '\0' }
+};
+
+static const char optstring[] = ":r:d:sSTL:f:p:D:t:ha:i:";
 
 static const char usage[] =
     "Usage:  atc-ai <ai-args> [-- <atc-args>]\n"
@@ -191,17 +220,77 @@ static const char usage[] =
     "        -h|--help\n"
     "            Display this usage message instead of running.\n"
     "        -a|--atc-cmd <command>\n"
-    "            Command to run.  (default \"atc\")\n";
+    "            Command to run.  (default \"atc\")\n"
+    "        -i|--interval <ms>[:<ms>:<ms>]\n"
+    "            Interval to change frame delay on a '+'/'-' keypress,\n"
+    "            and maximum and minimum values in milliseconds.\n"
+    "            (defaults: 100, 900, 100)\n";
 
+
+static bool do_self_test = false;
+static bool print_usage_message = false;
+static int random_seed = -2;
+static bool do_skip = false, dont_skip = false;
+
+static void process_cmd_args(int argc, char *const argv[]) {
+    int arg;
+    for (;;) {
+        arg = getopt_long(argc, argv, optstring, ai_opts, NULL);
+	switch (arg) {
+	    case -1: 
+		return;
+	    case ':': case '?': case 'h':
+	        print_usage_message = true;
+		return;
+	    case 'd':
+		delay_ms = atoi(optarg);
+		break;
+	    case 's':
+		do_skip = true;
+		break;
+	    case 'S':
+		dont_skip = true;
+		break;
+	    case 'T':
+		do_self_test = true;
+		break;
+	    case 'r':
+		if (!strncmp(".", optarg, 2))
+		    random_seed = -1;
+		else
+		    random_seed = atoi(optarg);
+		break;
+	    //XXX: Rest of the args
+	}
+    }
+}
 
 int main(int argc, char **argv) {
     int pipefd[2];
 
+    process_cmd_args(argc, argv);
+
+    if (do_skip && dont_skip) {
+ 	fprintf(stderr, "Both 'do' and 'dont' skip requested.\n");
+	print_usage_message = true;
+    } else {
+	skip_tick = !dont_skip;
+    }
+
+    if (print_usage_message) {
+	fputs(usage, stdout);
+	return 1;
+    }
+
+    if (delay_ms == 0) {
+	printf("Bad delay amount.\n");
+	return 2;
+    }
+
     logff = fopen(LOGFILE, "w");
     setvbuf(logff, NULL, _IOLBF, 0);
 
-    if (strstr(argv[0], "atc-test")) {
-	//TODO: Make this an option instead.
+    if (do_self_test) {
 	return testmain();
     }
 
@@ -209,9 +298,13 @@ int main(int argc, char **argv) {
     sigpipe = pipefd[1];
     ptm = get_ptm();
     reg_sighandler();
-    int seed = (argc == 2 && isdigit(argv[1][0])) ? atoi(argv[1]) : time(NULL);
-    fprintf(logff, "Using RNG seed of %d\n", seed);
-    char **args = make_args(seed);
+    if (random_seed == -2)
+	random_seed = time(NULL);
+    if (random_seed == -1)
+	fprintf(logff, "Using no random seed.\n");
+    else
+        fprintf(logff, "Using RNG seed of %d\n", random_seed);
+    char **args = make_args(random_seed);
     atc_pid = spawn("atc", args, ptm);
 
     raw_mode();
