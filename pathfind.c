@@ -125,21 +125,29 @@ static bool pos_adjacent(struct xyz pos, struct xy rc, int alt) {
 	   abs(pos.alt - alt) < 2;
 }
 
-static bool adjacent_another_plane(struct xy rc, int alt,
-				   const struct op_courses *opc, bool isprop) {
+struct direction { int bearing, alt; };
+
+static struct direction adjacent_another_plane(struct xy rc, int alt,
+		            const struct op_courses *opc, bool isprop) {
     for ( ; opc; opc = opc->next) {
 	if (!opc->c)
 	    continue;
 	struct xyz pos = opc->c->pos;
-	if (pos_adjacent(pos, rc, alt))
-	    return true;
+	if (pos_adjacent(pos, rc, alt)) {
+	    struct direction rv = { opc->c->bearing, pos.alt };
+	    return rv;
+	}
 	if (isprop && opc->c->next) {
 	    pos = opc->c->next->pos;
-	    if (pos_adjacent(pos, rc, alt))
-		return true;
+	    if (pos_adjacent(pos, rc, alt)) {
+		struct direction rv = { opc->c->next->bearing, pos.alt };
+		return rv;
+	    }
 	}
     }
-    return false;
+
+    struct direction rv = { -1, -1 };
+    return rv;
 }
 
 void calc_next_move(struct plane *p, int srow, int scol, int *alt, 
@@ -148,18 +156,23 @@ void calc_next_move(struct plane *p, int srow, int scol, int *alt,
     // Avoid obstacles.  Obstacles are:  The boundary except for the
     // target exit at alt==9, adjacency with another plane (props have
     // to check this at t+1 and t+2), within 2 of an exit at alt 6-8 if 
-    // it's cleared the exit, the exclusion area of an airport at alt <= 2,
-    // and matching the bearing/altitude/speed of a blocking airplane (because
-    // it'll just continue to block).  [TODO: The last of those]
+    // it's cleared the exit, the exclusion area of an airport at alt <= 2.
+    // [TODO: The 'exit' exclusion.]
+
+    // Incur a penalty for matching the bearing/altitude of a
+    // blocking airplane (because it'll just continue to block).
 
     int turn;  int nalt;
+    #define BLP_MAX 10
+    struct direction blocking_planes[BLP_MAX];
+    int n_blp = 0;
 
     // If the plane's at the airport, it can only hold or take off.
     if (*alt == 0) {
     	struct xy rc = apply(srow, scol, *bearing);
 	frame->cand[0].bearing = frame->cand[1].bearing = *bearing;
 	frame->cand[0].alt = 0;  frame->cand[1].alt = 1;
-	if (adjacent_another_plane(rc, 1, frame->opc_start, !p->isjet)) {
+	if (adjacent_another_plane(rc, 1, frame->opc_start, !p->isjet).alt > 0){
 	    // Can't take off, can only hold.
 	    frame->n_cand = 1;
 	} else {
@@ -186,8 +199,16 @@ void calc_next_move(struct plane *p, int srow, int scol, int *alt,
 		continue;
 	    if (p->target_airport && in_airport_excl(rc, nalt, p->target_num))
 		continue;
-	    if (adjacent_another_plane(rc, nalt, frame->opc_start, !p->isjet))
+	    struct direction adjacent_plane =
+	        adjacent_another_plane(rc, nalt, frame->opc_start, !p->isjet);
+	    if (adjacent_plane.alt > 0) {
+		if (n_blp == BLP_MAX) {
+		    fprintf(logff, "Warning: Too many blocking planes.\n");
+		} else {
+		    blocking_planes[n_blp++] = adjacent_plane;
+		}
 		continue;
+	    }
 	    /*if (cleared_exit && nalt >= 6 && nalt <= 8 && (
 		    rc.row <= 2 || rc.row >= board_height - 3 ||
 		    rc.col <= 2 || rc.col >= board_width - 3))
@@ -203,6 +224,14 @@ void calc_next_move(struct plane *p, int srow, int scol, int *alt,
 	fprintf(logff, "Warning: Can't find safe path for plane '%c'\n", p->id);
 	*alt = -1;
 	return;
+    }
+    #define MATCHCOURSE_PENALTY 1000
+    for (int i = 0; i < frame->n_cand; i++) {
+	for (int j = 0; j < n_blp; j++) {
+	     if (frame->cand[i].bearing == blocking_planes[j].bearing &&
+		     frame->cand[i].alt == blocking_planes[j].alt) 
+		frame->cand[i].distance += MATCHCOURSE_PENALTY;
+	}
     }
     qsort(frame->cand, frame->n_cand, sizeof(*frame->cand), distcmp);
     *bearing = frame->cand[frame->n_cand-1].bearing;

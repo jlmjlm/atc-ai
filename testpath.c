@@ -24,10 +24,10 @@ static void test_blocked() {
     struct xy rc = { .row = 5, .col = 5 };
     // c1: NW/W/SW blocked.
     struct course c1 = { .pos = { .row = 5, .col = 3, .alt = alt },
-			 .next = &c1, .prev = &c1 };
+			 .bearing = -1, .next = &c1, .prev = &c1 };
     // c2: W/NW/N/NE/E blocked.
     struct course c2 = { .pos = { .row = 4, .col = 5, .alt = alt },
-			 .next = &c2, .prev = &c2 };
+			 .bearing = -1, .next = &c2, .prev = &c2 };
     struct op_courses op = { .c = &c2, .prev = NULL, .next = NULL };
     struct frame fr = { .opc_start = &op, .prev = NULL, .next = NULL };
     
@@ -131,13 +131,13 @@ static void test_plot_course(bool isprop) {
 	{ .row = -1, .col = -1, .alt = -2 },
     };
     struct course c1 = { .pos = { .row = 4, .col = 6, .alt = 1 },
-			 .prev = &c1, .next = &c1 };
+			 .bearing = -1, .prev = &c1, .next = &c1 };
     struct course c2 = { .pos = { .row = 6, .col = 8, .alt = 1 },
-			 .prev = &c2, .next = &c2 };
+			 .bearing = -1, .prev = &c2, .next = &c2 };
     struct course c3 = { .pos = { .row = 6, .col = 4, .alt = 1 },
-			 .prev = &c3, .next = &c3 };
+			 .bearing = -1, .prev = &c3, .next = &c3 };
     struct course c4 = { .pos = { .row = 5, .col = 6, .alt = 4 },
-			 .prev = &c4, .next = &c4 };
+			 .bearing = -1, .prev = &c4, .next = &c4 };
     struct plane pls[5] = {
       { .id = 'a', .start = &c1, .end = &c1, .prev = NULL, .next = &pls[1] },
       { .id = 'b', .start = &c2, .end = &c2, .prev = &pls[0], .next = &pls[2] },
