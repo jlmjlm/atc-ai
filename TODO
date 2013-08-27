@@ -85,3 +85,8 @@ Interesting seeds:
 	1377061305	plane 'c' runs out of fuel, after flying from
 		tick 13831 to 13884.  [fixed]  (Looks like a plane has 50 moves
 		of fuel?)
+
+	1377534571 'Killer' - Due to exit blockage, atc-ai crashes
+		at tick 3229.  (Fixed)  Now, get an inf. loop at 27070.
+		This is because it gets near the exit at alt==5, and
+		so can't climb, just circles in the exit's exclusion zone.
