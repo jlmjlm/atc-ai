@@ -209,13 +209,10 @@ void calc_next_move(struct plane *p, int srow, int scol, int *alt,
 		}
 		continue;
 	    }
-	    if (cleared_exit && nalt >= 6 && nalt <= 8 && (
-		    rc.row <= 2 || rc.row >= board_height - 3 ||
-		    rc.col <= 2 || rc.col >= board_width - 3))
-		continue;
-	    if (cleared_exit && nalt != 9 && (
-		    rc.row <= 1 || rc.row >= board_height - 2 ||
-		    rc.col <= 1 || rc.col >= board_width - 2))
+	    if (cleared_exit && (rc.row <= 2 || rc.row >= board_height - 3 ||
+		    		 rc.col <= 2 || rc.col >= board_width - 3) &&
+		    ((p->target_airport && nalt >= 6) ||
+		     (!p->target_airport && nalt != 9)))
 		continue;
 	    int i = frame->n_cand++;
 	    frame->cand[i].bearing = nb;
