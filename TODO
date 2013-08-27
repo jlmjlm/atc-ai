@@ -90,3 +90,7 @@ Interesting seeds:
 		at tick 3229.  (Fixed)  Now, get an inf. loop at 27070.
 		This is because it gets near the exit at alt==5, and
 		so can't climb, just circles in the exit's exclusion zone.
+		Probably should say can't get within 2 of an exit at
+		alt in [6, 8] and can't get within 1 with an alt != 9.
+		-- Not enough.  Now at tick 27088 plane 'i' gets inf.
+		looped.

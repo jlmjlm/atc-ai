@@ -90,53 +90,54 @@ static void test_plot_course(bool isprop) {
     // Test a course where have to backtrack.
     /*     0123456789abc
 	  0-------------
-	  1|......G....|
-	  2|......1....|
-	  3|....***1...|
-	  4|....*a*2...|
-	  5|..***d3**..|
-	  6|..*c*2*b*..|
-	  7|..***1***..|
-	  8|.....1.....|	
-	  9|.....S.....|	
-	  a-------------	*/
+	  1|...........|
+	  2|......G....|
+	  3|......1....|
+	  4|....***1...|
+	  5|....*a*2...|
+	  6|..***d3**..|
+	  7|..*c*2*b*..|
+	  8|..***1***..|
+	  9|.....1.....|	
+	  a|.....S.....|	
+	  b-------------	*/
 
-    board_height = 11;  board_width = 0xD;
-    const int srow = 9, scol = 6;
+    board_height = 0xC;  board_width = 0xD;
+    const int srow = 0xA, scol = 6;
     #define EXC_LEN 10
     struct xyz excr[EXC_LEN] = {
-	{ .row = 9, .col = 6, .alt = 0 },
+	{ .row = 10, .col = 6, .alt = 0 },
+	{ .row = 9, .col = 6, .alt = 1 },
 	{ .row = 8, .col = 6, .alt = 1 },
-	{ .row = 7, .col = 6, .alt = 1 },
-	{ .row = 6, .col = 6, .alt = 2 },
-	{ .row = 5, .col = 7, .alt = 3 },
-	{ .row = 4, .col = 8, .alt = 2 },
-	{ .row = 3, .col = 8, .alt = 1 },
+	{ .row = 7, .col = 6, .alt = 2 },
+	{ .row = 6, .col = 7, .alt = 3 },
+	{ .row = 5, .col = 8, .alt = 2 },
+	{ .row = 4, .col = 8, .alt = 1 },
+	{ .row = 3, .col = 7, .alt = 1 },
 	{ .row = 2, .col = 7, .alt = 1 },
-	{ .row = 1, .col = 7, .alt = 1 },
 	{ .row = -1, .col = -1, .alt = -2 },
     };
     #define EXC_LEN_B 11
     struct xyz excr2[EXC_LEN_B] = {
-	{ .row = 9, .col = 6, .alt = 0 },
-	{ .row = 8, .col = 6, .alt = 1 },
-	{ .row = 7, .col = 6, .alt = 2 },
-	{ .row = 7, .col = 7, .alt = 3 },
+	{ .row = 10, .col = 6, .alt = 0 },
+	{ .row = 9, .col = 6, .alt = 1 },
+	{ .row = 8, .col = 6, .alt = 2 },
+	{ .row = 8, .col = 7, .alt = 3 },
+	{ .row = 7, .col = 8, .alt = 3 },
 	{ .row = 6, .col = 8, .alt = 3 },
-	{ .row = 5, .col = 8, .alt = 3 },
-	{ .row = 4, .col = 8, .alt = 2 },
-	{ .row = 3, .col = 8, .alt = 1 },
+	{ .row = 5, .col = 8, .alt = 2 },
+	{ .row = 4, .col = 8, .alt = 1 },
+	{ .row = 3, .col = 7, .alt = 1 },
 	{ .row = 2, .col = 7, .alt = 1 },
-	{ .row = 1, .col = 7, .alt = 1 },
 	{ .row = -1, .col = -1, .alt = -2 },
     };
-    struct course c1 = { .pos = { .row = 4, .col = 6, .alt = 1 },
+    struct course c1 = { .pos = { .row = 5, .col = 6, .alt = 1 },
 			 .bearing = -1, .prev = &c1, .next = &c1 };
-    struct course c2 = { .pos = { .row = 6, .col = 8, .alt = 1 },
+    struct course c2 = { .pos = { .row = 7, .col = 8, .alt = 1 },
 			 .bearing = -1, .prev = &c2, .next = &c2 };
-    struct course c3 = { .pos = { .row = 6, .col = 4, .alt = 1 },
+    struct course c3 = { .pos = { .row = 7, .col = 4, .alt = 1 },
 			 .bearing = -1, .prev = &c3, .next = &c3 };
-    struct course c4 = { .pos = { .row = 5, .col = 6, .alt = 4 },
+    struct course c4 = { .pos = { .row = 6, .col = 6, .alt = 4 },
 			 .bearing = -1, .prev = &c4, .next = &c4 };
     struct plane pls[5] = {
       { .id = 'a', .start = &c1, .end = &c1, .prev = NULL, .next = &pls[1] },
@@ -151,8 +152,8 @@ static void test_plot_course(bool isprop) {
     }
     plstart = pls;  plend = &pls[3];
     n_airports = 2;
-    struct airport G = { .num = 0, .row = 1, .col = 7,
-			 .trow = 1, .tcol = 7, .bearing = bearing_of("N") };
+    struct airport G = { .num = 0, .row = 2, .col = 7,
+			 .trow = 2, .tcol = 7, .bearing = bearing_of("N") };
     struct airport S = { .num = 1, .row = srow, .col = scol,
 			 .bearing = bearing_of("N") };
     for (int i = 0; i < EZ_SIZE; i++) {
