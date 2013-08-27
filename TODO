@@ -83,5 +83,5 @@ Interesting seeds:
 		takeoff on the next turn, forcing a collision.
 	1376893850	prop backtrack at tick 117.
 	1377061305	plane 'c' runs out of fuel, after flying from
-		tick 13831 to 13884.  (Looks like a plane has 50 moves
+		tick 13831 to 13884.  [fixed]  (Looks like a plane has 50 moves
 		of fuel?)

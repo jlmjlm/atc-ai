@@ -157,14 +157,28 @@ static void mainloop(int pfd) {
     }
 }
 
-static char **make_args(int seed) {
-    static char buf[30];
-    static char *args[4] = { "atc", "-r", buf, NULL };
-    if (seed == -1)
-	args[1] = NULL;
-    else
-        sprintf(buf, "%d", seed);
-    return args;
+static char **make_args(int argc, char **argv, int seed) {
+    if (*argv && !strncmp("--", *argv, 3)) {
+	argc--;
+	argv++;
+    }
+
+    char **args = malloc((argc+4)*sizeof(*args));
+    int i = 0;
+
+    args[i++] = "atc";
+
+    if (seed != -1) {
+	static char buf[30];
+	sprintf(buf, "%d", seed);
+	args[i++] = "-r";
+	args[i++] = buf;
+    }
+
+    for (;;) {
+	if (!(args[i++] = *(argv++)))
+	    return args;
+    }
 }
 
 static const struct option ai_opts[] = {
@@ -304,8 +318,9 @@ int main(int argc, char **argv) {
 	fprintf(logff, "Using no random seed.\n");
     else
         fprintf(logff, "Using RNG seed of %d\n", random_seed);
-    char **args = make_args(random_seed);
+    char **args = make_args(argc - optind, argv + optind, random_seed);
     atc_pid = spawn("atc", args, ptm);
+    free(args);
 
     raw_mode();
     outf = fdopen(ptm, "w");
