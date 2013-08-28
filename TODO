@@ -96,3 +96,5 @@ Interesting seeds:
 		-- Not enough.  Now at tick 27088 plane 'i' gets inf.
 		looped.  Caught at the corner at altitude 5.  Maybe we
 		should forbid alt != 9 for distance 2?
+		Next issue encountered:  Plane 'u' runs out of fuel at
+		tick 28306.

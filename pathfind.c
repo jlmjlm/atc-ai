@@ -306,11 +306,25 @@ static struct xyz backtrack(int *tick, bool *cleared_exit,
     *lfrend = fr->prev;
     (*lfrend)->next = NULL;
     free(fr);
-    //FIXME: Need to free() the op_courses?
+    // Don't need to free() the op_courses because they're all reached
+    // from frstart.
 
     return rv;
 }
 
+
+static void free_framelist(struct frame *fp) {
+    for (struct op_courses *o = fp->opc_start; o; o = fp->opc_start) {
+        fp->opc_start = o->next;
+        free(o);
+    }
+
+    while (fp) {
+	struct frame *next = fp->next;
+	free(fp);
+	fp = next;
+    }
+}
 
 static void make_new_fr(struct frame **endp);
 
@@ -432,12 +446,7 @@ void plot_course(struct plane *p, int row, int col, int alt) {
         	p->end_tm = tick-1;
     	    }
 
-            for (struct op_courses *o = frstart->opc_start; o;
-		     o = frstart->opc_start) {
-		frstart->opc_start = o->next;
-		free(o);
-    	    }
-	    //FIXME: Free the frames
+	    free_framelist(frstart);
 	    return;
 	}
 
