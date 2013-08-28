@@ -50,6 +50,7 @@ having others recalculate their routes constrained by it.
 -- Maybe a distance-score penalty for matching the direction & altitude
 	of a blocking plane will work better.
 Find out why there are "Too many blocking planes" in the self-test.
+Check n_mallocs == n_free > 0 in self-test.
 
 Interesting seeds:
 	1376278304 prop needs to backtrack tick ~1331.
@@ -96,5 +97,5 @@ Interesting seeds:
 		-- Not enough.  Now at tick 27088 plane 'i' gets inf.
 		looped.  Caught at the corner at altitude 5.  Maybe we
 		should forbid alt != 9 for distance 2?
-		Next issue encountered:  Plane 'u' runs out of fuel at
+	1377644268 'Killer' - Plane 'u' runs out of fuel at
 		tick 28306.
