@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <assert.h>
 #include "atc-ai.h"
 #include "pathfind.h"
@@ -10,7 +11,7 @@ static void check_course(struct course *c, struct xyz *excr, int exlen,
 
 // Verify the behavior of 'calc_next_move':
 //    - If headed for something to the NW, but blocked from the W, head
-//	N first.  N at alt e > NE at e > e at e > S,SE at e.
+//	N first.  N at alt e > NE at e > E at e > S,SE at e.
 //	No W, NW, or SW.
 
 static void test_blocked() {
@@ -197,3 +198,20 @@ int testmain() {
     printf("PASS\n");
     return 0;
 }
+
+
+// The call-counting malloc & free stuff
+int n_malloc = 0, n_free = 0;
+
+#undef malloc
+#undef free
+void *count_malloc(size_t s) {
+    n_malloc++;
+    return malloc(s);
+}
+
+void count_free(void *p) {
+    n_free++;
+    return free(p);
+}
+

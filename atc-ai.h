@@ -92,3 +92,17 @@ extern void order_new_bearing(char id, int bearing);
 extern void order_new_altitude(char id, int alt);
 extern void land_at_airport(char id, int airport_num);
 extern void next_tick(void);
+
+
+// So it can be called from testpath.c
+extern struct plane *remove_plane(struct plane *p);
+
+
+// Cheapo check for mem leaks
+extern int n_malloc, n_free;
+extern void *count_malloc(size_t);
+extern void count_free(void *);
+#ifndef malloc
+    #define malloc(x) count_malloc(x)
+    #define free(x) count_free(x)
+#endif

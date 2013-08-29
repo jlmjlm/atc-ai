@@ -218,7 +218,7 @@ struct course *free_course_entry(struct course *ci) {
     return rv;
 }
 
-static struct plane *remove_plane(struct plane *p) {
+struct plane *remove_plane(struct plane *p) {
     struct plane *rv = p->next;
     for (struct course *c = p->start; c; c = free_course_entry(c))
 	;
