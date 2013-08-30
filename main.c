@@ -260,6 +260,9 @@ static void process_cmd_args(int argc, char *const argv[]) {
 	    case 'd':
 		delay_ms = atoi(optarg);
 		break;
+	    case 't':
+		typing_delay_ms = atoi(optarg);
+                break;
 	    case 's':
 		do_skip = true;
 		break;

@@ -51,6 +51,8 @@ having others recalculate their routes constrained by it.
 	of a blocking plane will work better.
 Find out why there are "Too many blocking planes" in the self-test.
 Do something better than the "getting desperate" stuff in calc_bearing().
+Typing delay doesn't work right, because it all happens before there's
+	a return to the mainloop to check for new messages from atc.
 
 Interesting seeds:
 	1376278304 prop needs to backtrack tick ~1331.
@@ -103,4 +105,4 @@ Interesting seeds:
 	1377809753 'crossover' - Starts with a plane in the NE exit (#3)
 	1377811790 'crossover' - At tick 56, plane 'j' is "out of place"
 		because in starts out bearing SW and can't turn to the east
-		in one tick.
+		in one tick.  (Fixed.)

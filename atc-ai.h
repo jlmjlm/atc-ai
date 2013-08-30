@@ -86,6 +86,7 @@ extern struct plane *plstart, *plend;
 
 
 extern _Bool skip_tick;
+extern int typing_delay_ms;
 
 extern void order_new_bearing(char id, int bearing);
 extern void order_new_altitude(char id, int alt);
