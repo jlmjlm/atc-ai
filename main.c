@@ -13,8 +13,8 @@
 
 #include "atc-ai.h"
 
-#define BUFSIZE 100
-#define LOGFILE "atc-ai.log"
+#define BUFSIZE 1000
+#define DEF_LOGFILE "atc-ai.log"
 #define DEF_DELAY_MS 500
 
 
@@ -26,6 +26,7 @@ static struct termios orig_termio;
 static int sigpipe;
 static int ptm;
 static int delay_ms = DEF_DELAY_MS;
+static const char *logfile_name = DEF_LOGFILE;
 
 static void cleanup() {
     // Restore termio
@@ -87,10 +88,15 @@ static void process_data(int src, int amt, void (*handler)(char)) {
     char buf[amt];
     int nchar;
 
+    retry:
     nchar = read(src, buf, amt);
     if (nchar == 0)
 	exit(0);
     if (nchar == -1) {
+	if (errno == EINTR)
+	    goto retry;
+ 	if (errno == EIO)
+	    exit(0);
         fprintf(stderr, "\nread failed: %s\n", strerror(errno));
         exit(errno);
     }
@@ -272,6 +278,9 @@ static void process_cmd_args(int argc, char *const argv[]) {
 	    case 'T':
 		do_self_test = true;
 		break;
+	    case 'L':
+	        logfile_name = strdup(optarg);
+		break;
 	    case 'r':
 		if (!strncmp(".", optarg, 2))
 		    random_seed = -1;
@@ -305,7 +314,7 @@ int main(int argc, char **argv) {
 	return 2;
     }
 
-    logff = fopen(LOGFILE, "w");
+    logff = fopen(logfile_name, "w");
     setvbuf(logff, NULL, _IOLBF, 0);
 
     if (do_self_test) {

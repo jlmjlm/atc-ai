@@ -7,6 +7,8 @@ CFLAGS += -Wall -std=gnu99
 
 all: test atc-ai
 
+.PHONY: clean install uninstall all test
+
 atc-ai: main.o pty.o vty.o board.o orders.o pathfind.o testpath.o
 	$(CC) $(CFLAGS) -o $@ $^
 
@@ -27,7 +29,6 @@ orders.o: orders.c atc-ai.h
 
 testpath.o: testpath.c atc-ai.h pathfind.h
 
-.PHONY: clean
 clean:
 	-rm atc-ai *.o
 

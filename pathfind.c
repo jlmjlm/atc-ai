@@ -67,8 +67,10 @@ static int calc_bearing(int row, int col) {
     }
 
     // Getting desperate, so make a guess based on proximity to boundary.
-    fprintf(logff, "Getting desperate at figuring a bearing for (%d, %d)\n",
-	    row, col);
+    if (!is_exit_at(row, col)) {
+        fprintf(logff, "New plane at (%d, %d) isn't at exit or near exit.\n",
+	        row, col);
+    }
     if (row == 0 || row == 1)
 	return bearing_of("S");
     if (col == 0 || col == 1) 

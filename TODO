@@ -3,16 +3,11 @@ Trigger updates when it's been a while since the last read from atc,
 	and then wait indefinitely for a read after the update
 	is complete or frame_no was unchanged.
 License, readme, INSTALL
-Show full end-of-game output when exiting.
-atc & atc-ai args (+ usage msg)
-flag to skip ahead ('press enter')
 +/- to speed-up & slow down (say by 100ms or so)
-logfile option
 exit after specified #frames, real time, or saved planes
 expand tabs, remove trailing spaces
 secondary targets for airports
 print out (to the log) all planes' courses if get stuck in a loop.
-option to use time() for the random seed; option to not pass 'atc' a seed
 store revision ID (hash) in the object?
 Notice when we get a game over and "Press space".
 Figure out exits' directions by letting planes glide if safe.
@@ -24,19 +19,15 @@ Handle rogue planes which were shrouded by other planes
  	- guess based on proximity of exits
 Recalculate other planes' courses if they're interfering with
 	a new plane's.
-Watch memory usage over a long run to check for leaks.
 'make dist'
 A different "err log" for bugs.
-When blocked by a plane, don't match its heading & speed unless also
-	 changing alt.
 Recalc on a low-fuel ind.  (Just how far can a plane go?)
-Get out of a busy loop on SIGINT/SIGTERM.  (Do calc in another thread?)
 Err if calc takes too long.
-Do I/O in its own thread?
 Read cmds from stdin (eg, + and - to incr. & decr. speed)
 Have airports/exits in their arrays in their number's position.
 Deal with exit clearance better, esp. for border-hugging routes.
-Have a mode where the operator "types" slow enough to see.
+	(Considerably better now, but arriving plane could still in
+	theory be completely path blocked.)
 Keep track of moves taken, so if a plane has "too long" of a route,
 we can recalculate routes by starting it off with a short route, and
 having others recalculate their routes constrained by it.
@@ -48,11 +39,22 @@ having others recalculate their routes constrained by it.
 	velocity, so it can figure out a way to go around it, earlier than
 	getting cornered and forcing the matter.
 -- Maybe a distance-score penalty for matching the direction & altitude
-	of a blocking plane will work better.
+	of a blocking plane will work better.  (Done, but it seems in
+	a fraction of cases a plane can still be pushed away from its
+	exit until it reaches the boundary.  Eg, Killer 1377644268
+	with plane 'u'.)
 Find out why there are "Too many blocking planes" in the self-test.
 Do something better than the "getting desperate" stuff in calc_bearing().
-Typing delay doesn't work right, because it all happens before there's
-	a return to the mainloop to check for new messages from atc.
+Thread stuff:
+    Start of this on the branch "pthread".
+    * Get out of a busy loop on SIGINT/SIGTERM.  (Do calc in another thread?)
+    * Do I/O in its own thread?
+    * Have a mode where the operator "types" slow enough to see.
+        Tried this without threads, but typing delay doesn't work right, 
+	because it all happens before there's a return to the mainloop to 
+	check for new messages from atc.  Maybe instead of threads, the
+	procedures in orders.c should just queue up the orders to give
+	atc, and mainloop can slowly drain the queue.
 
 Interesting seeds:
 	1376278304 prop needs to backtrack tick ~1331.
@@ -69,7 +71,7 @@ Interesting seeds:
 		Hits a prop backtrack at 1021.
 	1376515486 similar
 		Around time 225, crowding around exit 1 pulls planes to FL 7.
-		Hits prop backtrack at t==600.
+		prop backtrack at t==600.
 		Looks awesome around time 3000.
 		Plane 'G' blocks plane 'H' from about 3500 on.
 		Another blockage around exit 0 stops a plane targeting exit
@@ -88,7 +90,7 @@ Interesting seeds:
 	1376893850	prop backtrack at tick 117.
 	1377061305	plane 'c' runs out of fuel, after flying from
 		tick 13831 to 13884.  [fixed]  (Looks like a plane has 50 moves
-		of fuel?)
+		of fuel)
 
 	1377534571 'Killer' - Due to exit blockage, atc-ai crashes
 		at tick 3229.  (Fixed)  Now, get an inf. loop at 27070.
