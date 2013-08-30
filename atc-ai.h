@@ -96,13 +96,14 @@ extern void next_tick(void);
 
 // So it can be called from testpath.c
 extern struct plane *remove_plane(struct plane *p);
+extern void remove_course_entries(struct course *c);
 
 
 // Cheapo check for mem leaks
 extern int n_malloc, n_free;
-extern void *count_malloc(size_t);
-extern void count_free(void *);
+extern void *count_malloc(const char *, size_t);
+extern void count_free(const char *, void *);
 #ifndef malloc
-    #define malloc(x) count_malloc(x)
-    #define free(x) count_free(x)
+    #define malloc(x) count_malloc(__func__, x)
+    #define free(x) count_free(__func__, x)
 #endif

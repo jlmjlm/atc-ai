@@ -74,6 +74,10 @@ static void test_blocked() {
 	}
     }
     assert(n_checks == 6);
+
+    //printf("n_malloc = %d; n_free = %d\n", n_malloc, n_free);
+    assert(n_malloc == 0);
+    assert(n_free == 0);
 }
 
 static void test_calc_next_move() {
@@ -168,12 +172,18 @@ static void test_plot_course(bool isprop) {
     frame_no = 1;
     plot_course(&pls[4], srow, scol, alt);
     check_course(pls[4].start, excr, EXC_LEN, isprop);
+    remove_course_entries(pls[4].start);
+    pls[4].start = pls[4].end = NULL;
+    //printf("n_malloc = %d; n_free = %d\n", n_malloc, n_free);
+    assert(n_malloc == n_free);
 
     // Test a double backtrack.
     add_plane_d();
     alt = 0;
     plot_course(&pls[4], srow, scol, alt);
     check_course(pls[4].start, excr2, EXC_LEN_B, isprop);
+    remove_course_entries(pls[4].start);
+    assert(n_malloc == n_free);
 }
 
 static void check_course(struct course *c, struct xyz *excr, int exlen,
@@ -205,13 +215,15 @@ int n_malloc = 0, n_free = 0;
 
 #undef malloc
 #undef free
-void *count_malloc(size_t s) {
+void *count_malloc(const char *msg, size_t s) {
+    void *p = malloc(s);
+    //fprintf(logff, "%p malloc %s\n", p, msg);
     n_malloc++;
-    return malloc(s);
+    return p;
 }
 
-void count_free(void *p) {
+void count_free(const char *msg, void *p) {
+    //fprintf(logff, "%p free %s\n", p, msg);
     n_free++;
-    return free(p);
+    free(p);
 }
-

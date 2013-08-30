@@ -218,10 +218,14 @@ struct course *free_course_entry(struct course *ci) {
     return rv;
 }
 
+void remove_course_entries(struct course *c) {
+    while (c) 
+	c = free_course_entry(c);
+}
+
 struct plane *remove_plane(struct plane *p) {
     struct plane *rv = p->next;
-    for (struct course *c = p->start; c; c = free_course_entry(c))
-	;
+    remove_course_entries(p->start);
     if (p->prev)
 	p->prev->next = p->next;
     else {
@@ -475,4 +479,9 @@ void update_board() {
     update_plane_courses();
     if (skip_tick)
         next_tick();
+
+    if (frame_no % 1000 == 0) {
+	fprintf(logff, "n_malloc = %d; n_free = %d; difference = %d\n",
+		n_malloc, n_free, n_malloc - n_free);
+    }
 }

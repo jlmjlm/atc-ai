@@ -21,6 +21,8 @@ const struct bearing bearings__[9] = {
 const struct bearing *const bearings = bearings__ + 1;
 
 
+static void free_op_courses(struct op_courses *oc);
+
 static inline int sgn(int x) {
     if (x > 0)
 	return 1;
@@ -272,7 +274,7 @@ static struct op_courses *next_opc(const struct op_courses *o) {
 static void incr_opc(struct op_courses *st) {
     for (struct op_courses *o = st; o; o = o->next) {
         if (o->c)
-    	    o->c = o->c->next;
+            o->c = o->c->next;
     }
 }
 
@@ -305,22 +307,26 @@ static struct xyz backtrack(int *tick, bool *cleared_exit,
     struct frame *fr = *lfrend;
     *lfrend = fr->prev;
     (*lfrend)->next = NULL;
+    free_op_courses(fr->opc_start);
     free(fr);
-    // Don't need to free() the op_courses because they're all reached
-    // from frstart.
 
     return rv;
 }
 
 
-static void free_framelist(struct frame *fp) {
-    for (struct op_courses *o = fp->opc_start; o; o = fp->opc_start) {
-        fp->opc_start = o->next;
-        free(o);
+static void free_op_courses(struct op_courses *oc) {
+    while (oc) {
+	struct op_courses *next = oc->next;
+	free(oc);
+	oc = next;
     }
+}
 
+static void free_framelist(struct frame *fp) {
     while (fp) {
 	struct frame *next = fp->next;
+
+        free_op_courses(fp->opc_start);
 	free(fp);
 	fp = next;
     }
@@ -349,13 +355,25 @@ void plot_course(struct plane *p, int row, int col, int alt) {
     incr_opc(frstart->opc_start);
 
     if (p->target_airport) {
+	struct airport *a = get_airport(p->target_num);
+	if (a == NULL) {
+	    fprintf(stderr, "\nPlane '%c' headed to unknown airport %d.\n",
+		    p->id, p->target_num);
+	    exit('u');
+	}
 	target.alt = 1;
-	target.row = get_airport(p->target_num)->trow;
-	target.col = get_airport(p->target_num)->tcol;
+	target.row = a->trow;
+	target.col = a->tcol;
     } else {
+	struct exitspec *e = get_exit(p->target_num);
+	if (e == NULL) {
+	    fprintf(stderr, "\nPlane '%c' headed to unknown exit %d.\n",
+		    p->id, p->target_num);
+	    exit('u');
+	}
 	target.alt = 9;
-	target.row = get_exit(p->target_num)->row;
-        target.col = get_exit(p->target_num)->col;
+	target.row = e->row;
+        target.col = e->col;
     }
     fprintf(logff, "Plotting course from %d:(%d, %d, %d)@%d to (%d, %d, %d)\n",
 	    frame_no, row, col, alt, bearings[bearing].degree, 
