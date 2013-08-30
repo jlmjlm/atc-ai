@@ -39,6 +39,15 @@ int bearing_of(const char *s) {
     return -1;
 }
 
+static bool is_exit_at(int row, int col) {
+    for (int i = 0; i < n_exits; i++) {
+	if (exits[i].row == row && exits[i].col == col)
+	    return true;
+    }
+
+    return false;
+}
+
 static int calc_bearing(int row, int col) {
     if ((row == 0 && col == 0) || (row == 1 && col == 1)) 
 	return bearing_of("SE");
@@ -52,6 +61,12 @@ static int calc_bearing(int row, int col) {
 		(row == board_height-2 && col == board_width-2)) 
         return bearing_of("NW");
 
+    for (int i = 0; i < 8; i++) {
+	if (is_exit_at(row-bearings[i].drow, col-bearings[i].dcol))
+	    return i;
+    }
+
+    // Getting desperate, so make a guess based on proximity to boundary.
     if (row == 0 || row == 1)
 	return bearing_of("S");
     if (col == 0 || col == 1) 

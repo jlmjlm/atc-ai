@@ -50,7 +50,7 @@ having others recalculate their routes constrained by it.
 -- Maybe a distance-score penalty for matching the direction & altitude
 	of a blocking plane will work better.
 Find out why there are "Too many blocking planes" in the self-test.
-There's something wrong with detecting exit 4 of 'crossover'.
+Do something better than the "getting desperate" stuff in calc_bearing().
 
 Interesting seeds:
 	1376278304 prop needs to backtrack tick ~1331.
