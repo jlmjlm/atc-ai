@@ -11,7 +11,7 @@ atc-ai: main.o pty.o vty.o board.o orders.o pathfind.o testpath.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 test: atc-ai
-	./atc-ai -T
+	./atc-ai --self-test
 
 main.o: main.c atc-ai.h
 
@@ -27,8 +27,9 @@ orders.o: orders.c atc-ai.h
 
 testpath.o: testpath.c atc-ai.h pathfind.h
 
+.PHONY: clean
 clean:
-	rm atc-ai atc-test *.o > /dev/null 2>&1
+	-rm atc-ai *.o
 
 install: atc-ai
 	cp atc-ai ${INSTALLDIR}

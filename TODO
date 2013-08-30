@@ -99,3 +99,8 @@ Interesting seeds:
 		should forbid alt != 9 for distance 2?
 	1377644268 'Killer' - Plane 'u' runs out of fuel at
 		tick 28306.
+
+	1377809753 'crossover' - Starts with a plane in the NE exit (#3)
+	1377811790 'crossover' - At tick 56, plane 'j' is "out of place"
+		because in starts out bearing SW and can't turn to the east
+		in one tick.

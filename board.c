@@ -9,6 +9,7 @@
 
 int board_width, board_height;
 bool skip_tick;
+static int info_col;
 static const char timestr[] = " Time: ";
 static const int timesize = sizeof(timestr)-1;
 
@@ -74,27 +75,21 @@ static void find_airports() {
 	    }
 	}
     }
-    fprintf(logff, "D(board_height-3, board_width-10) = '%c%c'\n",
-	    D(board_height-3, (board_width-10)*2),
-	    D(board_height-3, (board_width-10)*2+1));
     r = board_height-3;
     c = board_width-10;
-    fprintf(logff, "r = %d; c = %d; D(r, 2*c) = '%c'; D(r, 2*c+1) = '%c'; "
-		   "isdigit(D(r, 2*c+1)) = %d\n", r, c, D(r, 2*c),
-		   D(r, 2*c+1), isdigit(D(r, 2*c+1)));
 }
 
 static int get_frame_no() {
     int fnum;
-    if (memcmp(display + 2*board_width - 1, timestr, timesize) &&
-	    memcmp(display + 2*board_width - 1, alttimestr, timesize)) {
+    if (memcmp(display + info_col - 1, timestr, timesize) &&
+	    memcmp(display + info_col - 1, alttimestr, timesize)) {
 	fprintf(stderr, "\nCan't find frame number.\n");
 	fprintf(stderr, "Got '%.*s' instead of '%.*s'\n", 
-		timesize, display + 2*board_width,
+		timesize, display + info_col - 1,
 		timesize, timestr);
 	exit('t');
     }
-    int rv = sscanf(display+(2*board_width-1)+timesize, "%d", &fnum);
+    int rv = sscanf(display+(info_col-1)+timesize, "%d", &fnum);
     if (rv != 1) {
 	fprintf(stderr, "\nCan't read frame number.\n");
 	exit('t');
@@ -102,13 +97,21 @@ static int get_frame_no() {
     return fnum;
 }
 
+static const char *pmin(const char *a, const char *b) {
+    return (a < b) ? a : b;
+}
+
 static void board_init() {
-    char *spc = memchr(display, 'T', screen_width);
-    if (spc == NULL) {
+    const char *tee = memchr(display, 'T', screen_width);
+    if (tee == NULL) {
 	fprintf(stderr, "\nCan't determine board width.\n");
 	exit(' ');
     }
-    board_width = spc - display - 1;
+    info_col = tee - display;
+    const char *spc = memchr(display, ' ', screen_width);
+    if (spc[-1] == '7' && isalpha(spc[-2]))
+	spc--;
+    board_width = pmin(spc, tee-1) - display;
     if (board_width % 2 == 0) {
 	fprintf(stderr, "\nInvalid width of %d.5 chars.\n", board_width/2);
 	exit(2);
@@ -151,7 +154,8 @@ static void board_init() {
     }
 
     find_airports();
-    fprintf(logff, "Board is %d by %d.\n", board_width, board_height);
+    fprintf(logff, "Board is %d by %d and the info column is %d.\n",
+	board_width, board_height, info_col);
 }
 
 struct airport *get_airport(int n) {
@@ -206,6 +210,10 @@ static void check_for_exits() {
 	    new_exit(i, 0);
 	if (isdigit(D(i, 2*board_width-2)) && D(i, 2*board_width-1) == ' ')
 	    new_exit(i, board_width-1);
+	if (i == 0 || i == board_height-1)
+	    fprintf(logff, "D[%d, %d..%d] = '%c%c'\n", i, 2*board_width-2,
+		    2*board_width-1, D(i, 2*board_width-2),
+		    D(i, 2*board_width-1));
     }
 }
 
@@ -301,7 +309,7 @@ static const char pls1[] = " pl dt  comm ";
 static const char pls2[] = "7pl dt  comm ";
 
 static void check_pldt() {
-    char *base = &D(2, 2*board_width-1);
+    char *base = &D(2, info_col-1);
     if (memcmp(base, pls1, sizeof(pls1)-1) &&
 	    memcmp(base, pls2, sizeof(pls2)-1)) {
 	fprintf(stderr, "\nExpected \"%s\" but found \"%.*s\"\n",
@@ -318,8 +326,8 @@ static inline bool plane_at_airport(char id) {
 static void handle_airport_plane(char id, int dtpos) {
     static const char holding[] = ": Holding @ A";
     static const int holdlen = sizeof(holding)-1;
-    assert(!memcmp(&D(dtpos, 2*board_width + 5), holding, holdlen));
-    char apnum = D(dtpos, 2*board_width + 5 + holdlen);
+    assert(!memcmp(&D(dtpos, info_col + 5), holding, holdlen));
+    char apnum = D(dtpos, info_col + 5 + holdlen);
     struct airport *ap = get_airport(apnum-'0');
     assert(ap);
     handle_new_plane(id, ap->row, ap->col, 0);    
@@ -327,11 +335,11 @@ static void handle_airport_plane(char id, int dtpos) {
 
 static void new_airport_planes() {
     check_pldt();
-    for (int i = 3; i < screen_height && D(i, 2*board_width) != '*'; i++) {
-	char id = D(i, 2*board_width);
+    for (int i = 3; i < screen_height && D(i, info_col) != '*'; i++) {
+	char id = D(i, info_col);
 	if (!isalpha(id))
 	    continue;
-	if (D(i, 2*board_width+1) != '0')
+	if (D(i, info_col+1) != '0')
 	    continue;
 	if (get_plane(id) == NULL) {
 	    handle_airport_plane(id, i);
@@ -343,12 +351,12 @@ static void new_airport_planes() {
 
 static void target(struct plane *p) {
     char id = p->id;
-    for (int i = 3; i < screen_height && D(i, 2*board_width) != '*'; i++) {
-	if (D(i, 2*board_width) != id)
+    for (int i = 3; i < screen_height && D(i, info_col) != '*'; i++) {
+	if (D(i, info_col) != id)
 	    continue;
-	char ttype = D(i, 2*board_width+3);
-	char tnum = D(i, 2*board_width+4);
-	assert(D(i, 2*board_width+5) == ':');
+	char ttype = D(i, info_col+3);
+	char tnum = D(i, info_col+4);
+	assert(D(i, info_col+5) == ':');
 	assert(isdigit(tnum) && (ttype == 'A' || ttype == 'E'));
 	p->target_airport = (ttype == 'A');
 	p->target_num = tnum-'0';
