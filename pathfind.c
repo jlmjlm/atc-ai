@@ -39,8 +39,7 @@ int bearing_of(const char *s) {
     return -1;
 }
 
-static int calc_bearing(bool *bearing_set, int row, int col) {
-    *bearing_set = true;
+static int calc_bearing(int row, int col) {
     if ((row == 0 && col == 0) || (row == 1 && col == 1)) 
 	return bearing_of("SE");
     if ((row == 0 && col == board_width-1) ||
@@ -53,7 +52,6 @@ static int calc_bearing(bool *bearing_set, int row, int col) {
 		(row == board_height-2 && col == board_width-2)) 
         return bearing_of("NW");
 
-    *bearing_set = false;
     if (row == 0 || row == 1)
 	return bearing_of("S");
     if (col == 0 || col == 1) 
@@ -342,7 +340,7 @@ void plot_course(struct plane *p, int row, int col, int alt) {
     struct op_courses *opc_end = NULL;
 
     assert(alt == 7 || alt == 0);
-    int bearing = alt ? calc_bearing(&p->bearing_set, row, col)
+    int bearing = alt ? calc_bearing(row, col)
 		      : get_airport_xy(row, col)->bearing;
     bool cleared_exit = false;
     struct xyz target;

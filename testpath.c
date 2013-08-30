@@ -16,9 +16,9 @@ static void check_course(struct course *c, struct xyz *excr, int exlen,
 
 static void test_blocked() {
     struct plane pl = { .id = 't', .isjet = true, .target_airport = false,
-			.bearing_set = true, .target_num = 0,
-			.start = NULL, .end = NULL, .start_tm = -1,
-			.end_tm = -1, .prev = NULL, .next = NULL };
+			.target_num = 0, .start = NULL, .end = NULL,
+		        .start_tm = -1, .end_tm = -1,
+		        .prev = NULL, .next = NULL };
     int alt = 6;
     struct xyz target = { .row = 0, .col = 0, .alt = 9 };
     int bearing = bearing_of("N");
@@ -151,7 +151,7 @@ static void test_plot_course(bool isprop) {
       { .id = 'c', .start = &c3, .end = &c3, .prev = &pls[1], .next = &pls[4] },
       { .id = 'd', .start = &c4, .end = &c4, .prev = &pls[2], .next = &pls[4] },
       { .id = isprop ? 'S' : 's', .isjet = !isprop, .target_airport = true,
-	.bearing_set = true, .target_num = 0, .start = NULL, .end = NULL,
+	.target_num = 0, .start = NULL, .end = NULL,
 	.prev = &pls[2], .next = NULL } };
     void add_plane_d() {
 	pls[2].next = &pls[3];  pls[4].prev = &pls[3];

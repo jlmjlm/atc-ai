@@ -420,7 +420,6 @@ static void handle_new_plane(char code, int row, int col, int alt) {
 	if (next) {
 	    if (alt)
                 order_new_bearing(p->id, next->bearing);
-	    p->bearing_set = true;
 	    if (next->pos.alt != alt)
 	        order_new_altitude(p->id, next->pos.alt);
 	}

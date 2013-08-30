@@ -72,7 +72,6 @@ struct plane {
     char id;
     _Bool isjet;
     _Bool target_airport;
-    _Bool bearing_set;
     int target_num;
     struct course *start, *end;
     int start_tm, end_tm;
