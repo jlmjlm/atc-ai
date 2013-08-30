@@ -287,7 +287,7 @@ static void process_cmd_args(int argc, char *const argv[]) {
 		else
 		    random_seed = atoi(optarg);
 		break;
-	    //XXX: Rest of the args
+	    //FIXME: Rest of the args
 	}
     }
 }

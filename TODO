@@ -55,6 +55,9 @@ Thread stuff:
 	check for new messages from atc.  Maybe instead of threads, the
 	procedures in orders.c should just queue up the orders to give
 	atc, and mainloop can slowly drain the queue.
+    * Back in pthead-land...  When getting data from ptm, -not- from a
+	timeout, check to see if the frame_no has changed.  If it has,
+	move quickly to update_board
 
 Interesting seeds:
 	1376278304 prop needs to backtrack tick ~1331.

@@ -176,7 +176,6 @@ void calc_next_move(struct plane *p, int srow, int scol, int *alt,
     // target exit at alt==9, adjacency with another plane (props have
     // to check this at t+1 and t+2), within 2 of an exit at alt 6-8 if 
     // it's cleared the exit, the exclusion area of an airport at alt <= 2.
-    // [TODO: The 'exit' exclusion.]
 
     // Incur a penalty for matching the bearing/altitude of a
     // blocking airplane (because it'll just continue to block).
@@ -256,13 +255,6 @@ void calc_next_move(struct plane *p, int srow, int scol, int *alt,
     qsort(frame->cand, frame->n_cand, sizeof(*frame->cand), distcmp);
     *bearing = frame->cand[frame->n_cand-1].bearing;
     *alt = frame->cand[frame->n_cand-1].alt;
-    if (srow == 1 && scol == 7) {
-	for (int n = frame->n_cand-1; n >= 0; n--) {
-	    fprintf(logff, "#%d: bearing %d alt %d\n", n, 
-		    bearings[frame->cand[n].bearing].degree, 
-		    frame->cand[n].alt);
-	}
-    }
 }
 
 static void new_op_course(const struct course *c,
