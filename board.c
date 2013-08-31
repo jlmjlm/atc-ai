@@ -42,8 +42,7 @@ static int get_bearing(char code) {
 
 static void new_airport(int row, int col, int bearing, int id) {
     if (n_airports == AIRPORT_MAX) {
-	fprintf(stderr, "\nToo many airports.\n");
-	exit('a');
+	errexit('a', "Too many airports.");
     }
     struct airport *airport = airports + (n_airports++);
     airport->num = id;
@@ -83,16 +82,12 @@ static int get_frame_no() {
     int fnum;
     if (memcmp(display + info_col - 1, timestr, timesize) &&
 	    memcmp(display + info_col - 1, alttimestr, timesize)) {
-	fprintf(stderr, "\nCan't find frame number.\n");
-	fprintf(stderr, "Got '%.*s' instead of '%.*s'\n", 
-		timesize, display + info_col - 1,
-		timesize, timestr);
-	exit('t');
+	errexit('t', "Can't find frame number.  Got '%.*s' instead of '%.*s'",
+		timesize, display + info_col - 1, timesize, timestr);
     }
     int rv = sscanf(display+(info_col-1)+timesize, "%d", &fnum);
     if (rv != 1) {
-	fprintf(stderr, "\nCan't read frame number.\n");
-	exit('t');
+	errexit('t', "Can't read frame number.");
     }
     return fnum;
 }
@@ -104,8 +99,7 @@ static const char *pmin(const char *a, const char *b) {
 static void board_init() {
     const char *tee = memchr(display, 'T', screen_width);
     if (tee == NULL) {
-	fprintf(stderr, "\nCan't determine board width.\n");
-	exit(' ');
+	errexit(' ', "Can't determine board width.");
     }
     info_col = tee - display;
     const char *spc = memchr(display, ' ', screen_width);
@@ -113,17 +107,14 @@ static void board_init() {
 	spc--;
     board_width = pmin(spc, tee-1) - display;
     if (board_width % 2 == 0) {
-	fprintf(stderr, "\nInvalid width of %d.5 chars.\n", board_width/2);
-	exit(2);
+	errexit(2, "Invalid width of %d.5 chars.", board_width/2);
     }
     board_width = (board_width + 1) / 2;
     if (board_width <= 5) {
-	fprintf(stderr, "\nBoard unreasonably thin.\n");
-	exit(board_width+1);
+	errexit(board_width+1, "Board unreasonably thin.");
     }
     if (board_width > 80) {
-	fprintf(stderr, "\nBoard unreasonably wide.\n");
-	exit(board_width);
+	errexit(board_width, "Board unreasonably wide.");
     }
     for (int i = 1; i < screen_height; i++) {
 	if (D(i, 0) == ' ') {
@@ -132,25 +123,20 @@ static void board_init() {
 	}
     }
     if (board_height == 0) {
-	fprintf(stderr, "\nCannot determine board height.\n");
-	exit(' ');
+	errexit(' ', "Can't determine board height.");
     }
     if (board_height <= 5) {
-	fprintf(stderr, "\nBoard unreasonably short.\n");
-	exit(board_height+1);
+	errexit(board_height+1, "Board unreasonably short.");
     }
     if (board_height > 50) {
-	fprintf(stderr, "\nBoard unreasonably tall.\n");
-	exit(board_height);
+	errexit(board_height, "Board unreasonably tall.");
     }
     if (D(board_height-1, 0) != '-' && D(board_height-1, 2) != '-') {
-	fprintf(stderr, "\nCan't find lower left corner of board.\n");
-	exit('L');
+	errexit('L', "Can't find lower left corner of board.");
     }
     int fnum = get_frame_no();
     if (fnum != 1) {
-	fprintf(stderr, "\nStarting at frame %d instead of 1.\n", fnum);
-	exit('t');
+	errexit('t', "Starting at frame %d instead of 1.", fnum);
     }
 
     find_airports();
@@ -178,17 +164,14 @@ static void new_exit(int row, int col) {
     int exit_num = D(row, 2*col) - '0';
     struct exitspec *spec = get_exit(exit_num);
     if (spec && (spec->row != row || spec->col != col)) {
-	fprintf(stderr, "\nconflict: exit %d found at both (%d, %d) "
-		        "and (%d, %d)\n", exit_num, spec->row, spec->col,
-			row, col);
-	exit('c');
+	errexit('c', "conflict: exit %d found at both (%d, %d) and (%d, %d)",
+		exit_num, spec->row, spec->col, row, col);
     }
     if (spec)
 	return;
     spec = &exits[n_exits++];
     if (n_exits > EXIT_MAX) {
-	fprintf(stderr, "\nToo many exits found.\n");
-	exit('e');
+	errexit('e', "Too many exits found.");
     }
     spec->num = exit_num; spec->row = row; spec->col = col;
     fprintf(logff, "Found exit %d at (%d, %d)\n", exit_num, row, col);
@@ -274,32 +257,28 @@ static void verify_planes() {
 	char alt = D(i->start->pos.row, i->start->pos.col*2+1);
 	if (i->start->pos.alt == 0) {
 	    if (!isdigit(alt) || (!isalpha(code) && !memchr("<>^v", code, 4))) {
-	        fprintf(stderr, "\nFound '%c%c' where expected to find a "
-				"plane or airport.\n",
-		    	code, alt);
-	        fprintf(stderr, "[Tick %d] Expected to find plane '%c' at "
-		            "(%d, %d) but instead found '%c%c'\n",
-		    frame_no, i->id, i->start->pos.row, i->start->pos.col,
-		    code, alt);
-	        exit('p');
+	        fprintf(logff, "[Tick %d] Expected to find plane '%c' at "
+		               "(%d, %d) but instead found '%c%c'\n",
+		        frame_no, i->id, i->start->pos.row, i->start->pos.col,
+		        code, alt);
+		errexit('p', "Found '%c%c' where expected to find a "
+                             "plane or airport.", code, alt);
 	    }
 	} else if (!isalpha(code) || !isdigit(alt)) {
-	    fprintf(stderr, "\nFound '%c%c' where expected to find a plane.\n",
-		    code, alt);
-	    fprintf(stderr, "[Tick %d] Expected to find plane '%c' at "
-		            "(%d, %d) but instead found '%c%c'\n",
+	    fprintf(logff, "[Tick %d] Expected to find plane '%c' at "
+	                   "(%d, %d) but instead found '%c%c'\n",
 		    frame_no, i->id, i->start->pos.row, i->start->pos.col,
 		    code, alt);
-	    exit('p');
+	    errexit('p', "Found '%c%c' where expected to find a plane.",
+		    code, alt);
 	}
 	if (code == i->id && alt-'0' != i->start->pos.alt) {
-	    fprintf(stderr, "\nFound plane %c at altitude %c=%d where "
-		            "expected to find it at altitude %d.\n",
-		    code, alt, alt-'0', i->start->pos.alt);
 	    fprintf(logff, "Found plane '%c' at altitude %c=%d where "
 		           "expected to find it at altitude %d\n",
 		    code, alt, alt-'0', i->start->pos.alt);
-	    exit('a');
+	    errexit('a', "Found plane %c at altitude %c=%d where "
+                         "expected to find it at altitude %d.",
+                    code, alt, alt-'0', i->start->pos.alt);
 	}
 	i = i->next;
     }
@@ -312,9 +291,8 @@ static void check_pldt() {
     char *base = &D(2, info_col-1);
     if (memcmp(base, pls1, sizeof(pls1)-1) &&
 	    memcmp(base, pls2, sizeof(pls2)-1)) {
-	fprintf(stderr, "\nExpected \"%s\" but found \"%.*s\"\n",
-		pls1, sizeof(pls1)-1, base);
-	exit('P');
+	errexit('P', "Expected \"%s\" but found \"%.*s\"",
+                pls1, sizeof(pls1)-1, base);
     }
 }
 
@@ -363,8 +341,7 @@ static void target(struct plane *p) {
 	return;
     }
 
-    fprintf(stderr, "\nUnable to find the target of plane %c\n", id);
-    exit('T');
+    errexit('T', "Unable to find the target of plane %c", id);
 }
 
 static struct plane *get_plane(char code) {
@@ -383,13 +360,12 @@ static void handle_found_plane(char code, int alt, int row, int col) {
     if (p) {
 	struct xyz pos = p->start->pos;
 	if (pos.alt != alt || pos.row != row || pos.col != col) {
-	    fprintf(stderr, "\nExpected to find plane %c at (%d, %d, %d) "
-			    "but actually at (%d, %d, %d).\n",
-		    code, pos.row, pos.col, pos.alt, row, col, alt);
 	    fprintf(logff, "[Tick %d] Expected to find plane '%c' at "
 			   "(%d, %d, %d) but actually at (%d, %d, %d)\n",
 		    frame_no, code, pos.row, pos.col, pos.alt, row, col, alt);
-	    exit('E');
+	    errexit('E', "Expected to find plane %c at (%d, %d, %d) but "
+			 "actually at (%d, %d, %d).",
+		    code, pos.row, pos.col, pos.alt, row, col, alt);
 	}
 	// Plane's position is A-OK.
 	return;
@@ -397,9 +373,7 @@ static void handle_found_plane(char code, int alt, int row, int col) {
 
     // It's a new plane.
     if (alt != 7) {
-	fprintf(stderr, "\nNew plane %c found at flight level %d != 7.\n",
-		code, alt);
-	exit('7');
+	errexit('7', "New plane %c found at flight level %d != 7.", code, alt);
     }
     handle_new_plane(code, row, col, alt);
 }
@@ -444,9 +418,7 @@ static void find_new_planes() {
 	    if (!isalpha(code))
 		continue;
 	    if (!isdigit(alt)) {
-		fprintf(stderr, "\n\"Plane\" '%c%c' has bad altitude.\n",
-			code, alt);
-		exit('A');
+		errexit('A', "\"Plane\" '%c%c' has bad altitude.", code, alt);
 	    }
 	    handle_found_plane(code, alt-'0', r, c);
 	}
@@ -471,9 +443,8 @@ void update_board() {
     }
 
     if (new_frame_no != frame_no+1) {
-	fprintf(stderr, "\nFrame number jumped from %d to %d.\n", frame_no,
+	errexit('f', "Frame number jumped from %d to %d.", frame_no,
 		new_frame_no);
-	exit('f');
     }
 
     if (frame_no <= 3)
