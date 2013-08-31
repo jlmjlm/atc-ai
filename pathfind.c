@@ -109,10 +109,13 @@ static int distcmp(const void *b, const void *a) {
     return aa->distance - bb->distance;
 }
 
-static int cdist(int r, int c, int alt, struct xyz target) {
-    int dr = r - target.row;
-    int dc = c - target.col;
-    int da = alt - target.alt;
+
+// Euclidian distance.  Maybe taxicab distance would be better?
+// Or max(dr, dc, da)?
+static int edist(int r1, int c1, int a1, int r2, int c2, int a2) {
+    int dr = r1 - r2;
+    int dc = c1 - c2;
+    int da = a1 - a2;
     return dr*dr + dc*dc + da*da;
 }
 
@@ -131,6 +134,20 @@ static bool in_airport_excl(struct xy rc, int alt, int airport_num) {
 	return sgn(rc.col - a->col) == bearings[a->bearing].dcol;
     else
 	return sgn(rc.row - a->row) == bearings[a->bearing].drow;
+}
+
+static int cdist(int r, int c, int alt, struct xyz target,
+		 const struct plane *p, int srow, int scol) {
+    struct xy sxy = { .row = srow, .col = scol };
+    if (p->target_airport && in_airport_excl(sxy, 1, p->target_num)) {
+	// Use an airport's secondary targets.
+	const struct airport *ap = get_airport(p->target_num);
+	int dist1 = edist(r, c, alt, ap->strow1, ap->stcol1, 2);
+	int dist2 = edist(r, c, alt, ap->strow2, ap->stcol2, 2);
+	return (dist1 < dist2) ? dist1 : dist2;
+    }
+
+    return edist(r, c, alt, target.row, target.col, target.alt);
 }
 
 static bool pos_adjacent(struct xyz pos, struct xy rc, int alt) {
@@ -169,9 +186,9 @@ static struct direction adjacent_another_plane(struct xy rc, int alt,
     return rv;
 }
 
-void calc_next_move(struct plane *p, int srow, int scol, int *alt, 
-		    struct xyz target, int *bearing, bool cleared_exit,
-		    struct frame *frame) {
+void calc_next_move(const struct plane *p, const int srow, const int scol,
+		    int *alt, struct xyz target, int *bearing,
+		    bool cleared_exit, struct frame *frame) {
     // Avoid obstacles.  Obstacles are:  The boundary except for the
     // target exit at alt==9, adjacency with another plane (props have
     // to check this at t+1 and t+2), within 2 of an exit at alt 6-8 if 
@@ -235,7 +252,8 @@ void calc_next_move(struct plane *p, int srow, int scol, int *alt,
 	    int i = frame->n_cand++;
 	    frame->cand[i].bearing = nb;
 	    frame->cand[i].alt = nalt;
-	    frame->cand[i].distance = cdist(rc.row, rc.col, nalt, target);
+	    frame->cand[i].distance = cdist(rc.row, rc.col, nalt, target, p,
+					    srow, scol);
 	}
     }
     assert(frame->n_cand <= 15);

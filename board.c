@@ -53,6 +53,12 @@ static void new_airport(int row, int col, int bearing, int id) {
     struct xy xy = apply(row, col, (bearing+4)&7);
     airport->trow = xy.row;
     airport->tcol = xy.col;
+    xy = apply(row, col, (bearing+3)&7);
+    airport->strow1 = xy.row;
+    airport->stcol1 = xy.col;
+    xy = apply(row, col, (bearing-3)&7);
+    airport->strow2 = xy.row;
+    airport->stcol2 = xy.col;
     for (int i = -2; i <= 2; i++) {
 	airport->exc[i+2] = apply(row, col, (bearing+i)&7);
     }
