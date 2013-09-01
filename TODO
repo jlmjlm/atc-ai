@@ -45,6 +45,8 @@ having others recalculate their routes constrained by it.
 	with plane 'u'.)
 Find out why there are "Too many blocking planes" in the self-test.
 Do something better than the "getting desperate" stuff in calc_bearing().
+Planes are "lingering" at the exits in the course calculations instead of 
+	disappearing right away the way they do in atc.
 Thread stuff:
     Start of this on the branch "pthread".
     * Get out of a busy loop on SIGINT/SIGTERM.  (Do calc in another thread?)
@@ -107,6 +109,10 @@ Interesting seeds:
 	1377644268 'Killer' - Plane 'u' runs out of fuel at
 		tick 28306.  Though with the airport secondary targets
 		enabled, it switches to plane 'y' at tick 28266.
+		Maybe this could be fixed by having a penalty for matching
+		a blocking plane's route at a neighboring altitude too?
+	1377930389 'Killer' - runs on forever (or at least to 367536,
+		which takes 10h24m at 10 fps).
 
 	1377809753 'crossover' - Starts with a plane in the NE exit (#3)
 	1377811790 'crossover' - At tick 56, plane 'j' is "out of place"
