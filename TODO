@@ -111,6 +111,8 @@ Interesting seeds:
 		enabled, it switches to plane 'y' at tick 28266.
 		Maybe this could be fixed by having a penalty for matching
 		a blocking plane's route at a neighboring altitude too?
+		Whelp -- with those added, it goes to tick 28240 only, with
+		'h' being the plane that fails.
 	1377930389 'Killer' - runs on forever (or at least to 367536,
 		which takes 10h24m at 10 fps).
 	1378013339 'Killer' - Plane doesn't go to the exit direct sometime
