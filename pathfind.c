@@ -92,6 +92,7 @@ static void add_course_elem(struct plane *p, int row, int col, int alt,
     nc->pos.row = row;  nc->pos.col = col;  nc->pos.alt = alt;
     nc->bearing = bearing;
     nc->cleared_exit = cleared_exit;
+    nc->at_exit = false;
     if (!p->start)
 	p->start = nc;
     nc->prev = p->end;
@@ -166,7 +167,7 @@ struct direction { int bearing, alt; };
 static struct direction adjacent_another_plane(struct xy rc, int alt,
 		            const struct op_courses *opc, bool isprop) {
     for ( ; opc; opc = opc->next) {
-	if (!opc->c)
+	if (!opc->c || opc->c->at_exit)
 	    continue;
 	struct xyz pos = opc->c->pos;
 	if (pos_adjacent(pos, rc, alt)) {
@@ -185,6 +186,15 @@ static struct direction adjacent_another_plane(struct xy rc, int alt,
     struct direction rv = { -1, -1 };
     return rv;
 }
+
+static void new_cand(struct frame *frame, int bearing, int alt, int dist) {
+    int i = frame->n_cand++;
+    frame->cand[i].bearing = bearing;
+    frame->cand[i].alt = alt;
+    frame->cand[i].distance = dist;
+}
+
+#define MATCHCOURSE_PENALTY 1000
 
 void calc_next_move(const struct plane *p, const int srow, const int scol,
 		    int *alt, struct xyz target, int *bearing,
@@ -229,8 +239,14 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
 	for (nalt = *alt-1; nalt <= *alt+1; nalt++) {
 	    if (nalt == 0 || nalt == 10)
 		continue;
-	    if (on_boundary && (nalt != 9 || rc.row != target.row ||
-					     rc.col != target.col))
+	    if (target.alt == 9 && nalt == 9 && 
+		    rc.row == target.row && rc.col == target.col) {
+		// Reached the proper exit gate.  Can't collide here,
+		// planes just immediately disappear.
+		new_cand(frame, nb, nalt, -10*MATCHCOURSE_PENALTY);
+		break;
+	    }
+	    if (on_boundary)	// ... and not at the target exit
 		continue;
 	    if (p->target_airport && in_airport_excl(rc, nalt, p->target_num))
 		continue;
@@ -249,11 +265,8 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
 		    ((p->target_airport && nalt >= 6) ||
 		     (!p->target_airport && nalt != 9)))
 		continue;
-	    int i = frame->n_cand++;
-	    frame->cand[i].bearing = nb;
-	    frame->cand[i].alt = nalt;
-	    frame->cand[i].distance = cdist(rc.row, rc.col, nalt, target, p,
-					    srow, scol);
+	    new_cand(frame, nb, nalt, 
+		     cdist(rc.row, rc.col, nalt, target, p, srow, scol));
 	}
     }
     assert(frame->n_cand <= 15);
@@ -262,12 +275,15 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
 	*alt = -1;
 	return;
     }
-    #define MATCHCOURSE_PENALTY 1000
     for (int i = 0; i < frame->n_cand; i++) {
 	for (int j = 0; j < n_blp; j++) {
-	     if (frame->cand[i].bearing == blocking_planes[j].bearing &&
-		     frame->cand[i].alt == blocking_planes[j].alt) 
+	     if (frame->cand[i].bearing != blocking_planes[j].bearing)
+		continue;
+	     int da = abs(frame->cand[i].alt - blocking_planes[j].alt);
+	     if (da == 0)
 		frame->cand[i].distance += MATCHCOURSE_PENALTY;
+	     else if (da == 1)
+		frame->cand[i].distance += MATCHCOURSE_PENALTY/10;
 	}
     }
     qsort(frame->cand, frame->n_cand, sizeof(*frame->cand), distcmp);
@@ -489,6 +505,7 @@ void plot_course(struct plane *p, int row, int col, int alt) {
     	    } else {
 	 	// For an exit, the plane disappears at reaching it.
         	p->end_tm = tick-1;
+		p->end->at_exit = true;
     	    }
 
 	    free_framelist(frstart);

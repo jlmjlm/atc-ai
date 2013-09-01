@@ -113,6 +113,12 @@ Interesting seeds:
 		a blocking plane's route at a neighboring altitude too?
 	1377930389 'Killer' - runs on forever (or at least to 367536,
 		which takes 10h24m at 10 fps).
+	1378013339 'Killer' - Plane doesn't go to the exit direct sometime
+		in 300-320.  It doesn't realize that at the exit, it can't
+		be adj. to the approaching plane, just like the approaching
+		plane can't be abj. to an exiting airplane.  But, it turned
+		out to be the penalty for course matching being a 
+		disincentive (fixed).
 
 	1377809753 'crossover' - Starts with a plane in the NE exit (#3)
 	1377811790 'crossover' - At tick 56, plane 'j' is "out of place"

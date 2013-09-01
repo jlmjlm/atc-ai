@@ -62,7 +62,7 @@ extern struct airport *get_airport(int n);
 struct course {
     struct xyz pos;
     int bearing;
-    _Bool cleared_exit;
+    _Bool cleared_exit, at_exit;
     struct course *prev, *next;
 };
 
