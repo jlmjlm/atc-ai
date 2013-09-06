@@ -248,7 +248,8 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
 	    }
 	    if (on_boundary)	// ... and not at the target exit
 		continue;
-	    if (p->target_airport && in_airport_excl(rc, nalt, p->target_num))
+	    if (cleared_exit && p->target_airport &&
+		    in_airport_excl(rc, nalt, p->target_num))
 		continue;
 	    struct direction adjacent_plane =
 	        adjacent_another_plane(rc, nalt, frame->opc_start, !p->isjet);
@@ -512,7 +513,7 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	    return;
 	}
 
-	if (!cleared_exit && ((row > 2 && row < board_height-3 &&
+	if (!cleared_exit && alt > 1 && ((row > 2 && row < board_height-3 &&
 		col > 2 && col < board_width-3) || alt < 6 || alt == 9)) {
 	    cleared_exit = true;
 	}

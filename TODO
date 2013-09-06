@@ -130,4 +130,6 @@ Interesting seeds:
 	1378445708 'airports' - A south-facing airport (#5) gets
 		misrecognized as a plane (at FL 5) because of how 'v'
 		is overloaded.  (Fixed)
-		At tick 37, plane 'i' can't go from A2 to A0.
+		At tick 37, plane 'i' can't go from A0 to A2.  This
+		is because taking off from A0 puts it in A2's exclusion
+		zone.  (Fixed)
