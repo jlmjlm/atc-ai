@@ -126,3 +126,8 @@ Interesting seeds:
 	1377811790 'crossover' - At tick 56, plane 'j' is "out of place"
 		because in starts out bearing SW and can't turn to the east
 		in one tick.  (Fixed.)
+
+	1378445708 'airports' - A south-facing airport (#5) gets
+		misrecognized as a plane (at FL 5) because of how 'v'
+		is overloaded.  (Fixed)
+		At tick 37, plane 'i' can't go from A2 to A0.

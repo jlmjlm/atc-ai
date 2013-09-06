@@ -73,7 +73,7 @@ static void find_airports() {
     for (r = 1; r < board_height-1; r++) {
 	for (c = 1; c < board_width-1; c++) {
 	    if (isdigit(D(r, 2*c+1)) && D(r, 2*c) != '*' &&
-		    !isalpha(D(r, 2*c))) {
+		    (D(r, 2*c) == 'v' || !isalpha(D(r, 2*c)))) {
 		fprintf(logff, "Found '%c%c' at (%d, %d)\n",
 			D(r, 2*c), D(r, 2*c+1), r, c);
 		int bearing = get_bearing(D(r, 2*c));
@@ -383,6 +383,16 @@ static struct plane *get_plane(char code) {
 }
 
 static void handle_found_plane(char code, int alt, int row, int col) {
+    // It's OK if this "plane" is actually a 'v' airport.
+    if (code == 'v') {
+        const struct airport *ap = get_airport(alt);
+        if (ap && bearings[ap->bearing].degree == 180 &&
+	        ap->row == row && ap->col == col) {
+	    // It's just a south-facing airport.
+	    return;
+        }
+    }
+
     // See if the plane's ID matches any existing ones.
     struct plane *p = get_plane(code);
 
