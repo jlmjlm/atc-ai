@@ -133,3 +133,5 @@ Interesting seeds:
 		At tick 37, plane 'i' can't go from A0 to A2.  This
 		is because taking off from A0 puts it in A2's exclusion
 		zone.  (Fixed)
+		Jets seem to be taking a suboptimal route when approaching
+		A1 from the west.
