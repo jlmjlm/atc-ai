@@ -8,7 +8,7 @@
 
 
 const struct bearing bearings__[9] = {
-    { 666, 0, 0, '\0', '\0', "O", "stationary" },
+    { -1, 0, 0, '\0', '\0', "O", "stationary" },
     { 0, -1, 0, 'w', '^', "N", "north" },
     { 45, -1, 1, 'e', '\0', "NE", "northeast" },
     { 90, 0, 1, 'd', '>', "E", "east" },

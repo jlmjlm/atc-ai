@@ -49,6 +49,8 @@ Find out why there are "Too many blocking planes" in the self-test.
 Do something better than the "getting desperate" stuff in calc_bearing().
 On a SIGABORT/assert-fail, SIGINT+'y' the atc command, so atc-ai doesn't
 	just leave them lying around when it aborts.
+Nothing to do with atc-ai per se, but atc in some conditions will stomp
+	the high score list.
 Thread stuff:
     Start of this on the branch "pthread".
     * Get out of a busy loop on SIGINT/SIGTERM.  (Do calc in another thread?)
