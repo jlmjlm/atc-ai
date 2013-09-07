@@ -3,7 +3,8 @@ Trigger updates when it's been a while since the last read from atc,
 	and then wait indefinitely for a read after the update
 	is complete or frame_no was unchanged.
 License, readme, INSTALL
-+/- to speed-up & slow down (say by 100ms or so)
+'+'/'-' to speed-up & slow down
+	-- And proxy ^L thru for a board refresh.
 exit after specified #frames, real time, or saved planes
 expand tabs, remove trailing spaces
 secondary targets for airports
