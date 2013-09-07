@@ -128,13 +128,20 @@ Interesting seeds:
 		because in starts out bearing SW and can't turn to the east
 		in one tick.  (Fixed.)
 
-	1378445708 'airports' - A south-facing airport (#5) gets
-		misrecognized as a plane (at FL 5) because of how 'v'
-		is overloaded.  (Fixed)
-		At tick 37, plane 'i' can't go from A0 to A2.  This
+	1378445708 'airports' -
+		* A south-facing airport (#5) gets misrecognized as a
+		plane (at FL 5) because of how 'v' is overloaded.  (Fixed)
+		* At tick 37, plane 'i' can't go from A0 to A2.  This
 		is because taking off from A0 puts it in A2's exclusion
 		zone.  (Fixed)
-		And at tick 13939 or so, plane 'v' takes off from the 'v5' 
+		* And at tick 13939 or so, plane 'v' takes off from the 'v5' 
 		airport and board.c gets confused again.  (Fixed)
 		* Jets seem to be taking a suboptimal route when approaching
-		A1 from the west.
+		A1 from the west.  --  That's OK, it's just the exclusion zone
+		meaning that the incoming plane can either be beside the 
+		airport at alt==3 or one more square to the south at alt==2,
+		either of which is drow==1 and (dcol==0 && dalt == 1) or
+		(dcol==1 && dalt == 0) so the exact same distance away, and
+		the order we go thru the bearings means we hit these in
+		a different order depending on whether we approach from
+		WNW or WSW.
