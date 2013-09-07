@@ -3,11 +3,10 @@ Trigger updates when it's been a while since the last read from atc,
 	and then wait indefinitely for a read after the update
 	is complete or frame_no was unchanged.
 License, readme, INSTALL
-'+'/'-' to speed-up & slow down
+Read cmds from stdin (eg, + and - to incr. & decr. speed)
 	-- And proxy ^L thru for a board refresh.
 exit after specified #frames, real time, or saved planes
 expand tabs, remove trailing spaces
-secondary targets for airports
 print out (to the log) all planes' courses if get stuck in a loop.
 store revision ID (hash) in the object?
 Notice when we get a game over and "Press space".
@@ -18,20 +17,18 @@ Handle rogue planes which were shrouded by other planes
 			from an exit
 	- turn plane in a direction compatible with all poss. bearings
  	- guess based on proximity of exits
-Recalculate other planes' courses if they're interfering with
-	a new plane's.
+Recalculate other planes' courses if they're interfering with a new plane's.
 'make dist'
-A different "err log" for bugs.
-Recalc on a low-fuel ind.  (Just how far can a plane go?)
-Err if calc takes too long.
-Read cmds from stdin (eg, + and - to incr. & decr. speed)
+A different "error log" for bugs.
+Planes can go for 50 moves (which is 100 ticks for props).  Re-calc some
+	other planes' courses if the new plane requires > 50 moves.
+Err if calc takes too long in realtime.
 Have airports/exits in their arrays in their number's position.
-Deal with exit clearance better, esp. for border-hugging routes.
-	(Considerably better now, but arriving plane could still in
-	theory be completely path blocked.)
-Keep track of moves taken, so if a plane has "too long" of a route,
-we can recalculate routes by starting it off with a short route, and
-having others recalculate their routes constrained by it.
+Deal with exit clearance better.  It's pretty good now, but an arriving plane 
+	could still in theory be completely path-blocked.
+Keep track of moves taken, so if a plane has "too long" of a route, we can 
+	recalculate routes by starting it off with a short route, and
+	having others recalculate their routes constrained by it.
 -- That won't work for the 1377061305 case, though.  If 'c' calcs its
 	route first ignoring 'b', then 'b' will find it has no first
 	moves which aren't adjacent to 'c'.  If 'b' calcs the route
@@ -44,10 +41,14 @@ having others recalculate their routes constrained by it.
 	a fraction of cases a plane can still be pushed away from its
 	exit until it reaches the boundary.  Eg, Killer 1377644268
 	with plane 'u'.)
+-- Or maybe it'd be better to have all the planes move for one tick,
+	minimizing the sum of the distances to the targets, and then do
+	that repeatedly.  But maybe it'd be too costly, what with each
+	plane having up to 15 possible moves.
 Find out why there are "Too many blocking planes" in the self-test.
 Do something better than the "getting desperate" stuff in calc_bearing().
-Planes are "lingering" at the exits in the course calculations instead of
-	disappearing right away the way they do in atc.
+On a SIGABORT/assert-fail, SIGINT+'y' the atc command, so atc-ai doesn't
+	just leave them lying around when it aborts.
 Thread stuff:
     Start of this on the branch "pthread".
     * Get out of a busy loop on SIGINT/SIGTERM.  (Do calc in another thread?)
@@ -149,4 +150,7 @@ Interesting seeds:
 		This is due to a [Esc M] seq which scrolls the list of
 		planes up (see http://www.termsys.demon.co.uk/vtansi.htm ),
 		so what atc-ai thinks the board is and what atc thinks
-		it is get de-sync'd.
+		it is get de-sync'd.  (Looks to be fixed.  Should confirm.)
+		* At tick 44207, plane 'j' crashes into terrain, because it
+		reaches the alt==1 approach for ap #2 but can't complete the
+		turn to bearing 0.

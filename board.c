@@ -9,7 +9,7 @@
 
 int board_width, board_height;
 bool skip_tick;
-static int info_col;
+int info_col;
 static const char timestr[] = " Time: ";
 static const int timesize = sizeof(timestr)-1;
 

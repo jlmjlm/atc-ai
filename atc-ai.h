@@ -24,7 +24,7 @@ extern struct exitspec exits[EXIT_MAX];
 extern int n_exits;
 extern struct exitspec *get_exit(int);
 
-extern int board_width, board_height;
+extern int board_width, board_height, info_col;
 
 
 struct bearing {

@@ -11,6 +11,22 @@ int screen_height, screen_width;
 
 char *display;
 
+static void scroll_up_plane_list() {
+    if (D(screen_height-3, info_col) != '*') {
+	fprintf(logff, "Got '%c' where expected to get '*'\n",
+	        D(screen_height-3, info_col));
+	exit(D(screen_height-3, info_col));
+    }
+    for (int i = 3; i < screen_height-4; i++) {
+	for (int j = info_col; j < screen_width; j++) {
+	    D(i, j) = D(i+1, j);
+	}
+    }
+    for (int j = info_col; j < screen_width; j++) {
+	D(screen_height-4, j) = ' ';
+    }
+}
+
 void update_display(char c) {
     static int cur_row, cur_col;
     static int esc_size;
@@ -54,6 +70,11 @@ void update_display(char c) {
 	    esc_size = 0;
             return;
         }
+
+	if (esc[1] == 'M' && esc_size == 2) {
+	    scroll_up_plane_list();
+	    return;
+	}
 
 	if (esc[1] == '[' && isalpha(c)) {
 	    // control sequence
