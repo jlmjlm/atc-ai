@@ -24,9 +24,9 @@ Planes can go for 50 moves (which is 100 ticks for props).  Re-calc some
 	other planes' courses if the new plane requires > 50 moves.
 Err if calc takes too long in realtime.
 Have airports/exits in their arrays in their number's position.
-Deal with exit clearance better.  It's pretty good now, but an arriving plane 
+Deal with exit clearance better.  It's pretty good now, but an arriving plane
 	could still in theory be completely path-blocked.
-Keep track of moves taken, so if a plane has "too long" of a route, we can 
+Keep track of moves taken, so if a plane has "too long" of a route, we can
 	recalculate routes by starting it off with a short route, and
 	having others recalculate their routes constrained by it.
 -- That won't work for the 1377061305 case, though.  If 'c' calcs its
@@ -155,4 +155,6 @@ Interesting seeds:
 		it is get de-sync'd.  (Looks to be fixed.  Should confirm.)
 		* At tick 44207, plane 'j' crashes into terrain, because it
 		reaches the alt==1 approach for ap #2 but can't complete the
-		turn to bearing 0.
+		turn to bearing 0.  This might be because it flies all the
+		way there in A2's exclusion zone at alt==1 and so never gets
+		the 'cleared_exit' flag set.
