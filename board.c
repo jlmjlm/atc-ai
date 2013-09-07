@@ -256,6 +256,16 @@ struct plane *remove_plane(struct plane *p) {
     return rv;
 }
 
+static bool southbound_airport(char code, int alt, int row, int col) {
+    if (code == 'v') {
+        const struct airport *ap = get_airport(alt);
+	return ap && bearings[ap->bearing].degree == 180 &&
+                ap->row == row && ap->col == col;
+    }
+
+    return false;
+}
+
 static void verify_planes() {
     for (struct plane *i = plstart; i; ) {
 	assert(i->start_tm == frame_no);
@@ -298,7 +308,9 @@ static void verify_planes() {
 		    code, alt);
 	    exit('p');
 	}
-	if (code == i->id && alt-'0' != i->start->pos.alt) {
+	if (code == i->id && alt-'0' != i->start->pos.alt &&
+		!southbound_airport(code, alt-'0',
+				    i->start->pos.row, i->start->pos.col)) {
 	    fprintf(stderr, "\nFound plane %c at altitude %c=%d where "
 		            "expected to find it at altitude %d.\n",
 		    code, alt, alt-'0', i->start->pos.alt);
@@ -384,14 +396,8 @@ static struct plane *get_plane(char code) {
 
 static void handle_found_plane(char code, int alt, int row, int col) {
     // It's OK if this "plane" is actually a 'v' airport.
-    if (code == 'v') {
-        const struct airport *ap = get_airport(alt);
-        if (ap && bearings[ap->bearing].degree == 180 &&
-	        ap->row == row && ap->col == col) {
-	    // It's just a south-facing airport.
-	    return;
-        }
-    }
+    if (southbound_airport(code, alt, row, col))
+	return;
 
     // See if the plane's ID matches any existing ones.
     struct plane *p = get_plane(code);
