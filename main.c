@@ -88,6 +88,7 @@ static void interrupt(int signo) {
 
 noreturn static void abort_hand(int signo) {
     shutdown_atc(SIGINT);
+    cleanup();
     abort();
 }
 
