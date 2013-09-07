@@ -50,7 +50,7 @@ Keep track of moves taken, so if a plane has "too long" of a route, we can
 Find out why there are "Too many blocking planes" in the self-test.
 Do something better than the "getting desperate" stuff in calc_bearing().
 On a SIGABORT/assert-fail, SIGINT+'y' the atc command, so atc-ai doesn't
-	just leave them lying around when it aborts.  [Done.  Needs testing.]
+	just leave them lying around when it aborts.  [Done and tested.]
 Make a test for the prevention of flying from an excl zone to the airport's
 	approach target.
 Nothing to do with atc-ai per se, but atc in some conditions will stomp
@@ -163,4 +163,4 @@ Interesting seeds:
 		way there in A2's exclusion zone at alt==1 and so never gets
 		the 'cleared_exit' flag set.  To fix that, hard-exclude
 		moving to the ap's primary target from the excl. zone,
-		even if cleared_exit is false.  (Done.  Testing in progress.)
+		even if cleared_exit is false.  (Done and tested.)
