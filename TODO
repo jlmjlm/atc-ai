@@ -13,7 +13,7 @@ store revision ID (hash) in the object?
 Notice when we get a game over and "Press space".
 Figure out exits' directions by letting planes glide if safe.
 Handle rogue planes which were shrouded by other planes
-	- figure out bearing based on neighboring shadowed squares from 
+	- figure out bearing based on neighboring shadowed squares from
 			last turn and directions which lead directly
 			from an exit
 	- turn plane in a direction compatible with all poss. bearings
@@ -32,7 +32,7 @@ Deal with exit clearance better, esp. for border-hugging routes.
 Keep track of moves taken, so if a plane has "too long" of a route,
 we can recalculate routes by starting it off with a short route, and
 having others recalculate their routes constrained by it.
--- That won't work for the 1377061305 case, though.  If 'c' calcs its 
+-- That won't work for the 1377061305 case, though.  If 'c' calcs its
 	route first ignoring 'b', then 'b' will find it has no first
 	moves which aren't adjacent to 'c'.  If 'b' calcs the route
 	first, then 'c''s route is too long, because it gets pushed into
@@ -46,15 +46,15 @@ having others recalculate their routes constrained by it.
 	with plane 'u'.)
 Find out why there are "Too many blocking planes" in the self-test.
 Do something better than the "getting desperate" stuff in calc_bearing().
-Planes are "lingering" at the exits in the course calculations instead of 
+Planes are "lingering" at the exits in the course calculations instead of
 	disappearing right away the way they do in atc.
 Thread stuff:
     Start of this on the branch "pthread".
     * Get out of a busy loop on SIGINT/SIGTERM.  (Do calc in another thread?)
     * Do I/O in its own thread?
     * Have a mode where the operator "types" slow enough to see.
-        Tried this without threads, but typing delay doesn't work right, 
-	because it all happens before there's a return to the mainloop to 
+        Tried this without threads, but typing delay doesn't work right,
+	because it all happens before there's a return to the mainloop to
 	check for new messages from atc.  Maybe instead of threads, the
 	procedures in orders.c should just queue up the orders to give
 	atc, and mainloop can slowly drain the queue.
@@ -87,7 +87,7 @@ Interesting seeds:
 		Pretty at 41540.
 		Plane 'V' makes a major detour around 58400.
 	1376535757 On turn 23 produces a plane at (0, 29, 7)
-		[upper right corner].  
+		[upper right corner].
 		This also has plane 'w' follow blocking place 's' at about
 		frame 150 on.
 		~800 a plane goes into exit 3 climbing from alt 8 to 9.
@@ -120,7 +120,7 @@ Interesting seeds:
 		in 300-320.  It doesn't realize that at the exit, it can't
 		be adj. to the approaching plane, just like the approaching
 		plane can't be abj. to an exiting airplane.  But, it turned
-		out to be the penalty for course matching being a 
+		out to be the penalty for course matching being a
 		disincentive (fixed).
 
 	1377809753 'crossover' - Starts with a plane in the NE exit (#3)
@@ -134,14 +134,19 @@ Interesting seeds:
 		* At tick 37, plane 'i' can't go from A0 to A2.  This
 		is because taking off from A0 puts it in A2's exclusion
 		zone.  (Fixed)
-		* And at tick 13939 or so, plane 'v' takes off from the 'v5' 
+		* And at tick 13939 or so, plane 'v' takes off from the 'v5'
 		airport and board.c gets confused again.  (Fixed)
 		* Jets seem to be taking a suboptimal route when approaching
 		A1 from the west.  --  That's OK, it's just the exclusion zone
-		meaning that the incoming plane can either be beside the 
+		meaning that the incoming plane can either be beside the
 		airport at alt==3 or one more square to the south at alt==2,
 		either of which is drow==1 and (dcol==0 && dalt == 1) or
 		(dcol==1 && dalt == 0) so the exact same distance away, and
 		the order we go thru the bearings means we hit these in
 		a different order depending on whether we approach from
 		WNW or WSW.
+		* A bona fide crash (assert failed) at tick 37369.
+		This is due to a [Esc M] seq which scrolls the list of
+		planes up (see http://www.termsys.demon.co.uk/vtansi.htm ),
+		so what atc-ai thinks the board is and what atc thinks
+		it is get de-sync'd.
