@@ -91,6 +91,40 @@ static inline bool xyz_eq(struct xyz a, struct xyz b) {
     return a.row == b.row && a.col == b.col && a.alt == b.alt;
 }
 
+static void test_excl_landing(int alt, int exp_n_cands) {
+    board_width = board_height = 10;
+    const int srow = 6, scol = 5;
+    n_airports = 1;
+    struct airport G = { .num = 0, .row = 6, .col = 5, .trow = 5, .tcol = 5,
+			 .strow1 = 5, .stcol1 = 5, .strow2 = 5, .stcol2 = 5,
+			 .bearing = bearing_of("S") };
+    for (int i = 0; i < EZ_SIZE; i++) {
+        G.exc[i].row = srow;
+	G.exc[i].col = scol;
+    }
+    airports[0] = G;
+    frame_no = 1;
+    
+    struct plane pl = { .id = 'e', .isjet = true, .target_airport = true,
+			.target_num = 0, .start = NULL, .end = NULL,
+			.start_tm = -1, .end_tm = -1,
+                        .prev = NULL, .next = NULL };
+    plstart = plend = &pl;
+    struct xyz target = { .row = 5, .col = 5, .alt = 1 };
+    int bearing = 0;  // north
+    
+    struct frame fr = { .opc_start = NULL, .prev = NULL, .next = NULL,
+			.n_cand = 0 };
+    calc_next_move(&pl, srow, scol, &alt, target, &bearing, false, &fr);
+    assert(fr.n_cand == exp_n_cands);
+
+    for (int i = 0; i < fr.n_cand; i++) {
+	fprintf(logff, "#%d: bearing %d, alt %d\n", i,
+		fr.cand[i].bearing, fr.cand[i].alt);
+	assert(fr.cand[i].bearing > 0 || fr.cand[i].alt > 1);
+    }
+}
+
 static void test_plot_course(bool isprop) {
     // Test a course where have to backtrack.
     /*     0123456789abc
@@ -205,6 +239,8 @@ int testmain() {
     test_calc_next_move();
     test_plot_course(false);
     test_plot_course(true);
+    test_excl_landing(1, 9);
+    test_excl_landing(2, 14);
     printf("PASS\n");
     return 0;
 }
