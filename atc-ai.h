@@ -2,7 +2,12 @@ extern int get_ptm(void);
 extern int spawn(char *cmd, char *args[], int ptm);
 extern void update_display(char);
 extern void update_board(void);
+extern void cleanup(void);
 extern int testmain(void);
+
+__attribute__((noreturn, format(printf, 2, 3) ))
+void errexit(int exit_code, const char *fmt, ...);
+
 
 extern int screen_height, screen_width;
 extern char *display;

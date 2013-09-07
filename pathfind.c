@@ -152,9 +152,6 @@ static int cdist(int r, int c, int alt, struct xyz target,
 }
 
 static bool pos_adjacent(struct xyz pos, struct xy rc, int alt) {
-    //fprintf(logff, "[Checking if (%d, %d, %d) adjacent to (%d, %d, %d)]\n",
-    //        pos.row, pos.col, pos.alt, rc.row, rc.col, alt);
-
     if (pos.alt == 0)
 	return false;
 
@@ -338,9 +335,8 @@ static struct xyz backtrack(int *tick, bool *cleared_exit,
     struct course *prev = (*cend)->prev;
     if (prev == NULL) {
 	struct xyz pos = (*cend)->pos;
-        fprintf(stderr, "\nAieee.  Plane at (%d, %d, %d) is impossible.\n",
-		pos.row, pos.col, pos.alt);
-        exit('x');
+	errexit('x', "Aieee.  Plane at (%d, %d, %d) is impossible.",
+                pos.row, pos.col, pos.alt);
     }
     struct xyz rv = prev->pos;
     *cleared_exit = prev->cleared_exit;
@@ -401,9 +397,8 @@ void plot_course(struct plane *p, int row, int col, int alt) {
     if (p->target_airport) {
 	struct airport *a = get_airport(p->target_num);
 	if (a == NULL) {
-	    fprintf(stderr, "\nPlane '%c' headed to unknown airport %d.\n",
+	    errexit('u', "Plane '%c' headed to unknown airport %d.",
 		    p->id, p->target_num);
-	    exit('u');
 	}
 	target.alt = 1;
 	target.row = a->trow;
@@ -411,9 +406,8 @@ void plot_course(struct plane *p, int row, int col, int alt) {
     } else {
 	struct exitspec *e = get_exit(p->target_num);
 	if (e == NULL) {
-	    fprintf(stderr, "\nPlane '%c' headed to unknown exit %d.\n",
+	    errexit('u', "Plane '%c' headed to unknown exit %d.",
 		    p->id, p->target_num);
-	    exit('u');
 	}
 	target.alt = 9;
 	target.row = e->row;
@@ -437,8 +431,7 @@ void plot_course(struct plane *p, int row, int col, int alt) {
      */
     for (;;) {
 	if (++steps > 200) {
-	    fprintf(stderr, "\nPlane %c stuck in an infinite loop.\n", p->id);
-	    exit('8');
+	    errexit('8', "Plane %c stuck in an infinite loop.", p->id);
 	}
 
 	// Plane doesn't move if it's a prop and the tick is odd...

@@ -99,8 +99,9 @@ void update_display(char c) {
 		    }
 		    rv = sscanf(esc+2, "%d;%d", &cur_row, &cur_col);
 		    if (rv != 2) {
+			cleanup();
 			fprintf(stderr,
-			        "\nInvalid cursor position sequence [\\33");
+			        "Invalid cursor position sequence [\\33");
 			display_esc_seq(stderr);
 			fprintf(stderr, "]\n");
 			exit('H');
@@ -134,7 +135,8 @@ void update_display(char c) {
 	}
 
 	if (esc_size == ESC_MAX) {
-	    fprintf(stderr, "\nUnknown escape sequence \\33");
+	    cleanup();
+	    fprintf(stderr, "Unknown escape sequence \\33");
 	    display_esc_seq(stderr);
 	    fprintf(stderr, "\n");
 	    exit('\33');

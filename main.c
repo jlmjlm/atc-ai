@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <time.h>
+#include <stdarg.h>
 #include <errno.h>
 #include <termios.h>
 #include <signal.h>
@@ -27,14 +28,33 @@ static int sigpipe;
 static int ptm;
 static int delay_ms = DEF_DELAY_MS;
 static const char *logfile_name = DEF_LOGFILE;
+static bool cleanup_done = false;
 
-static void cleanup() {
+void cleanup() {
+    if (cleanup_done)
+	return;
+
+    cleanup_done = true;
     // Restore termio
     tcsetattr(1, TCSAFLUSH, &orig_termio);
 
     // Kill atc
     if (atc_pid)
         kill(atc_pid, SIGTERM);
+}
+
+__attribute__((noreturn, format(printf, 2, 3) ))
+void errexit(int exit_code, const char *fmt, ...) {
+    cleanup();
+    putc('\n', stderr);
+    
+    va_list va;
+    va_start(va, fmt);
+    vfprintf(stderr, fmt, va);
+    putc('\n', stderr);
+    va_end(va);
+
+    exit(exit_code);
 }
 
 static void raw_mode() {
@@ -49,7 +69,7 @@ static void raw_mode() {
     tcsetattr(1, TCSAFLUSH, &new_termio);
 }
 
-static void terminate(int signo) {
+__attribute__((noreturn)) static void terminate(int signo) {
     kill(atc_pid, signo);
     exit(0);
 }
@@ -97,8 +117,7 @@ static void process_data(int src, int amt, void (*handler)(char)) {
 	    goto retry;
  	if (errno == EIO)
 	    exit(0);
-        fprintf(stderr, "\nread failed: %s\n", strerror(errno));
-        exit(errno);
+        errexit(errno, "read failed: %s", strerror(errno));
     }
     for (int i = 0; i < nchar; i++)
 	handler(buf[i]);
@@ -129,8 +148,7 @@ static void mainloop(int pfd) {
 		errno = 0;
 		continue;
 	    }
-	    fprintf(stderr, "\nselect failed: %s\n", strerror(errno));
-	    exit(errno);
+	    errexit(errno, "select failed: %s", strerror(errno));
 	}
 	if (rv == 0) {	// timeout
 	    update_board();
@@ -145,8 +163,8 @@ static void mainloop(int pfd) {
 	    read(pfd, &signo, 1);
 	    switch(signo) {
 		case SIGWINCH:
-		    fprintf(stderr, "\nCan't handle window resize.\n");
-		    // Fallthrough
+		    errexit('w', "Can't handle window resize.");
+		    // No return
 		case SIGTERM:
 		    terminate(signo);
 		    // No return
@@ -156,9 +174,8 @@ static void mainloop(int pfd) {
 		case SIGCLD:
 		    exit(0);
 		default:
-		    fprintf(stderr, "\nCaught unexpected signal %s\n",
+		    errexit(signo, "Caught unexpected signal %s",
 			    strsignal(signo));
-		    exit(signo);
 	    }
 	}
     }

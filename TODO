@@ -1,4 +1,6 @@
-A errexit or something to fix up the terminal then emit the error message.
+Organize all these crazy exit codes.
+Don't log all the courses.  Instead, log all current planes' courses on an
+	error or an inability to plot a safe course.
 Trigger updates when it's been a while since the last read from atc,
 	and then wait indefinitely for a read after the update
 	is complete or frame_no was unchanged.
