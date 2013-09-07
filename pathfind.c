@@ -248,6 +248,10 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
 	    if (cleared_exit && p->target_airport &&
 		    in_airport_excl(rc, nalt, p->target_num))
 		continue;
+	    if (nalt == 1 && p->target_airport &&
+		    rc.row == target.row && rc.col == target.col &&
+		    in_airport_excl(apply(srow, scol, -1), *alt, p->target_num))
+		continue;
 	    struct direction adjacent_plane =
 	        adjacent_another_plane(rc, nalt, frame->opc_start, !p->isjet);
 	    if (adjacent_plane.alt > 0) {

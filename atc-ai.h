@@ -112,3 +112,6 @@ extern void count_free(const char *, void *);
     #define malloc(x) count_malloc(__func__, x)
     #define free(x) count_free(__func__, x)
 #endif
+
+
+#define noreturn __attribute__((noreturn))

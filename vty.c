@@ -12,6 +12,8 @@ int screen_height, screen_width;
 char *display;
 
 static void scroll_up_plane_list() {
+    fprintf(logff, "Scrolling plane list.  Old display:\n%.*s\n",
+	    screen_height*screen_width, display);
     if (D(screen_height-3, info_col) != '*') {
 	fprintf(logff, "Got '%c' where expected to get '*'\n",
 	        D(screen_height-3, info_col));
@@ -25,6 +27,8 @@ static void scroll_up_plane_list() {
     for (int j = info_col; j < screen_width; j++) {
 	D(screen_height-4, j) = ' ';
     }
+    fprintf(logff, "New display:\n%.*s\n",
+	    screen_height*screen_width, display);
 }
 
 void update_display(char c) {

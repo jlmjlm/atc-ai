@@ -159,4 +159,6 @@ Interesting seeds:
 		reaches the alt==1 approach for ap #2 but can't complete the
 		turn to bearing 0.  This might be because it flies all the
 		way there in A2's exclusion zone at alt==1 and so never gets
-		the 'cleared_exit' flag set.
+		the 'cleared_exit' flag set.  To fix that, hard-exclude
+		moving to the ap's primary target from the excl. zone,
+		even if cleared_exit is false.  (Done.  Testing in progress.)

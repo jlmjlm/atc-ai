@@ -43,7 +43,7 @@ void cleanup() {
         kill(atc_pid, SIGTERM);
 }
 
-__attribute__((noreturn, format(printf, 2, 3) ))
+__attribute__((__noreturn__, format(printf, 2, 3) ))
 void errexit(int exit_code, const char *fmt, ...) {
     cleanup();
     putc('\n', stderr);
@@ -69,17 +69,26 @@ static void raw_mode() {
     tcsetattr(1, TCSAFLUSH, &new_termio);
 }
 
-__attribute__((noreturn)) static void terminate(int signo) {
+noreturn static void terminate(int signo) {
     kill(atc_pid, signo);
     exit(0);
 }
 
-static void interrupt(int signo) {
-    fprintf(logff, "Caught interrupt signal.  Contents of the display:\n%.*s\n",
-	    screen_height*screen_width, display);
+static void shutdown_atc(int signo) {
     kill(atc_pid, signo);
     usleep(100000);  // .1 s
     write(ptm, "y", 1);
+}
+
+static void interrupt(int signo) {
+    fprintf(logff, "Caught %s signal.  Contents of the display:\n%.*s\n",
+	    strsignal(signo), screen_height*screen_width, display);
+    shutdown_atc(signo);
+}
+
+noreturn static void abort_hand(int signo) {
+    shutdown_atc(SIGINT);
+    abort();
 }
 
 static void handle_signal(int signo) {
@@ -91,11 +100,12 @@ static void reg_sighandler() {
     struct sigaction handler;
     handler.sa_handler = &handle_signal;
     sigemptyset(&handler.sa_mask);
-    handler.sa_flags = 0;
+    handler.sa_flags = SA_RESETHAND;
     sigaction(SIGINT, &handler, NULL);
     sigaction(SIGTERM, &handler, NULL);
     sigaction(SIGWINCH, &handler, NULL);
     sigaction(SIGCLD, &handler, NULL);
+    sigaction(SIGABRT, &handler, NULL);
 }
 
 static void add_fd(int fd, fd_set *fds, int *max) {
@@ -167,6 +177,9 @@ static void mainloop(int pfd) {
 		    // No return
 		case SIGTERM:
 		    terminate(signo);
+		    // No return
+		case SIGABRT:
+		    abort_hand(signo);
 		    // No return
 		case SIGINT:
 		    interrupt(signo);
