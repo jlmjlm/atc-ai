@@ -51,6 +51,10 @@ Find out why there are "Too many blocking planes" in the self-test.
 Do something better than the "getting desperate" stuff in calc_bearing().
 On a SIGABORT/assert-fail, SIGINT+'y' the atc command, so atc-ai doesn't
 	just leave them lying around when it aborts.  [Done and tested.]
+Should we keep count_malloc and count_free around, even tho there are
+	no memleaks, just in case some get introduced?  Or remove them?
+Should have a --game (-g) option which fwd's to "atc", instead of
+	having to do -- -g <game>
 Make a test for the prevention of flying from an excl zone to the airport's
 	approach target.
 Nothing to do with atc-ai per se, but atc in some conditions will stomp
