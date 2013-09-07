@@ -192,6 +192,22 @@ static void new_cand(struct frame *frame, int bearing, int alt, int dist) {
 }
 
 #define MATCHCOURSE_PENALTY 1000
+#define CHANGEALT_BONUS 100
+#define BLP_MAX 10
+
+static void add_blocking_plane(struct direction *blocking_planes, int *n_blp,
+			       struct direction adjacent_plane) {
+    for (int i = 0; i < *n_blp; i++) {
+	if (blocking_planes[i].bearing == adjacent_plane.bearing &&
+		blocking_planes[i].alt == adjacent_plane.alt)
+	    return;
+    }
+
+    if (*n_blp == BLP_MAX)
+	fprintf(logff, "Warning: Too many blocking planes.\n");
+    else
+        blocking_planes[(*n_blp)++] = adjacent_plane;
+}
 
 void calc_next_move(const struct plane *p, const int srow, const int scol,
 		    int *alt, struct xyz target, int *bearing,
@@ -204,8 +220,7 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
     // Incur a penalty for matching the bearing/altitude of a
     // blocking airplane (because it'll just continue to block).
 
-    int turn;  int nalt;
-    #define BLP_MAX 10
+    int nalt;
     struct direction blocking_planes[BLP_MAX];
     int n_blp = 0;
 
@@ -225,7 +240,7 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
     }
    
     frame->n_cand = 0;
-    for (turn = -2; turn <= 2; turn++) {
+    for (int turn = -2; turn <= 2; turn++) {
 	int nb = (*bearing + turn) & 7;
     	struct xy rc = apply(srow, scol, nb);
 	if (rc.row < 0 || rc.col < 0 ||
@@ -254,12 +269,9 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
 		continue;
 	    struct direction adjacent_plane =
 	        adjacent_another_plane(rc, nalt, frame->opc_start, !p->isjet);
+	    
 	    if (adjacent_plane.alt > 0) {
-		if (n_blp == BLP_MAX) {
-		    fprintf(logff, "Warning: Too many blocking planes.\n");
-		} else {
-		    blocking_planes[n_blp++] = adjacent_plane;
-		}
+		add_blocking_plane(blocking_planes, &n_blp, adjacent_plane);
 		continue;
 	    }
 	    if (cleared_exit && (rc.row <= 2 || rc.row >= board_height - 3 ||
@@ -279,6 +291,9 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
     }
     for (int i = 0; i < frame->n_cand; i++) {
 	for (int j = 0; j < n_blp; j++) {
+	     if (*alt == blocking_planes[j].alt &&
+		     frame->cand[i].alt != blocking_planes[j].alt)
+		frame->cand[i].distance -= CHANGEALT_BONUS;
 	     if (frame->cand[i].bearing != blocking_planes[j].bearing)
 		continue;
 	     int da = abs(frame->cand[i].alt - blocking_planes[j].alt);

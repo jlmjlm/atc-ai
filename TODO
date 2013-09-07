@@ -53,8 +53,10 @@ Should we keep count_malloc and count_free around, even tho there are
 	no memleaks, just in case some get introduced?  Or remove them?
 Should have a --game (-g [or is '-g' already taken?]) option which fwd's 
 	to "atc", instead of having to do -- -g <game>
+Test on different size displays.
 Nothing to do with atc-ai per se, but atc in some conditions will stomp
-	the high score list.
+	the high score list.  (Hope the new ABRT handling fixes it.)
+	-- Nope!  At least not for SIGINT.
 Thread stuff:
     Start of this on the branch "pthread".
     * Get out of a busy loop on SIGINT/SIGTERM.  (Do calc in another thread?)
@@ -120,7 +122,12 @@ Interesting seeds:
 		Maybe this could be fixed by having a penalty for matching
 		a blocking plane's route at a neighboring altitude too?
 		Whelp -- with those added, it goes to tick 28240 only, with
-		'h' being the plane that fails.
+		'h' being the plane that fails.  --  And now it's plane 'p'
+		at tick 28274.  --  How about reversing the bearing prefs
+		each tick?  Will that let these planes figure out how 
+		to "go around"? - Ha!  That made it worse:  Now plane 'z'
+		exhausts fuel at tick 22076.  [Let's look at this in
+		detail.  See below.]
 	1377930389 'Killer' - runs on forever (or at least to 367536,
 		which takes 10h24m at 10 fps).
 	1378013339 'Killer' - Plane doesn't go to the exit direct sometime
@@ -164,3 +171,20 @@ Interesting seeds:
 		the 'cleared_exit' flag set.  To fix that, hard-exclude
 		moving to the ap's primary target from the excl. zone,
 		even if cleared_exit is false.  (Done and tested.)
+
+
+The 1377644268 fuel exhaustion scenario:
+At 22043, plane 'z' targeting (7, 29, 9) has to go back from (5, 11, 9) 
+to (5, 10, 9), and from there on til (4, 3, 9) at 22056 it's pushed westward.
+
+ 123456789abcdef
+2
+3
+4
+5          zS
+6
+7          V
+8
+
+Okay.  So, the problem is 'z' never tries to descend.  So, looks like we
+should give a bonus for unmatching a blocking plane's altitude.

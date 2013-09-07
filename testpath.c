@@ -132,12 +132,12 @@ static void test_plot_course(bool isprop) {
 	  1|...........|
 	  2|...........|
 	  3|......G....|
-	  4|......1....|
+	  4|......2....|
 	  5|....***1...|
 	  6|....*a*2...|
 	  7|..***d3**..|
 	  8|..*c*2*b*..|
-	  9|..***1***..|
+	  9|..***2***..|
 	  a|.....1.....|	
 	  b|.....S.....|	
 	  c-------------	*/
@@ -148,12 +148,12 @@ static void test_plot_course(bool isprop) {
     struct xyz excr[EXC_LEN] = {
 	{ .row = 11, .col = 6, .alt = 0 },
 	{ .row = 10, .col = 6, .alt = 1 },
-	{ .row = 9, .col = 6, .alt = 1 },
+	{ .row = 9, .col = 6, .alt = 2 },
 	{ .row = 8, .col = 6, .alt = 2 },
 	{ .row = 7, .col = 7, .alt = 3 },
 	{ .row = 6, .col = 8, .alt = 2 },
 	{ .row = 5, .col = 8, .alt = 1 },
-	{ .row = 4, .col = 7, .alt = 1 },
+	{ .row = 4, .col = 7, .alt = 2 },
 	{ .row = 3, .col = 7, .alt = 1 },
 	{ .row = -1, .col = -1, .alt = -2 },
     };
@@ -167,7 +167,7 @@ static void test_plot_course(bool isprop) {
 	{ .row = 7, .col = 8, .alt = 3 },
 	{ .row = 6, .col = 8, .alt = 2 },
 	{ .row = 5, .col = 8, .alt = 1 },
-	{ .row = 4, .col = 7, .alt = 1 },
+	{ .row = 4, .col = 7, .alt = 2 },
 	{ .row = 3, .col = 7, .alt = 1 },
 	{ .row = -1, .col = -1, .alt = -2 },
     };
