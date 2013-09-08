@@ -47,8 +47,6 @@ Keep track of moves taken, so if a plane has "too long" of a route, we can
 	minimizing the sum of the distances to the targets, and then do
 	that repeatedly.  But maybe it'd be too costly, what with each
 	plane having up to 15 possible moves.
-Find out why there are "Too many blocking planes" in the self-test.
-	-- It was double-counting.  Fixed.
 Do something better than the "getting desperate" stuff in calc_bearing().
 Should we keep count_malloc and count_free around, even tho there are
 	no memleaks, just in case some get introduced?  Or remove them?
@@ -191,3 +189,6 @@ Okay.  So, the problem is 'z' never tries to descend.  So, looks like we
 should give a bonus for unmatching a blocking plane's altitude.
 -- --  Tried, but hit plane 'a' hitting empty at tick 18412.  So, this
 doesn't seem to be the way to go.
+       -- So, now let's try only applying the "altchange" bonus only
+	  if we're forced to move away from the target (ie, increase
+	  our distance).  [And boy, do I use "so" too much.]

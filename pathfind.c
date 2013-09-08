@@ -291,9 +291,6 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
     }
     for (int i = 0; i < frame->n_cand; i++) {
 	for (int j = 0; j < n_blp; j++) {
-	     if (*alt == blocking_planes[j].alt &&
-		     frame->cand[i].alt != blocking_planes[j].alt)
-		frame->cand[i].distance -= CHANGEALT_BONUS;
 	     if (frame->cand[i].bearing != blocking_planes[j].bearing)
 		continue;
 	     int da = abs(frame->cand[i].alt - blocking_planes[j].alt);
@@ -304,6 +301,21 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
 	}
     }
     qsort(frame->cand, frame->n_cand, sizeof(*frame->cand), distcmp);
+
+    int old_dist = cdist(srow, scol, *alt, target, p, srow, scol);
+    if (frame->cand[frame->n_cand-1].distance > old_dist) {
+	// We're being pushed away from the destination.  Apply the
+	// alt change bonus and re-sort.
+	for (int i = 0; i < frame->n_cand; i++) {
+            for (int j = 0; j < n_blp; j++) {
+		if (*alt == blocking_planes[j].alt &&
+                        frame->cand[i].alt != blocking_planes[j].alt)
+                    frame->cand[i].distance -= CHANGEALT_BONUS;
+	    }
+	}
+	qsort(frame->cand, frame->n_cand, sizeof(*frame->cand), distcmp);
+    }
+
     *bearing = frame->cand[frame->n_cand-1].bearing;
     *alt = frame->cand[frame->n_cand-1].alt;
 }
