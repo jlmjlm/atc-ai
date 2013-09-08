@@ -88,7 +88,9 @@ static void interrupt(int signo) {
 
 noreturn static void abort_hand(int signo) {
     shutdown_atc(SIGINT);
+    atc_pid = 0;
     cleanup();
+    usleep(100000);  // .1 s
     abort();
 }
 

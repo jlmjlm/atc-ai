@@ -192,3 +192,4 @@ doesn't seem to be the way to go.
        -- So, now let's try only applying the "altchange" bonus only
 	  if we're forced to move away from the target (ie, increase
 	  our distance).  [And boy, do I use "so" too much.]
+       -- Okay, that worked for plane 'a' @ 18412.  And 'z' at 22043+.
