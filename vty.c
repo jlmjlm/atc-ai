@@ -2,17 +2,20 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdarg.h>
+#include <stdbool.h>
 
 #include "atc-ai.h"
 
 #define ESC_MAX 20
 
 int screen_height, screen_width;
+static int sr_start, sr_end;	// The scroll region.
 
 char *display;
 
-static void scroll_up_plane_list() {
+static void scroll_up_plane_list() { //XXX: Remove
     fprintf(logff, "Scrolling plane list.  Old display:\n%.*s\n",
 	    screen_height*screen_width, display);
     if (D(screen_height-3, info_col) != '*') {
@@ -32,10 +35,37 @@ static void scroll_up_plane_list() {
 	    screen_height*screen_width, display);
 }
 
-static const _Bool do_trace = 1;
+static void scroll_up() {
+    char *start = &D(sr_start, 0);
+    char *from = &D(sr_start+1, 0);
+    char *end = &D(sr_end, 0);
+
+    memmove(start, from, end-start);
+    for (int i = 0; i < screen_width; i++)
+	D(sr_end, i) = ' ';
+
+    fprintf(logff, "Scrolled up.  New display:\n%.*s\n",
+	    screen_height*screen_width, display);
+}
+
+static void scroll_down() {
+    char *start = &D(sr_start+1, 0);
+    char *from = &D(sr_start, 0);
+    char *end = &D(sr_end, 0);
+
+    memmove(start, from, end-from);
+    for (int i = 0; i < screen_width; i++)
+        D(sr_start, i) = ' ';
+
+    fprintf(logff, "Scrolled down.  New display:\n%.*s\n",
+            screen_height*screen_width, display);
+}
+
 
 __attribute__((format(printf, 1, 2) ))
 static void trace(const char *fmt, ...) {
+    static const bool do_trace = true;
+
     if (do_trace) {
         va_list va;
         va_start(va, fmt);
@@ -46,6 +76,7 @@ static void trace(const char *fmt, ...) {
 
 void update_display(char c) {
     static int cur_row, cur_col;
+    static bool at_sr_bottom;
     static int esc_size;
     static char esc[ESC_MAX];
 
@@ -61,9 +92,12 @@ void update_display(char c) {
 
     write(1, &c, 1);
 
+    if (sr_end == 0)
+	sr_end = screen_height-1;
+
     // ESC
-    if (c == '\33') {	// An ESC aborts any seqs which are partial
-	if (esc_size) {
+    if (c == '\33') {
+	if (esc_size) {  // An ESC aborts any seqs which are partial
 	    fprintf(logff, "warning: Escape sequence [\\33");
 	    display_esc_seq(logff);
 	    fprintf(logff, "] aborted by an ESC\n");
@@ -90,9 +124,15 @@ void update_display(char c) {
             return;
         }
 
+	if (esc[1] == 'D' && esc_size == 2) {
+	    trace("scroll-down: %.*s\n", esc_size, esc);
+	    scroll_down();
+	    return;
+	}
+
 	if (esc[1] == 'M' && esc_size == 2) {
 	    trace("scroll-up: %.*s\n", esc_size, esc);
-	    scroll_up_plane_list();
+	    scroll_up();
 	    return;
 	}
 
@@ -107,16 +147,39 @@ void update_display(char c) {
 		    fprintf(logff, "], ignoring.\n");
 		    break;
 		case 'm': // display attributes (inverse, bold, etc.) -- ignore
-		case 'r': // scrolling region -- ignore
 		case 'h': // terminal mode -- ignore
 		case 'l': // terminal mode reset -- ignore
 		case 'J': case 'K': // erase -- ignore
 	    	    trace("ignoring: %.*s\n", esc_size, esc);
 		    break;
+		case 'r': // scrolling region
+		    if (esc_size == 3) {
+			trace("setting default scroll region "
+			      "(entire display)\n");
+			sr_start = 0;
+			sr_end = screen_height-1;
+		        cur_row = cur_col = 0;
+			at_sr_bottom = false;
+			break;
+		    }
+		    rv = sscanf(esc+2, "%d;%d", &sr_start, &sr_end);
+		    if (rv != 2) {
+			cleanup();
+			fprintf(stderr, "Invalid scroll region sequence [\\33");
+			display_esc_seq(stderr);
+			fprintf(stderr, "]\n");
+			exit('r');
+		    }
+		    // VT100 positions are 1-origin, not 0-origin.
+		    sr_start--;  sr_end--;
+		    cur_row = cur_col = 0;
+		    at_sr_bottom = false;
+                    break;
 		case 'H': // cursor position
 		    if (esc_size == 3) {
 			trace("going to (0, 0): %.*s\n", esc_size, esc);
 			cur_row = cur_col = 0;
+		        at_sr_bottom = false;
 			break;
 		    }
 		    rv = sscanf(esc+2, "%d;%d", &cur_row, &cur_col);
@@ -132,6 +195,7 @@ void update_display(char c) {
 		    cur_row--; cur_col--;
 		    trace("going to (%d, %d): %.*s\n", cur_row, cur_col,
 			  esc_size, esc);
+		    at_sr_bottom = false;
 		    break;
 		case 'A': // move cursor up
 		case 'B': // move cursor down
@@ -153,6 +217,7 @@ void update_display(char c) {
 			cur_col = 0;
 		    trace("going to (%d, %d): %.*s\n", cur_row, cur_col,
 			  esc_size, esc);
+		    at_sr_bottom = false;
 		    break;
 	    }
     
@@ -181,6 +246,7 @@ void update_display(char c) {
 	case '\r':
 	    cur_col = 0;
 	    trace("carriage return: going to (%d, %d)\n", cur_row, cur_col);
+	    at_sr_bottom = false;
 	    return;
 
 	// BS
@@ -189,10 +255,15 @@ void update_display(char c) {
 	    if (cur_col < 0)
 		cur_col = 0;
 	    trace("going to (%d, %d): %c\n", cur_row, cur_col, c);
+	    at_sr_bottom = false;
 	    return;
 
 	// normal text
 	default:
+	    if (at_sr_bottom) {
+		scroll_up();
+		at_sr_bottom = false;
+	    }
     	    D(cur_row, cur_col) = c;
 	    trace("setting (%d, %d) to '%c' and ", cur_row, cur_col, c);
 	    if (cur_col+1 < screen_width) {
@@ -202,15 +273,20 @@ void update_display(char c) {
 	    }
 	    // ... else wrap to next line
 	    cur_col = 0;
-	    if (cur_row+1 < screen_height)
+	    if (cur_row == sr_end)
+		at_sr_bottom = true;
+	    else if (cur_row+1 < screen_height)
 		cur_row++;
 	    trace("going to (%d, %d)\n", cur_row, cur_col);
 	    break;
 
 	// LF
 	case '\n':
-	    if (cur_row+1 < screen_height)
+	    if (cur_row == sr_end)
+		scroll_up();
+	    else if (cur_row+1 < screen_height)
 		cur_row++;
+	    at_sr_bottom = false;
 	    trace("line feed: going to (%d, %d)\n", cur_row, cur_col);
 	    return;
     }
