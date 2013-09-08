@@ -57,9 +57,22 @@ void errexit(int exit_code, const char *fmt, ...) {
     exit(exit_code);
 }
 
+static void shutdown_atc(int signo) {
+    kill(atc_pid, signo);
+    usleep(100000);  // .1 s
+    write(ptm, "y", 1);
+}
+
+static void exit_hand() {
+    shutdown_atc(SIGINT);
+    atc_pid = 0;
+    cleanup();
+    usleep(100000);  // .1 s
+}
+
 static void raw_mode() {
     tcgetattr(1, &orig_termio);
-    atexit(&cleanup);
+    atexit(&exit_hand);
     struct termios new_termio = orig_termio;
     new_termio.c_lflag &= ~(ECHO | ICANON | IEXTEN);
     new_termio.c_iflag &= ~(ICRNL | ISTRIP | IXON);
@@ -74,12 +87,6 @@ noreturn static void terminate(int signo) {
     exit(0);
 }
 
-static void shutdown_atc(int signo) {
-    kill(atc_pid, signo);
-    usleep(100000);  // .1 s
-    write(ptm, "y", 1);
-}
-
 static void interrupt(int signo) {
     fprintf(logff, "Caught %s signal.  Contents of the display:\n%.*s\n",
 	    strsignal(signo), screen_height*screen_width, display);
@@ -87,10 +94,7 @@ static void interrupt(int signo) {
 }
 
 noreturn static void abort_hand(int signo) {
-    shutdown_atc(SIGINT);
-    atc_pid = 0;
-    cleanup();
-    usleep(100000);  // .1 s
+    exit_hand();
     abort();
 }
 

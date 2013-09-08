@@ -2,6 +2,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 #include "atc-ai.h"
 
@@ -29,6 +30,18 @@ static void scroll_up_plane_list() {
     }
     fprintf(logff, "New display:\n%.*s\n",
 	    screen_height*screen_width, display);
+}
+
+static const _Bool do_trace = 1;
+
+__attribute__((format(printf, 1, 2) ))
+static void trace(const char *fmt, ...) {
+    if (do_trace) {
+        va_list va;
+        va_start(va, fmt);
+        vfprintf(logff, fmt, va);
+        va_end(va);
+    }
 }
 
 void update_display(char c) {
@@ -65,17 +78,20 @@ void update_display(char c) {
 
 	if ((esc[1] == '(' || esc[1] == ')') && esc_size == 3) {
  	    // designate charset -- ignore
+	    trace("ignoring: %.*s\n", esc_size, esc);
 	    esc_size = 0;
 	    return;
 	}
 
 	if (esc[1] == '>' && esc_size == 2) {
 	    // keypad -- ignore
+	    trace("ignoring: %.*s\n", esc_size, esc);
 	    esc_size = 0;
             return;
         }
 
 	if (esc[1] == 'M' && esc_size == 2) {
+	    trace("scroll-up: %.*s\n", esc_size, esc);
 	    scroll_up_plane_list();
 	    return;
 	}
@@ -95,9 +111,11 @@ void update_display(char c) {
 		case 'h': // terminal mode -- ignore
 		case 'l': // terminal mode reset -- ignore
 		case 'J': case 'K': // erase -- ignore
+	    	    trace("ignoring: %.*s\n", esc_size, esc);
 		    break;
 		case 'H': // cursor position
 		    if (esc_size == 3) {
+			trace("going to (0, 0): %.*s\n", esc_size, esc);
 			cur_row = cur_col = 0;
 			break;
 		    }
@@ -112,6 +130,8 @@ void update_display(char c) {
 		    }
 		    // VT100 positions are 1-origin, not 0-origin.
 		    cur_row--; cur_col--;
+		    trace("going to (%d, %d): %.*s\n", cur_row, cur_col,
+			  esc_size, esc);
 		    break;
 		case 'A': // move cursor up
 		case 'B': // move cursor down
@@ -131,6 +151,8 @@ void update_display(char c) {
 			cur_col = screen_width-1;
 		    if (cur_col < 0)
 			cur_col = 0;
+		    trace("going to (%d, %d): %.*s\n", cur_row, cur_col,
+			  esc_size, esc);
 		    break;
 	    }
     
@@ -151,11 +173,14 @@ void update_display(char c) {
 
     switch (c) {
 	// swallow beeps & ^O
-	case '\a': case 15: return;
+	case '\a': case 15: 
+	    trace("ignoring: %c\n", c);
+	    return;
 
 	// CR
 	case '\r':
 	    cur_col = 0;
+	    trace("carriage return: going to (%d, %d)\n", cur_row, cur_col);
 	    return;
 
 	// BS
@@ -163,23 +188,30 @@ void update_display(char c) {
 	    cur_col--;
 	    if (cur_col < 0)
 		cur_col = 0;
+	    trace("going to (%d, %d): %c\n", cur_row, cur_col, c);
 	    return;
 
 	// normal text
 	default:
     	    D(cur_row, cur_col) = c;
+	    trace("setting (%d, %d) to '%c' and ", cur_row, cur_col, c);
 	    if (cur_col+1 < screen_width) {
     	    	cur_col++;
+	        trace("going to (%d, %d)\n", cur_row, cur_col);
 		return;
 	    }
 	    // ... else wrap to next line
 	    cur_col = 0;
-	    // Fallthrough
+	    if (cur_row+1 < screen_height)
+		cur_row++;
+	    trace("going to (%d, %d)\n", cur_row, cur_col);
+	    break;
 
 	// LF
 	case '\n':
 	    if (cur_row+1 < screen_height)
 		cur_row++;
+	    trace("line feed: going to (%d, %d)\n", cur_row, cur_col);
 	    return;
     }
 }

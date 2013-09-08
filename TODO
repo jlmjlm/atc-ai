@@ -51,12 +51,17 @@ Do something better than the "getting desperate" stuff in calc_bearing().
 Record what the longest routes for jets & props are.
 Should we keep count_malloc and count_free around, even tho there are
 	no memleaks, just in case some get introduced?  Or remove them?
-Should have a --game (-g [or is '-g' already taken?]) option which fwd's 
+Should have a --game (-g [or is '-g' already taken?]) option which fwd's
 	to "atc", instead of having to do -- -g <game>
 Test on different size displays.
 Nothing to do with atc-ai per se, but atc in some conditions will stomp
 	the high score list.  (Hope the new ABRT handling fixes it.)
-	-- Nope!  At least not for SIGINT.
+	-- Nope!  At least not for SIGINT.  Might be abort_hand() [called
+	   for assert fails and general aborts] versus errexit().  [The
+	   difference is fuzzy, but generally errexit() is for "didn't
+	   expect that from the environment & don't know how to deal with it"
+	   while assert() is for "damn, I screwed something up, internal
+	   error".]
 Thread stuff:
     Start of this on the branch "pthread".
     * Get out of a busy loop on SIGINT/SIGTERM.  (Do calc in another thread?)
@@ -124,7 +129,7 @@ Interesting seeds:
 		Whelp -- with those added, it goes to tick 28240 only, with
 		'h' being the plane that fails.  --  And now it's plane 'p'
 		at tick 28274.  --  How about reversing the bearing prefs
-		each tick?  Will that let these planes figure out how 
+		each tick?  Will that let these planes figure out how
 		to "go around"? - Ha!  That made it worse:  Now plane 'z'
 		exhausts fuel at tick 22076.  [Let's look at this in
 		detail.  See below.]  And after that stuff below, it
@@ -146,8 +151,15 @@ Interesting seeds:
 		in one tick.  (Fixed.)
 
 	1378611916 'Tic-Tac-Toe'
-		At tick 27, errors with "Found '+ ' where expected to find 
+		At tick 27, errors with "Found '+ ' where expected to find
 		a plane."
+	1378613004 'Tic-Tac-Toe'
+		Very much similar.  "Found '. ' where expected to find a plane."
+		Don't understand how the plane's getting to (9, 1) on the
+		display, but stays at (10, 1) on the board -- there's 
+		something to write it at (10, 1) at tick 11, but nothing
+		alters it for tick 12.  Probably I have to read up on
+		vt100 scrolling regions.
 
 	1378445708 'airports' -
 		* A south-facing airport (#5) gets misrecognized as a
@@ -181,7 +193,7 @@ Interesting seeds:
 
 
 The 1377644268 fuel exhaustion scenario:
-At 22043, plane 'z' targeting (7, 29, 9) has to go back from (5, 11, 9) 
+At 22043, plane 'z' targeting (7, 29, 9) has to go back from (5, 11, 9)
 to (5, 10, 9), and from there on til (4, 3, 9) at 22056 it's pushed westward.
 
  123456789abcdef
