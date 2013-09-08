@@ -15,25 +15,6 @@ static int sr_start, sr_end;	// The scroll region.
 
 char *display;
 
-static void scroll_up_plane_list() { //XXX: Remove
-    fprintf(logff, "Scrolling plane list.  Old display:\n%.*s\n",
-	    screen_height*screen_width, display);
-    if (D(screen_height-3, info_col) != '*') {
-	fprintf(logff, "Got '%c' where expected to get '*'\n",
-	        D(screen_height-3, info_col));
-	exit(D(screen_height-3, info_col));
-    }
-    for (int i = 3; i < screen_height-4; i++) {
-	for (int j = info_col; j < screen_width; j++) {
-	    D(i, j) = D(i+1, j);
-	}
-    }
-    for (int j = info_col; j < screen_width; j++) {
-	D(screen_height-4, j) = ' ';
-    }
-    fprintf(logff, "New display:\n%.*s\n",
-	    screen_height*screen_width, display);
-}
 
 static void scroll_up() {
     char *start = &D(sr_start, 0);
@@ -63,8 +44,8 @@ static void scroll_down() {
 
 
 __attribute__((format(printf, 1, 2) ))
-static void trace(const char *fmt, ...) {
-    static const bool do_trace = true;
+static inline void trace(const char *fmt, ...) {
+    static const bool do_trace = false;
 
     if (do_trace) {
         va_list va;

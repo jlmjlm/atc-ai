@@ -162,6 +162,8 @@ Interesting seeds:
 		alters it for tick 12.  Probably I have to read up on
 		vt100 scrolling regions.  The new scoll handling helps,
 		as this now gets to frame 129 before fatal confusion.
+		And after fixing "Esc M" and "Esc D", seems to work just
+		fine.
 
 	1378445708 'airports' -
 		* A south-facing airport (#5) gets misrecognized as a
