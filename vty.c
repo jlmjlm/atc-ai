@@ -125,14 +125,22 @@ void update_display(char c) {
         }
 
 	if (esc[1] == 'D' && esc_size == 2) {
-	    trace("scroll-down: %.*s\n", esc_size, esc);
-	    scroll_down();
+	    trace("index: %.*s\n", esc_size, esc);
+	    if (cur_row == sr_end)
+		scroll_up();
+	    else if (cur_row < screen_height-1)
+		cur_row++;
+	    esc_size = 0;
 	    return;
 	}
 
 	if (esc[1] == 'M' && esc_size == 2) {
-	    trace("scroll-up: %.*s\n", esc_size, esc);
-	    scroll_up();
+	    trace("reverse index: %.*s\n", esc_size, esc);
+	    if (cur_row == sr_start)
+		scroll_down();
+	    else if (cur_row > 0)
+		cur_row--;
+	    esc_size = 0;
 	    return;
 	}
 
@@ -174,6 +182,8 @@ void update_display(char c) {
 		    sr_start--;  sr_end--;
 		    cur_row = cur_col = 0;
 		    at_sr_bottom = false;
+		    trace("setting scroll region to %d-%d: %.*s\n", 
+			  sr_start, sr_end, esc_size, esc);
                     break;
 		case 'H': // cursor position
 		    if (esc_size == 3) {
