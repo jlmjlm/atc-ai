@@ -543,7 +543,7 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	        rec->len = steps;
 		rec->code = p->id;
 		rec->frame_no = frame_no;
-		fprintf(logff, "New record long route: plane '%c' at time 
+		fprintf(logff, "New record long route: plane '%c' at time "
 			       "%d in %d steps.\n", p->id, frame_no, steps);
 	    }
 

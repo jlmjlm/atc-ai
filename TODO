@@ -145,6 +145,10 @@ Interesting seeds:
 		because in starts out bearing SW and can't turn to the east
 		in one tick.  (Fixed.)
 
+	1378611916 'Tic-Tac-Toe'
+		At tick 27, errors with "Found '+ ' where expected to find 
+		a plane."
+
 	1378445708 'airports' -
 		* A south-facing airport (#5) gets misrecognized as a
 		plane (at FL 5) because of how 'v' is overloaded.  (Fixed)
