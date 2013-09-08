@@ -405,6 +405,9 @@ static void free_framelist(struct frame *fp) {
 
 static void make_new_fr(struct frame **endp);
 
+struct record { char code; int frame_no; int len; };
+static struct record rec_jet, rec_prop;  // static init. == zeros
+
 void plot_course(struct plane *p, int row, int col, int alt) {
     struct frame *frstart = malloc(sizeof *frstart);
     struct frame *frend = frstart;
@@ -534,6 +537,16 @@ void plot_course(struct plane *p, int row, int col, int alt) {
     	    }
 
 	    free_framelist(frstart);
+
+	    struct record *rec = p->isjet ? &rec_jet : &rec_prop;
+	    if (steps > rec->len) {
+	        rec->len = steps;
+		rec->code = p->id;
+		rec->frame_no = frame_no;
+		fprintf(logff, "New record long route: plane '%c' at %d "
+			       "in %d steps.\n", p->id, frame_no, steps);
+	    }
+
 	    return;
 	}
 

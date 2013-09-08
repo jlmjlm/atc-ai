@@ -42,12 +42,13 @@ Keep track of moves taken, so if a plane has "too long" of a route, we can
 	of a blocking plane will work better.  (Done, but it seems in
 	a fraction of cases a plane can still be pushed away from its
 	exit until it reaches the boundary.  Eg, Killer 1377644268
-	with plane 'u'.)
+	with plane 'u'.) XXX(remove this a.i.)
 -- Or maybe it'd be better to have all the planes move for one tick,
 	minimizing the sum of the distances to the targets, and then do
 	that repeatedly.  But maybe it'd be too costly, what with each
 	plane having up to 15 possible moves.
 Do something better than the "getting desperate" stuff in calc_bearing().
+Record what the longest routes for jets & props are.
 Should we keep count_malloc and count_free around, even tho there are
 	no memleaks, just in case some get introduced?  Or remove them?
 Should have a --game (-g [or is '-g' already taken?]) option which fwd's 
@@ -126,7 +127,10 @@ Interesting seeds:
 		each tick?  Will that let these planes figure out how 
 		to "go around"? - Ha!  That made it worse:  Now plane 'z'
 		exhausts fuel at tick 22076.  [Let's look at this in
-		detail.  See below.]
+		detail.  See below.]  And after that stuff below, it
+		seems to be fixed!  Made it to 29000 with 6700 saved planes,
+		and still going strong.  And ran it until 40367 at 80 ms/frame
+		in 54m52s to save 9385 planes.
 	1377930389 'Killer' - runs on forever (or at least to 367536,
 		which takes 10h24m at 10 fps).
 	1378013339 'Killer' - Plane doesn't go to the exit direct sometime
