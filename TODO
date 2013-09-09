@@ -99,10 +99,20 @@ Interesting seeds:
 		Another blockage around exit 0 stops a plane targeting 
 		exit 1 at ~11450.  (Uber-fixed:  Doesn't even bunch around
 		that exit now.)
-		'G' pushes 'H' at about t=27650.
+		'G' pushes 'H' at about t=27650.  (Hmm, missed that.)
 		Three planes together at E. border at ~32390.
 		Pretty at 41540.
-		Plane 'V' makes a major detour around 58400.
+		Plane 'V' makes a major detour around 58400.  (No longer.
+		I wouldn't even recognize this game's behavior as being
+		seeded correctly, except checking from 'ps' shows that
+		it is.)
+		Have some very long routes:  
+- New record long route: plane 'g' at time 193099 in 48 steps.
+- New record long route: plane 'd' at time 242633 in 51 steps.
+		(But somehow survives that last one.  I bet it hits
+		the exit portal right at out-of-gas.  Not quite realistic,
+		that!)
+
 	1376535757 On turn 23 produces a plane at (0, 29, 7)
 		[upper right corner].
 		This also has plane 'w' follow blocking place 's' at about
