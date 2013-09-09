@@ -96,8 +96,9 @@ Interesting seeds:
 		prop backtrack at t==600.
 		Looks awesome around time 3000.
 		Plane 'G' blocks plane 'H' from about 3500 on.
-		Another blockage around exit 0 stops a plane targeting exit
-		1 at ~11450.
+		Another blockage around exit 0 stops a plane targeting 
+		exit 1 at ~11450.  (Uber-fixed:  Doesn't even bunch around
+		that exit now.)
 		'G' pushes 'H' at about t=27650.
 		Three planes together at E. border at ~32390.
 		Pretty at 41540.
