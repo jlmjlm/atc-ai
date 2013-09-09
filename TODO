@@ -186,7 +186,7 @@ Interesting seeds:
 		This is due to a [Esc M] seq which scrolls the list of
 		planes up (see http://www.termsys.demon.co.uk/vtansi.htm ),
 		so what atc-ai thinks the board is and what atc thinks
-		it is get de-sync'd.  (Looks to be fixed.  Should confirm.)
+		it is get de-sync'd.  (Fixed & fix confirmed.)
 		* At tick 44207, plane 'j' crashes into terrain, because it
 		reaches the alt==1 approach for ap #2 but can't complete the
 		turn to bearing 0.  This might be because it flies all the
