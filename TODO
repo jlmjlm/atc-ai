@@ -62,7 +62,8 @@ Nothing to do with atc-ai per se, but atc in some conditions will stomp
 	   expect that from the environment & don't know how to deal with it"
 	   while assert() is for "damn, I screwed something up, internal
 	   error".]  Seems to be reliably killing the "atc" children,
-	   but not as resetting the console to "sane".
+	   but not as resetting the console to "sane".  This is the case
+	   for SIGINT.  [Which I thought I'd fixed. :( ]
 Thread stuff:
     Start of this on the branch "pthread".
     * Get out of a busy loop on SIGINT/SIGTERM.  (Do calc in another thread?)
