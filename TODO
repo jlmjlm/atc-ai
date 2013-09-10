@@ -111,7 +111,13 @@ Interesting seeds:
 - New record long route: plane 'd' at time 242633 in 51 steps.
 		(But somehow survives that last one.  I bet it hits
 		the exit portal right at out-of-gas.  Not quite realistic,
-		that!)
+		that!)  Recording these is going to be tough.
+	 FIXME: Maybe have it be so that when a record course is plotted,
+		it logs the entire flight courses of all the planes that
+		are on the board.  To do this, it'd have to remember the
+		past flight steps of the planes, and so delete the entire
+		course when the plane becomes safe, instead of deleting them
+		turn by turn with each clock tick.
 
 	1376535757 On turn 23 produces a plane at (0, 29, 7)
 		[upper right corner].
