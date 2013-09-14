@@ -403,22 +403,25 @@ static void free_framelist(struct frame *fp) {
     }
 }
 
-static void log_all_courses() {
-    for (struct plane *p = plstart; p; p = p->next) {
-	fprintf(logff, "Plotting plane %c's course from %d:(%d, %d, %d) to "
-		       "%d:(%d, %d, %d)\n", p->id, p->start_tm,
-		p->start->pos.row, p->start->pos.col, p->start->pos.alt,
-		p->end_tm, p->end->pos.row, p->end->pos.col, p->end->pos.alt);
-	int tick = p->start_tm;
-	struct course *c = p->start;
-	for ( ; c; tick++, c = c->next) {
-	    fprintf(logff, "\t%c %d: (%d, %d, %d) bearing %s\n", p->id, tick,
-		    c->pos.row, c->pos.col, c->pos.alt,
-		    bearings[c->bearing].shortname);
-	    if (c->bearing < 0)
-		break;
-	}
+static void log_course(const struct plane *p) {
+    fprintf(logff, "Plotting plane %c's course from %d:(%d, %d, %d) to "
+                   "%d:(%d, %d, %d)\n", p->id, p->start_tm,
+            p->start->pos.row, p->start->pos.col, p->start->pos.alt,
+            p->end_tm, p->end->pos.row, p->end->pos.col, p->end->pos.alt);
+    int tick = p->start_tm;
+    struct course *c = p->start;
+    for ( ; c; tick++, c = c->next) {
+        fprintf(logff, "\t%c %d: (%d, %d, %d) bearing %s\n", p->id, tick,
+                c->pos.row, c->pos.col, c->pos.alt,
+                bearings[c->bearing].shortname);
+        if (c->bearing < 0)
+            break;
     }
+}
+
+static void log_all_courses() {
+    for (struct plane *p = plstart; p; p = p->next)
+	log_course(p);
 }
 
 static void make_new_fr(struct frame **endp);
@@ -563,6 +566,7 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 		rec->frame_no = frame_no;
 		fprintf(logff, "New record long route: plane '%c' at time "
 			       "%d in %d steps.\n", p->id, frame_no, steps);
+		log_course(p);
 		log_all_courses();
 	    }
 
