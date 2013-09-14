@@ -68,8 +68,8 @@ static int calc_bearing(int row, int col) {
 
     // Getting desperate, so make a guess based on proximity to boundary.
     if (!is_exit_at(row, col)) {
-        fprintf(logff, "New plane at (%d, %d) isn't at exit or near exit.\n",
-	        row, col);
+        fprintf(logff, "Caution: New plane at (%d, %d) isn't at exit or near "
+		       "exit.\n", row, col);
     }
     if (row == 0 || row == 1)
 	return bearing_of("S");
@@ -86,8 +86,8 @@ static int calc_bearing(int row, int col) {
 
 static void add_course_elem(struct plane *p, int row, int col, int alt,
 			    int bearing, bool cleared_exit) {
-    fprintf(logff, "\t(%d, %d, %d)@%d\n", row, col, alt, 
-	    bearings[bearing].degree);
+    //fprintf(logff, "\t(%d, %d, %d)@%d\n", row, col, alt, 
+    //        bearings[bearing].degree);
     struct course *nc = malloc(sizeof(*nc));
     nc->pos.row = row;  nc->pos.col = col;  nc->pos.alt = alt;
     nc->bearing = bearing;
@@ -447,9 +447,9 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	target.row = e->row;
         target.col = e->col;
     }
-    fprintf(logff, "Plotting course from %d:(%d, %d, %d)@%d to (%d, %d, %d)\n",
-	    frame_no, row, col, alt, bearings[bearing].degree, 
-	    target.row, target.col, target.alt);
+    //fprintf(logff, "Plotting course from %d:(%d, %d, %d)@%d to (%d, %d, %d)\n",
+    //	      frame_no, row, col, alt, bearings[bearing].degree, 
+    //	      target.row, target.col, target.alt);
     
     p->start = p->current = p->end = NULL;
     add_course_elem(p, row, col, alt, bearing, false);
@@ -472,7 +472,7 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	// ...except that a prop plane in an exit will pop out of it.
 	if (!p->isjet && tick%2 == 1 && row != 0 && col != 0 &&
 		row != board_height-1 && col != board_width-1) {
-	    fprintf(logff, "\t%d:", tick);
+	    //fprintf(logff, "\t%d:", tick);
 	    add_course_elem(p, row, col, alt, bearing, cleared_exit);
 	    tick++;
 	    frend->n_cand = -3;
@@ -517,7 +517,7 @@ void plot_course(struct plane *p, int row, int col, int alt) {
             col += bearings[bearing].dcol;
 	}
 	
-	fprintf(logff, "\t%d:", tick);
+	//fprintf(logff, "\t%d:", tick);
 	add_course_elem(p, row, col, alt, bearing, cleared_exit);
 	tick++;
 
@@ -545,6 +545,7 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 		rec->frame_no = frame_no;
 		fprintf(logff, "New record long route: plane '%c' at time "
 			       "%d in %d steps.\n", p->id, frame_no, steps);
+		//FIXME: Report full courses of all extant planes.
 	    }
 
 	    return;
