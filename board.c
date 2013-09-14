@@ -401,8 +401,8 @@ static void handle_found_plane(char code, int alt, int row, int col) {
 }
 
 static void handle_new_plane(char code, int row, int col, int alt) {
-    fprintf(logff, "New plane '%c' found at (%d, %d, %d) on turn %d.\n",
-	    code, row, col, alt, frame_no);
+    //fprintf(logff, "New plane '%c' found at (%d, %d, %d) on turn %d.\n",
+    //        code, row, col, alt, frame_no);
     struct plane *p = malloc(sizeof(*p));
     p->id = code;
     p->isjet = islower(code);
