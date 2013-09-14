@@ -78,8 +78,8 @@ struct plane {
     _Bool isjet;
     _Bool target_airport;
     int target_num;
-    struct course *start, *end;
-    int start_tm, end_tm;
+    struct course *start, *current, *end;
+    int start_tm, current_tm, end_tm;
     struct plane *prev, *next;
 };
 

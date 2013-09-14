@@ -424,7 +424,7 @@ void plot_course(struct plane *p, int row, int col, int alt) {
     for (struct plane *pi = plstart; pi; pi = pi->next) {
 	if (pi == p)
 	    continue;
-	new_op_course(pi->start, &frstart->opc_start, &opc_end);
+	new_op_course(pi->current, &frstart->opc_start, &opc_end);
     }
     incr_opc(frstart->opc_start);
 
@@ -451,9 +451,9 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	    frame_no, row, col, alt, bearings[bearing].degree, 
 	    target.row, target.col, target.alt);
     
-    p->start = p->end = NULL;
+    p->start = p->current = p->end = NULL;
     add_course_elem(p, row, col, alt, bearing, false);
-    p->start_tm = frame_no;
+    p->start_tm = p->current_tm = frame_no;
     int tick = frame_no+1;
     int steps = 0;
 

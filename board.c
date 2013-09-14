@@ -251,8 +251,8 @@ static bool southbound_airport(char code, int alt, int row, int col) {
 
 static void verify_planes() {
     for (struct plane *i = plstart; i; ) {
-	assert(i->start_tm == frame_no);
-	struct course *next = i->start->next;
+	assert(i->current_tm == frame_no);
+	struct course *next = i->current->next;
 	if (!next) {
 	    //fprintf(logff, "Plane '%c' safe at tick %d frame %d\n",
             //        i->id, i->end_tm, frame_no);
@@ -263,40 +263,40 @@ static void verify_planes() {
 	if (next->pos.alt == -2)
 	    land_at_airport(i->id, i->target_num);
 	else {
-	    if (i->start->bearing != next->bearing)
+	    if (i->current->bearing != next->bearing)
             	order_new_bearing(i->id, next->bearing);
-	    if (i->start->pos.alt != next->pos.alt)
+	    if (i->current->pos.alt != next->pos.alt)
             	order_new_altitude(i->id, next->pos.alt);
 	}
 
-	char code = D(i->start->pos.row, i->start->pos.col*2);
-	char alt = D(i->start->pos.row, i->start->pos.col*2+1);
-	if (i->start->pos.alt == 0) {
+	char code = D(i->current->pos.row, i->current->pos.col*2);
+	char alt = D(i->current->pos.row, i->current->pos.col*2+1);
+	if (i->current->pos.alt == 0) {
 	    if (!isdigit(alt) || (!isalpha(code) && !memchr("<>^v", code, 4))) {
 	        fprintf(logff, "[Tick %d] Expected to find plane '%c' at "
 		               "(%d, %d) but instead found '%c%c'\n",
-		        frame_no, i->id, i->start->pos.row, i->start->pos.col,
-		        code, alt);
+		        frame_no, i->id,
+			i->current->pos.row, i->current->pos.col, code, alt);
 		errexit('p', "Found '%c%c' where expected to find a "
                              "plane or airport.", code, alt);
 	    }
 	} else if (!isalpha(code) || !isdigit(alt)) {
 	    fprintf(logff, "[Tick %d] Expected to find plane '%c' at "
 	                   "(%d, %d) but instead found '%c%c'\n",
-		    frame_no, i->id, i->start->pos.row, i->start->pos.col,
+		    frame_no, i->id, i->current->pos.row, i->current->pos.col,
 		    code, alt);
 	    errexit('p', "Found '%c%c' where expected to find a plane.",
 		    code, alt);
 	}
-	if (code == i->id && alt-'0' != i->start->pos.alt &&
+	if (code == i->id && alt-'0' != i->current->pos.alt &&
 		!southbound_airport(code, alt-'0',
-				    i->start->pos.row, i->start->pos.col)) {
+				    i->current->pos.row, i->current->pos.col)) {
 	    fprintf(logff, "Found plane '%c' at altitude %c=%d where "
 		           "expected to find it at altitude %d\n",
-		    code, alt, alt-'0', i->start->pos.alt);
+		    code, alt, alt-'0', i->current->pos.alt);
 	    errexit('a', "Found plane %c at altitude %c=%d where "
                          "expected to find it at altitude %d.",
-                    code, alt, alt-'0', i->start->pos.alt);
+                    code, alt, alt-'0', i->current->pos.alt);
 	}
 	i = i->next;
     }
@@ -316,7 +316,7 @@ static void check_pldt() {
 
 static inline bool plane_at_airport(char id) {
     struct plane *p = get_plane(id);
-    return p->id == id && p->start && p->start->pos.alt == 0;
+    return p->id == id && p->current && p->current->pos.alt == 0;
 }
 
 static void handle_airport_plane(char id, int dtpos) {
@@ -380,7 +380,7 @@ static void handle_found_plane(char code, int alt, int row, int col) {
     struct plane *p = get_plane(code);
 
     if (p) {
-	struct xyz pos = p->start->pos;
+	struct xyz pos = p->current->pos;
 	if (pos.alt != alt || pos.row != row || pos.col != col) {
 	    fprintf(logff, "[Tick %d] Expected to find plane '%c' at "
 			   "(%d, %d, %d) but actually at (%d, %d, %d)\n",
@@ -419,6 +419,8 @@ static void handle_new_plane(char code, int row, int col, int alt) {
 	    if (next->pos.alt != alt)
 	        order_new_altitude(p->id, next->pos.alt);
 	}
+	p->current = p->start;
+	p->current_tm = p->start_tm;
     }
 
     p->next = NULL;
@@ -449,8 +451,8 @@ static void find_new_planes() {
 
 static void update_plane_courses() {
     for (struct plane *p = plstart; p; p = p->next) {
-	p->start = free_course_entry(p->start);
-	p->start_tm++;
+	p->current = p->current->next;
+	p->current_tm++;
     }
 }
 

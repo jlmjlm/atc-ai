@@ -180,12 +180,16 @@ static void test_plot_course(bool isprop) {
     struct course c4 = { .pos = { .row = 7, .col = 6, .alt = 4 },
 			 .bearing = -1, .prev = &c4, .next = &c4 };
     struct plane pls[5] = {
-      { .id = 'a', .start = &c1, .end = &c1, .prev = NULL, .next = &pls[1] },
-      { .id = 'b', .start = &c2, .end = &c2, .prev = &pls[0], .next = &pls[2] },
-      { .id = 'c', .start = &c3, .end = &c3, .prev = &pls[1], .next = &pls[4] },
-      { .id = 'd', .start = &c4, .end = &c4, .prev = &pls[2], .next = &pls[4] },
+      { .id = 'a', .start = &c1, .current = &c1, .end = &c1,
+	.prev = NULL, .next = &pls[1] },
+      { .id = 'b', .start = &c2, .current = &c2, .end = &c2,
+	.prev = &pls[0], .next = &pls[2] },
+      { .id = 'c', .start = &c3, .current = &c3, .end = &c3,
+	.prev = &pls[1], .next = &pls[4] },
+      { .id = 'd', .start = &c4, .current = &c4, .end = &c4,
+	.prev = &pls[2], .next = &pls[4] },
       { .id = isprop ? 'S' : 's', .isjet = !isprop, .target_airport = true,
-	.target_num = 0, .start = NULL, .end = NULL,
+	.target_num = 0, .start = NULL, .current = NULL, .end = NULL,
 	.prev = &pls[2], .next = NULL } };
     void add_plane_d() {
 	pls[2].next = &pls[3];  pls[4].prev = &pls[3];
