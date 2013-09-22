@@ -162,7 +162,7 @@ static bool pos_adjacent(struct xyz pos, struct xy rc, int alt) {
 struct blp { int bearing, alt; bool isjet; };
 
 static struct blp adjacent_another_plane(struct xy rc, int alt, bool imjet,
-		            const struct op_courses *opc) {
+		             	 	 const struct op_courses *opc) {
     for ( ; opc; opc = opc->next) {
 	if (!opc->c || opc->c->at_exit)
 	    continue;
@@ -182,6 +182,28 @@ static struct blp adjacent_another_plane(struct xy rc, int alt, bool imjet,
 
     struct blp rv = { -1, -1, true };
     return rv;
+}
+
+// Also have a penalty for a jet aligning with a prop at the
+// same FL and orthodistance 2, because that's essentially
+// "matching" up courses (to be tighter with this check,
+// we should check bearings).
+// FIXME: self-test this
+static bool planes_aligned(struct xy rc, int alt, bool imjet, 
+			   const struct op_courses *opc) {
+    if (!imjet)
+	return false;
+    for ( ; opc; opc = opc->next) {
+        if (!opc->c || opc->c->at_exit || opc->isjet)
+            continue;
+        struct xyz pos = opc->c->pos;
+	int dr = rc.row - pos.row;
+	int dc = rc.col - pos.col;
+	if (alt == pos.alt && ((dr == 0 && abs(dc) == 2) ||
+                               (dc == 0 && abs(dr) == 2)))
+	    return true;
+    }
+    return false;
 }
 
 static void new_cand(struct frame *frame, int bearing, int alt, int dist) {
@@ -219,10 +241,10 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
 
     // Incur a penalty for matching the bearing/altitude of a
     // blocking airplane (because it'll just continue to block).
-
-    int nalt;
     struct blp blocking_planes[BLP_MAX];
     int n_blp = 0;
+
+    int nalt;
 
     // If the plane's at the airport, it can only hold or take off.
     if (*alt == 0) {
@@ -279,8 +301,10 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
 		    ((p->target_airport && nalt >= 6) ||
 		     (!p->target_airport && nalt != 9)))
 		continue;
+	    bool aligned = planes_aligned(rc, nalt, p->isjet, frame->opc_start);
+	    int penalty = aligned ? MATCHCOURSE_PENALTY/2 : 0;
 	    new_cand(frame, nb, nalt, 
-		     cdist(rc.row, rc.col, nalt, target, p, srow, scol));
+		     cdist(rc.row, rc.col, nalt, target, p, srow, scol)+penalty);
 	}
     }
     assert(frame->n_cand <= 15);
@@ -299,25 +323,6 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
 		frame->cand[i].distance += MATCHCOURSE_PENALTY;
 	     else if (da == 1)
 		frame->cand[i].distance += MATCHCOURSE_PENALTY/10;
-	}
-
-	for (const struct plane *pi = plstart; pi; pi = pi->next) {
-	    // Also have a penalty for a jet aligning with a prop at the
-	    // same FL and orthodistance 2, because that's essentially
-	    // "matching" up courses (to be tighter with this check,
-	    // we should check bearings).
-	    // FIXME: self-test this
-	    if (p->isjet && !pi->isjet && pi->current->next) {
-		struct xy rc = apply(srow, scol, frame->cand[i].bearing);
-	        int da = frame->cand[i].alt - pi->current->next->pos.alt;
-	        int dr = rc.row - pi->current->next->pos.row;
-	        int dc = rc.col - pi->current->next->pos.col;
-
-		if (da == 0 && ((dr == 0 && abs(dc) == 2) || 
-				(dc == 0 && abs(dr) == 2))) {
-		    frame->cand[i].distance += MATCHCOURSE_PENALTY/2;
-		}
-	    }
 	}
     }
     qsort(frame->cand, frame->n_cand, sizeof(*frame->cand), distcmp);
@@ -451,6 +456,7 @@ struct record { char code; int frame_no; int len; };
 static struct record rec_jet, rec_prop;  // static init. == zeros
 
 void plot_course(struct plane *p, int row, int col, int alt) {
+    bool trace = (p->id == 'i' && frame_no == 575);
     struct frame *frstart = malloc(sizeof *frstart);
     struct frame *frend = frstart;
     frstart->prev = frstart->next = NULL;
@@ -489,9 +495,12 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	target.row = e->row;
         target.col = e->col;
     }
-    //fprintf(logff, "Plotting course from %d:(%d, %d, %d)@%d to (%d, %d, %d)\n",
-    //	      frame_no, row, col, alt, bearings[bearing].degree, 
-    //	      target.row, target.col, target.alt);
+    if (trace) {
+        fprintf(logff, "Tracing plane %c's course from %d:(%d, %d, %d)@%d to "
+		       "(%d, %d, %d)\n",
+                p->id, frame_no, row, col, alt, bearings[bearing].degree, 
+                target.row, target.col, target.alt);
+    }
     
     p->start = p->current = p->end = NULL;
     add_course_elem(p, row, col, alt, bearing, false);
@@ -507,6 +516,7 @@ void plot_course(struct plane *p, int row, int col, int alt) {
      */
     for (;;) {
 	if (++steps > 200) {
+	    log_course(p);
 	    errexit('8', "Plane %c stuck in an infinite loop.", p->id);
 	}
 
@@ -559,7 +569,8 @@ void plot_course(struct plane *p, int row, int col, int alt) {
             col += bearings[bearing].dcol;
 	}
 	
-	//fprintf(logff, "\t%d:", tick);
+	if (trace)
+	    fprintf(logff, "\t%d:", tick);
 	add_course_elem(p, row, col, alt, bearing, cleared_exit);
 	tick++;
 
