@@ -85,9 +85,11 @@ static int calc_bearing(int row, int col) {
 }
 
 static void add_course_elem(struct plane *p, int row, int col, int alt,
-			    int bearing, bool cleared_exit) {
-    //fprintf(logff, "\t(%d, %d, %d)@%d\n", row, col, alt, 
-    //        bearings[bearing].degree);
+			    int bearing, bool cleared_exit, int trace_tick) {
+    if (trace_tick) {
+        fprintf(logff, "\t%d: (%d, %d, %d)@%d\n", trace_tick, row, col, alt, 
+                bearings[bearing].degree);
+    }
     struct course *nc = malloc(sizeof(*nc));
     nc->pos.row = row;  nc->pos.col = col;  nc->pos.alt = alt;
     nc->bearing = bearing;
@@ -503,7 +505,7 @@ void plot_course(struct plane *p, int row, int col, int alt) {
     }
     
     p->start = p->current = p->end = NULL;
-    add_course_elem(p, row, col, alt, bearing, false);
+    add_course_elem(p, row, col, alt, bearing, false, trace ? frame_no : 0);
     p->start_tm = p->current_tm = frame_no;
     int tick = frame_no+1;
     int steps = 0;
@@ -525,7 +527,8 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	if (!p->isjet && tick%2 == 1 && row != 0 && col != 0 &&
 		row != board_height-1 && col != board_width-1) {
 	    //fprintf(logff, "\t%d:", tick);
-	    add_course_elem(p, row, col, alt, bearing, cleared_exit);
+	    add_course_elem(p, row, col, alt, bearing, cleared_exit,
+			    trace ? tick : 0);
 	    tick++;
 	    frend->n_cand = -3;
 	    make_new_fr(&frend);
@@ -569,19 +572,20 @@ void plot_course(struct plane *p, int row, int col, int alt) {
             col += bearings[bearing].dcol;
 	}
 	
-	if (trace)
-	    fprintf(logff, "\t%d:", tick);
-	add_course_elem(p, row, col, alt, bearing, cleared_exit);
+	add_course_elem(p, row, col, alt, bearing, cleared_exit,
+		        trace ? tick : 0);
 	tick++;
 
 	if (row == target.row && col == target.col && alt == target.alt) {
 	    // We've reached the target.  Clean-up and return.
     	    if (p->target_airport) {
 		if (!p->isjet) {
-	    	    add_course_elem(p, row, col, alt, bearing, cleared_exit);
+	    	    add_course_elem(p, row, col, alt, bearing, cleared_exit,
+				    trace ? tick : 0);
 	    	    tick++;
  		}
-		add_course_elem(p, -1, -1, -2, -1, cleared_exit);
+		add_course_elem(p, -1, -1, -2, -1, cleared_exit,
+				trace ? tick : 0);
 		p->end_tm = tick;
     	    } else {
 	 	// For an exit, the plane disappears at reaching it.

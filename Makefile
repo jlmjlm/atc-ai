@@ -13,7 +13,7 @@ atc-ai: main.o pty.o vty.o board.o orders.o pathfind.o testpath.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 test: atc-ai
-	./atc-ai --self-test
+	./atc-ai --self-test -L self-test.log
 
 main.o: main.c atc-ai.h
 

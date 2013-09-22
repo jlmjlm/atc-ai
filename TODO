@@ -284,3 +284,8 @@ there don't seem to be any other planes around to be blocking.  --  Ahh,
 it's due to the "matchcourse" penalty.  Turning NE would match courses,
 so it turns E instead.
 
+-- All right, the fixes worked for those two.  Now the problems we have
+from seed 1376515486 are:
+New record long route: plane 'j' at time 125177 in 51 steps.
+New record long route: plane 'B' at time 252631 in 107 steps.
+[The latter actually crashes, just one space from the exit somehow.]
