@@ -325,6 +325,7 @@ static void process_cmd_args(int argc, char *const argv[]) {
 		    random_seed = atoi(optarg);
 		break;
 	    //FIXME: Rest of the args
+	    //FIXME: -g/--game (so don't have to "-- -g <game>")
 	}
     }
 }

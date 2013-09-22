@@ -235,3 +235,34 @@ doesn't seem to be the way to go.
 	  if we're forced to move away from the target (ie, increase
 	  our distance).  [And boy, do I use "so" too much.]
        -- Okay, that worked for plane 'a' @ 18412.  And 'z' at 22043+.
+
+What's happening with 'default' seed #1376515486 around tick 193107:
+Plotting plane g's course from 193099:(13, 1, 7) to 193147:(0, 29, 9)
+        g 193106: (9, 7, 8) bearing S
+        g 193107: (9, 8, 9) bearing E
+        g 193108: (10, 8, 8) bearing S
+        g 193109: (10, 9, 9) bearing E
+        g 193110: (11, 9, 8) bearing S
+        g 193111: (11, 10, 9) bearing E
+Etc.
+        F 193106: (7, 7, 9) bearing SE
+        F 193107: (7, 7, 9) bearing SE
+        F 193108: (8, 8, 9) bearing SE
+        F 193109: (8, 8, 9) bearing SE
+        F 193110: (9, 9, 9) bearing SE
+        F 193111: (9, 9, 9) bearing SE
+Etc.
+So we have:
+	 456789abcde
+ 	5
+	6
+	7   F
+	8    \
+	9   g
+	a   |>
+	b
+	c
+Hm.  Is there a good way to encourage the "g"s of the game to stick at
+alt. 8 when they go East, so they notice that they can go NW at alt. 7 ?
+Maybe a small penalty for matching a plane in two dimensions and d=2 on
+the 3rd?  (Probably should make da not count, only dr or dc.)

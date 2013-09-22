@@ -210,8 +210,8 @@ static void add_blocking_plane(struct direction *blocking_planes, int *n_blp,
 }
 
 void calc_next_move(const struct plane *p, const int srow, const int scol,
-		    int *alt, struct xyz target, int *bearing,
-		    bool cleared_exit, struct frame *frame) {
+		    int *alt, const struct xyz target, int *bearing,
+		    const bool cleared_exit, struct frame *frame) {
     // Avoid obstacles.  Obstacles are:  The boundary except for the
     // target exit at alt==9, adjacency with another plane (props have
     // to check this at t+1 and t+2), within 2 of an exit at alt 6-8 if 
@@ -298,6 +298,25 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
 		frame->cand[i].distance += MATCHCOURSE_PENALTY;
 	     else if (da == 1)
 		frame->cand[i].distance += MATCHCOURSE_PENALTY/10;
+	}
+
+	for (const struct plane *pi = plstart; pi; pi = pi->next) {
+	    // Also have a penalty for a jet aligning with a prop at the
+	    // same FL and orthodistance 2, because that's essentially
+	    // "matching" up courses (to be tighter with this check,
+	    // we should check bearings).
+	    // FIXME: self-test this
+	    if (p->isjet && !pi->isjet && pi->current->next) {
+		struct xy rc = apply(srow, scol, frame->cand[i].bearing);
+	        int da = frame->cand[i].alt - pi->current->next->pos.alt;
+	        int dr = rc.row - pi->current->next->pos.row;
+	        int dc = rc.col - pi->current->next->pos.col;
+
+		if (da == 0 && ((dr == 0 && abs(dc) == 2) || 
+				(dc == 0 && abs(dr) == 2))) {
+		    frame->cand[i].distance += MATCHCOURSE_PENALTY/2;
+		}
+	    }
 	}
     }
     qsort(frame->cand, frame->n_cand, sizeof(*frame->cand), distcmp);
@@ -426,6 +445,7 @@ static void log_all_courses() {
 
 static void make_new_fr(struct frame **endp);
 
+// The "record" longest course planes of type jet & prop.
 struct record { char code; int frame_no; int len; };
 static struct record rec_jet, rec_prop;  // static init. == zeros
 
