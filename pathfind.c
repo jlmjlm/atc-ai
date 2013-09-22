@@ -159,28 +159,28 @@ static bool pos_adjacent(struct xyz pos, struct xy rc, int alt) {
 	   abs(pos.alt - alt) < 2;
 }
 
-struct direction { int bearing, alt; };
+struct blp { int bearing, alt; bool isjet; };
 
-static struct direction adjacent_another_plane(struct xy rc, int alt,
-		            const struct op_courses *opc, bool isprop) {
+static struct blp adjacent_another_plane(struct xy rc, int alt, bool imjet,
+		            const struct op_courses *opc) {
     for ( ; opc; opc = opc->next) {
 	if (!opc->c || opc->c->at_exit)
 	    continue;
 	struct xyz pos = opc->c->pos;
 	if (pos_adjacent(pos, rc, alt)) {
-	    struct direction rv = { opc->c->bearing, pos.alt };
+	    struct blp rv = { opc->c->bearing, pos.alt, opc->isjet };
 	    return rv;
 	}
-	if (isprop && opc->c->next) {
+	if (!imjet && opc->c->next) {
 	    pos = opc->c->next->pos;
 	    if (pos_adjacent(pos, rc, alt)) {
-		struct direction rv = { opc->c->next->bearing, pos.alt };
+		struct blp rv = { opc->c->next->bearing, pos.alt, opc->isjet };
 		return rv;
 	    }
 	}
     }
 
-    struct direction rv = { -1, -1 };
+    struct blp rv = { -1, -1, true };
     return rv;
 }
 
@@ -195,8 +195,8 @@ static void new_cand(struct frame *frame, int bearing, int alt, int dist) {
 #define CHANGEALT_BONUS 100
 #define BLP_MAX 10
 
-static void add_blocking_plane(struct direction *blocking_planes, int *n_blp,
-			       struct direction adjacent_plane) {
+static void add_blocking_plane(struct blp *blocking_planes, int *n_blp,
+			       struct blp adjacent_plane) {
     for (int i = 0; i < *n_blp; i++) {
 	if (blocking_planes[i].bearing == adjacent_plane.bearing &&
 		blocking_planes[i].alt == adjacent_plane.alt)
@@ -221,7 +221,7 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
     // blocking airplane (because it'll just continue to block).
 
     int nalt;
-    struct direction blocking_planes[BLP_MAX];
+    struct blp blocking_planes[BLP_MAX];
     int n_blp = 0;
 
     // If the plane's at the airport, it can only hold or take off.
@@ -229,7 +229,7 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
     	struct xy rc = apply(srow, scol, *bearing);
 	frame->cand[0].bearing = frame->cand[1].bearing = *bearing;
 	frame->cand[0].alt = 0;  frame->cand[1].alt = 1;
-	if (adjacent_another_plane(rc, 1, frame->opc_start, !p->isjet).alt > 0){
+	if (adjacent_another_plane(rc, 1, p->isjet, frame->opc_start).alt > 0) {
 	    // Can't take off, can only hold.
 	    frame->n_cand = 1;
 	} else {
@@ -267,8 +267,8 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
 		    rc.row == target.row && rc.col == target.col &&
 		    in_airport_excl(apply(srow, scol, -1), *alt, p->target_num))
 		continue;
-	    struct direction adjacent_plane =
-	        adjacent_another_plane(rc, nalt, frame->opc_start, !p->isjet);
+	    struct blp adjacent_plane =
+	        adjacent_another_plane(rc, nalt, p->isjet, frame->opc_start);
 	    
 	    if (adjacent_plane.alt > 0) {
 		add_blocking_plane(blocking_planes, &n_blp, adjacent_plane);
@@ -291,7 +291,8 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
     }
     for (int i = 0; i < frame->n_cand; i++) {
 	for (int j = 0; j < n_blp; j++) {
-	     if (frame->cand[i].bearing != blocking_planes[j].bearing)
+	     if (frame->cand[i].bearing != blocking_planes[j].bearing ||
+		    p->isjet != blocking_planes[j].isjet)
 		continue;
 	     int da = abs(frame->cand[i].alt - blocking_planes[j].alt);
 	     if (da == 0)

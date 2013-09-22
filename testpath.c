@@ -29,7 +29,8 @@ static void test_blocked() {
     // c2: W/NW/N/NE/E blocked.
     struct course c2 = { .pos = { .row = 4, .col = 5, .alt = alt },
 			 .bearing = -1, .next = &c2, .prev = &c2 };
-    struct op_courses op = { .c = &c2, .prev = NULL, .next = NULL };
+    struct op_courses op = { .c = &c2, .isjet = false,
+			     .prev = NULL, .next = NULL };
     struct frame fr = { .opc_start = &op, .prev = NULL, .next = NULL };
     
     // Test all moves blocked (c2)

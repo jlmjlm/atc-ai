@@ -112,12 +112,8 @@ Interesting seeds:
 		(But somehow survives that last one.  I bet it hits
 		the exit portal right at out-of-gas.  Not quite realistic,
 		that!)  Recording these is going to be tough.
-	 FIXME: Maybe have it be so that when a record course is plotted,
-		it logs the entire flight courses of all the planes that
-		are on the board.  To do this, it'd have to remember the
-		past flight steps of the planes, and so delete the entire
-		course when the plane becomes safe, instead of deleting them
-		turn by turn with each clock tick.
+	    [These two very-nearly-fatally-long courses are analyzed
+		below.]
 
 	1376535757 On turn 23 produces a plane at (0, 29, 7)
 		[upper right corner].
@@ -242,15 +238,11 @@ Plotting plane g's course from 193099:(13, 1, 7) to 193147:(0, 29, 9)
         g 193107: (9, 8, 9) bearing E
         g 193108: (10, 8, 8) bearing S
         g 193109: (10, 9, 9) bearing E
-        g 193110: (11, 9, 8) bearing S
-        g 193111: (11, 10, 9) bearing E
 Etc.
         F 193106: (7, 7, 9) bearing SE
         F 193107: (7, 7, 9) bearing SE
         F 193108: (8, 8, 9) bearing SE
         F 193109: (8, 8, 9) bearing SE
-        F 193110: (9, 9, 9) bearing SE
-        F 193111: (9, 9, 9) bearing SE
 Etc.
 So we have:
 	 456789abcde
@@ -258,11 +250,37 @@ So we have:
 	6
 	7   F
 	8    \
-	9   g
-	a   |>
+	9   g>
+	a    |
 	b
 	c
 Hm.  Is there a good way to encourage the "g"s of the game to stick at
 alt. 8 when they go East, so they notice that they can go NW at alt. 7 ?
 Maybe a small penalty for matching a plane in two dimensions and d=2 on
-the 3rd?  (Probably should make da not count, only dr or dc.)
+the 3rd?  (Probably should make da not count, only dr or dc.)  [Done.]
+
+For the same seed on "-g default", at tick 242641 we have:
+Plotting plane d's course from 242633:(17, 28, 7) to 242683:(0, 0, 9)
+        d 242641: (9, 21, 9) bearing N
+        d 242642: (9, 22, 8) bearing E
+        d 242643: (8, 22, 9) bearing N
+        d 242644: (8, 23, 8) bearing E
+Etc.
+        A 242641: (10, 19, 9) bearing NE
+        A 242642: (9, 20, 9) bearing NE
+        A 242643: (9, 20, 9) bearing NE
+        A 242644: (8, 21, 9) bearing NE
+Etc.
+	 789abcdefg (+a)
+	6
+	7
+	8     |
+	9   /d>
+	a  A
+	b
+Hmm, this doesn't make much sense.  Why is 'd' turning E at ticks 242642,
+242644, and so on?  Shouldn't it turn NE?  It's not blocked by 'A'.  And
+there don't seem to be any other planes around to be blocking.  --  Ahh,
+it's due to the "matchcourse" penalty.  Turning NE would match courses,
+so it turns E instead.
+
