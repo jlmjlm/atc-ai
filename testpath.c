@@ -81,11 +81,48 @@ static void test_blocked() {
     assert(n_free == 0);
 }
 
+// Test the matchcourse penalty:  Verify a jet ('i') at (1, 11, 9) bearing
+// west prevents a jet ('j') at (1, 9, 9) from going west.
+static void test_matchcourse() {
+    struct plane pi = { .id = 'i', .isjet = true, .target_airport = false,
+			.target_num = 0, .start = NULL, .end = NULL,
+			.start_tm = -1, .end_tm = -1,
+                        .prev = NULL, .next = NULL };
+    struct plane pj = { .id = 'j', .isjet = true, .target_airport = false,
+			.target_num = 1, .start = NULL, .end = NULL,
+			.start_tm = -1, .end_tm = -1,
+                        .prev = NULL, .next = NULL };
+    plstart = plend = &pi;
+    struct xyz target = { .row = 0, .col = 19, .alt = 9 };
+    int bearing = bearing_of("W");
+    struct xy rc = { .row = 1, .col = 9 };
+    int jalt = 9;
+    struct course c1 = { .pos = { .row = 1, .col = 11, .alt = 9 },
+			 .bearing = bearing, .prev = NULL };
+    struct course c2 = { .pos = { .row = 1, .col = 10, .alt = 9 },
+			 .bearing = bearing, .next = NULL, .prev = &c1 };
+    c1.next = &c2;
+    pi.start = &c1;  pi.end = &c2;
+    struct op_courses op = { .c = &c2, .isjet = true, 
+			     .prev = NULL, .next = NULL };
+    struct frame fr = { .opc_start = &op, .prev = NULL, .next = NULL };
+
+    calc_next_move(&pj, rc.row, rc.col, &jalt, target, &bearing, true, &fr);
+    assert(fr.n_cand > 0);
+    printf("Bearing %s\n", bearings[bearing].longname); //XXX
+    assert(bearing == bearing_of("SW"));
+    assert(jalt == 9);
+    struct step s1 = fr.cand[fr.n_cand-1];
+    assert(s1.bearing == bearing_of("SW"));
+    assert(s1.alt == 9);
+}
+
 static void test_calc_next_move() {
     board_width = 20;
     board_height = 20;
 
     test_blocked();
+    test_matchcourse();
 }
 
 static inline bool xyz_eq(struct xyz a, struct xyz b) {

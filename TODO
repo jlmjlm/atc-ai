@@ -289,3 +289,31 @@ from seed 1376515486 are:
 New record long route: plane 'j' at time 125177 in 51 steps.
 New record long route: plane 'B' at time 252631 in 107 steps.
 [The latter actually crashes, just one space from the exit somehow.]
+
+Let's look at j-125177 (target: (0, 29, 9)):
+        j 125188: (2, 12, 9) bearing NE
+        j 125189: (1, 11, 9) bearing NW
+        j 125190: (1, 10, 9) bearing W
+        j 125191: (1, 9, 9) bearing W
+
+	i 125188: (3, 14, 9) bearing NW
+        i 125189: (2, 13, 9) bearing NW
+        i 125190: (1, 12, 9) bearing NW
+        i 125191: (1, 11, 9) bearing W
+        i 125192: (1, 10, 9) bearing W
+ 789abcdef 
+0=========
+1    j\
+2      i
+3
+
+So, what we want is for 'j' to turn south to get around 'i'.  But as it's 
+heading W *anyway*, the turn to the SW is a greater distance to the target
+than staying straight W.  But, why doesn't the "matchcourse" penalty apply
+here?  --  Maybe it'd be better to make the "cleared_exit" flag more exact
+(check for d>2 being true for all exits), so that we could have 'j' descend
+and get around 'i' that way.
+FIXME: First off, I should build a test with this trajectory, to ensure that
+calc_next_move() will send 'j' SW instead of due W because of the
+matchcourse penalty.
+[Try #1 of this failed: The test plane *does* turn SW, not keep going W.]
