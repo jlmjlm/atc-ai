@@ -321,10 +321,17 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
 		    p->isjet != blocking_planes[j].isjet)
 		continue;
 	     int da = abs(frame->cand[i].alt - blocking_planes[j].alt);
-	     if (da == 0)
+	     if (da == 0) {
+		fprintf(logff, "Applying matchcourse penalty to plane %c "
+			       "bearing %s.\n", p->id, 
+			bearings[blocking_planes[j].bearing].longname); //XXX
 		frame->cand[i].distance += MATCHCOURSE_PENALTY;
-	     else if (da == 1)
+	     } else if (da == 1) {
+		fprintf(logff, "Applying minor matchcourse penalty to plane %c "
+		       	       "bearing %s.\n", p->id, 
+                        bearings[blocking_planes[j].bearing].longname); //XXX
 		frame->cand[i].distance += MATCHCOURSE_PENALTY/10;
+	     }
 	}
     }
     qsort(frame->cand, frame->n_cand, sizeof(*frame->cand), distcmp);

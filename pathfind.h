@@ -2,7 +2,7 @@ struct step { int bearing, alt, distance; };
 
 struct op_courses {
     const struct course *c;
-    _Bool isjet;
+    bool isjet;
     struct op_courses *prev, *next;
 };
 

@@ -98,11 +98,17 @@ static void test_matchcourse() {
     struct xy rc = { .row = 1, .col = 9 };
     int jalt = 9;
     struct course c1 = { .pos = { .row = 1, .col = 11, .alt = 9 },
-			 .bearing = bearing, .prev = NULL };
+			 .bearing = bearing, .prev = NULL,
+			 .at_exit = false };
     struct course c2 = { .pos = { .row = 1, .col = 10, .alt = 9 },
-			 .bearing = bearing, .next = NULL, .prev = &c1 };
+			 .bearing = bearing, .prev = &c1,
+			 .at_exit = false };
+    struct course c3 = { .pos = { .row = 1, .col = 9, .alt = 9 },
+			 .bearing = bearing, .next = NULL, .prev = &c2,
+			 .at_exit = false };
     c1.next = &c2;
-    pi.start = &c1;  pi.end = &c2;
+    c2.next = &c3;
+    pi.start = &c1;  pi.end = &c3;
     struct op_courses op = { .c = &c2, .isjet = true, 
 			     .prev = NULL, .next = NULL };
     struct frame fr = { .opc_start = &op, .prev = NULL, .next = NULL };
