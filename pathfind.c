@@ -334,22 +334,43 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
 	*alt = -1;
 	return;
     }
+    if (trace) {
+	fprintf(logff, "Checking %d candidate moves against %d blocking "
+		       "planes.\n", frame->n_cand, n_blp);
+    }
     for (int i = 0; i < frame->n_cand; i++) {
 	for (int j = 0; j < n_blp; j++) {
 	     if (frame->cand[i].bearing != blocking_planes[j].bearing ||
-		    p->isjet != blocking_planes[j].isjet)
+		    p->isjet != blocking_planes[j].isjet) {
+		if (trace) {
+		    fprintf(logff, "Not applying matchcourse penalty: "
+				   "%s c_bearing %s vs. %s b_bearing %s "
+			 	   "(%d/%d vs. %d/%d)\n",
+			    p->isjet ? "jet" : "prop", 
+			    bearings[frame->cand[i].bearing].shortname,
+			    blocking_planes[j].isjet ? "jet" : "prop", 
+			    bearings[blocking_planes[j].bearing].shortname,
+			    frame->cand[i].bearing, p->isjet,
+			    blocking_planes[j].bearing, 
+			    blocking_planes[j].isjet);
+		}
 		continue;
+	     }
 	     int da = abs(frame->cand[i].alt - blocking_planes[j].alt);
 	     if (da == 0) {
 		fprintf(logff, "Applying matchcourse penalty to plane %c "
 			       "bearing %s.\n", p->id, 
-			bearings[blocking_planes[j].bearing].longname); //XXX
+			bearings[blocking_planes[j].bearing].longname); //FIXME
 		frame->cand[i].distance += MATCHCOURSE_PENALTY;
 	     } else if (da == 1) {
 		fprintf(logff, "Applying minor matchcourse penalty to plane %c "
 		       	       "bearing %s.\n", p->id, 
-                        bearings[blocking_planes[j].bearing].longname); //XXX
+                        bearings[blocking_planes[j].bearing].longname); //FIXME
 		frame->cand[i].distance += MATCHCOURSE_PENALTY/10;
+	     } else if (trace) {
+		fprintf(logff, "Not applying matchcourse penalty: "
+			       "c_alt %d vs. b_alt %d\n", 
+		        frame->cand[i].alt, blocking_planes[j].alt);
 	     }
 	}
     }
