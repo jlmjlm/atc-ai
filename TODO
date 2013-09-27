@@ -313,9 +313,16 @@ than staying straight W.  But, why doesn't the "matchcourse" penalty apply
 here?  --  Maybe it'd be better to make the "cleared_exit" flag more exact
 (check for d>2 being true for all exits), so that we could have 'j' descend
 and get around 'i' that way.
-FIXME: First off, I should build a test with this trajectory, to ensure that
+First off, I should build a test with this trajectory, to ensure that
 calc_next_move() will send 'j' SW instead of due W because of the
-matchcourse penalty.
-[Try #1 of this failed: The test plane *does* turn SW, not keep going W.]
-[Hey, note at tick #61620 of this seed, we do a successful double-backtrack.
-{Actually, this happens a lot.}]
+matchcourse penalty.  [Done.  But didn't trigger the bug.]
+[Try #1 of this failed: The test plane *does* turn SW, not keep going W.
+This was because we weren't populating the op_course "isjet" field. :( ]
+[Hey, note at tick #59939 of this seed, plane 'r' does a pentipule backtrack!
+{Sure enough, it works! :-) }]
+
+Now it shows: "New record long route: plane 'd' at time 173207 in 69 steps."
+When the plane's path actually only took < 30 steps.  It's because
+it did a *lot* of backtracking, and backtracks don't decrement 'step'
+(tho they probably should).  Or maybe "step numbers" should be kept
+for both with and w/o backtracks. 
