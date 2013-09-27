@@ -396,9 +396,11 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
 
 static void new_op_course(const struct course *c,
 			  struct op_courses **st,
-			  struct op_courses **end) {
+			  struct op_courses **end,
+			  bool isjet) {
     struct op_courses *ne = malloc(sizeof(*ne));
     ne->c = c;
+    ne->isjet = isjet;
     ne->prev = *end;
     ne->next = NULL;
     if (*end)
@@ -411,7 +413,7 @@ static void new_op_course(const struct course *c,
 static struct op_courses *next_opc(const struct op_courses *o) {
     struct op_courses *st = NULL, *end = NULL;
     while (o) {
-	new_op_course(o->c ? o->c->next : NULL, &st, &end);
+	new_op_course(o->c ? o->c->next : NULL, &st, &end, o->isjet);
 	o = o->next;
     }
     return st;
@@ -521,7 +523,7 @@ void plot_course(struct plane *p, int row, int col, int alt) {
     for (struct plane *pi = plstart; pi; pi = pi->next) {
 	if (pi == p)
 	    continue;
-	new_op_course(pi->current, &frstart->opc_start, &opc_end);
+	new_op_course(pi->current, &frstart->opc_start, &opc_end, pi->isjet);
     }
     incr_opc(frstart->opc_start);
 
