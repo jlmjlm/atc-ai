@@ -93,7 +93,7 @@ static void test_matchcourse() {
 			.start_tm = -1, .end_tm = -1,
                         .prev = NULL, .next = NULL };
     plstart = plend = &pi;
-    struct xyz target = { .row = 0, .col = 19, .alt = 9 };
+    struct xyz target = { .row = 0, .col = 29, .alt = 9 };
     int bearing = bearing_of("W");
     struct xy rc = { .row = 1, .col = 9 };
     int jalt = 9;

@@ -317,3 +317,5 @@ FIXME: First off, I should build a test with this trajectory, to ensure that
 calc_next_move() will send 'j' SW instead of due W because of the
 matchcourse penalty.
 [Try #1 of this failed: The test plane *does* turn SW, not keep going W.]
+[Hey, note at tick #61620 of this seed, we do a successful double-backtrack.
+{Actually, this happens a lot.}]

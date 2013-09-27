@@ -248,6 +248,10 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
 
     int nalt;
 
+    bool trace = (p->id == 'j' && srow == 1 && scol == 9 && *alt == 9 &&
+		  bearings[*bearing].aircode == '<' &&
+		  target.row == 0 && target.col == 29 && target.alt == 9);
+
     // If the plane's at the airport, it can only hold or take off.
     if (*alt == 0) {
     	struct xy rc = apply(srow, scol, *bearing);
@@ -296,6 +300,15 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
 	    
 	    if (adjacent_plane.alt > 0) {
 		add_blocking_plane(blocking_planes, &n_blp, adjacent_plane);
+	        if (trace) {
+	    	    fprintf(logff, "Candidate move to (%d, %d, %d) bearing "
+			       	   "%s blocked by %s plane at alt. %d "
+				   "bearing %s\n",
+			    rc.row, rc.col, nalt, bearings[nb].shortname,
+			    adjacent_plane.isjet ? "jet" : "prop",
+			    adjacent_plane.alt, 
+			    bearings[adjacent_plane.bearing].shortname);
+	        }
 		continue;
 	    }
 	    if (cleared_exit && (rc.row <= 2 || rc.row >= board_height - 3 ||
@@ -305,8 +318,14 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
 		continue;
 	    bool aligned = planes_aligned(rc, nalt, p->isjet, frame->opc_start);
 	    int penalty = aligned ? MATCHCOURSE_PENALTY/2 : 0;
-	    new_cand(frame, nb, nalt, 
-		     cdist(rc.row, rc.col, nalt, target, p, srow, scol)+penalty);
+	    int distance = penalty + cdist(rc.row, rc.col, nalt, target, p,
+			                   srow, scol);
+	    new_cand(frame, nb, nalt, distance);
+	    if (trace) {
+		fprintf(logff, "Adding candidate move to (%d, %d, %d) bearing "
+			       "%s distance=%d\n", rc.row, rc.col, nalt,
+			bearings[nb].longname, distance);
+	    }
 	}
     }
     assert(frame->n_cand <= 15);
