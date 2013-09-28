@@ -171,9 +171,9 @@ Interesting seeds:
 		display, but stays at (10, 1) on the board -- there's 
 		something to write it at (10, 1) at tick 11, but nothing
 		alters it for tick 12.  Probably I have to read up on
-		vt100 scrolling regions.  The new scoll handling helps,
+		vt100 scrolling regions.  --  The new scoll handling helps,
 		as this now gets to frame 129 before fatal confusion.
-		And after fixing "Esc M" and "Esc D", seems to work just
+		--  And after fixing "Esc M" and "Esc D", seems to work just
 		fine.
 
 	1378445708 'airports' -
@@ -206,6 +206,14 @@ Interesting seeds:
 		moving to the ap's primary target from the excl. zone,
 		even if cleared_exit is false.  (Done and tested.)
 
+	1380348787 'game_4' 
+		gives a failed assert at time 2336.  Looks like another 
+		previously unencountered esc. sequence.  Or two!
+		[Esc 7] and [Esc 8 015 012] (Huh?  Don't think I've ever
+		had one go into ctrl chars.  Maybe [Esc 8] is the entire
+		seq.?  Looks like it:  015==\r and 012==\n, so that's
+		just a CR LF.)  [Esc 8] is "restore cursor [position]".
+		[Esc 7] is "save cursor [position]".
 
 The 1377644268 fuel exhaustion scenario:
 At 22043, plane 'z' targeting (7, 29, 9) has to go back from (5, 11, 9)

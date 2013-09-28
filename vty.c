@@ -11,6 +11,7 @@
 #define ESC_MAX 20
 
 int screen_height, screen_width;
+static int saved_row, saved_col;
 static int sr_start, sr_end;	// The scroll region.
 
 char *display;
@@ -124,6 +125,20 @@ void update_display(char c) {
 	    esc_size = 0;
 	    return;
 	}
+
+	if (esc[1] == '7' && esc_size == 2) {
+	    saved_row = cur_row;
+	    saved_col = cur_col;
+	    esc_size = 0;
+            return;
+        }
+
+	if (esc[1] == '8' && esc_size == 2) {
+	    cur_row = saved_row;
+	    cur_col = saved_col;
+	    esc_size = 0;
+            return;
+        }
 
 	if (esc[1] == '[' && isalpha(c)) {
 	    // control sequence
