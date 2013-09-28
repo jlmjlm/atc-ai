@@ -115,7 +115,8 @@ static void test_matchcourse() {
 
     calc_next_move(&pj, rc.row, rc.col, &jalt, target, &bearing, true, &fr);
     assert(fr.n_cand > 0);
-    printf("Bearing %s\n", bearings[bearing].longname); //XXX
+    fprintf(logff, "Matchcourse test plane: Bearing %s\n",
+	    bearings[bearing].longname);
     assert(bearing == bearing_of("SW"));
     assert(jalt == 9);
     struct step s1 = fr.cand[fr.n_cand-1];
