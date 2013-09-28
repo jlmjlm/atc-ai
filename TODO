@@ -61,6 +61,12 @@ Nothing to do with atc-ai per se, but atc in some conditions will stomp
 	   error".]  Seems to be reliably killing the "atc" children,
 	   but not as resetting the console to "sane".  This is the case
 	   for SIGINT.  [Which I thought I'd fixed. :( ]
+The termios is left in a messed-up state after abort (or at least
+assert(false)).  I think that's because abort doesn't let raise return,
+so writing SIGABRT to the pipefd is no good because the select loop
+doesn't get a chance for one last run.  So, I need to do the tty attr
+restore in the ABRT handler itself.  [Yep, it looks like that fixed it.]
+
 Thread stuff:
     Start of this on the branch "pthread".
     * Get out of a busy loop on SIGINT/SIGTERM.  (Do calc in another thread?)
@@ -214,6 +220,13 @@ Interesting seeds:
 		seq.?  Looks like it:  015==\r and 012==\n, so that's
 		just a CR LF.)  [Esc 8] is "restore cursor [position]".
 		[Esc 7] is "save cursor [position]".
+		--  Dangerously long records:  (Though it gets to tick
+			432580 just fine!)
+		   New record long route: plane 'f' at time 104072 in 47 steps.
+		   New record long route: plane 'm' at time 88231 in 43 steps.
+		   New record long route: plane 'D' at time 9373 in 99 steps.
+
+
 
 The 1377644268 fuel exhaustion scenario:
 At 22043, plane 'z' targeting (7, 29, 9) has to go back from (5, 11, 9)

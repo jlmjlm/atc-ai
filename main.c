@@ -28,7 +28,7 @@ static int sigpipe;
 static int ptm;
 static int delay_ms = DEF_DELAY_MS;
 static const char *logfile_name = DEF_LOGFILE;
-static bool cleanup_done = false;
+static volatile sig_atomic_t cleanup_done = false;
 
 void cleanup() {
     if (cleanup_done)
@@ -103,6 +103,11 @@ static void handle_signal(int signo) {
     write(sigpipe, &c, 1);
 }
 
+static void handle_abort(int signo) {
+    cleanup();
+    handle_signal(signo);
+}
+
 static void reg_sighandler() {
     struct sigaction handler;
     handler.sa_handler = &handle_signal;
@@ -112,6 +117,7 @@ static void reg_sighandler() {
     sigaction(SIGTERM, &handler, NULL);
     sigaction(SIGWINCH, &handler, NULL);
     sigaction(SIGCLD, &handler, NULL);
+    handler.sa_handler = &handle_abort;
     sigaction(SIGABRT, &handler, NULL);
 }
 
