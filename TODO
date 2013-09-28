@@ -1,6 +1,4 @@
 Organize all these crazy exit codes.
-Don't log all the courses.  Instead, log all current planes' courses on an
-	error or an inability to plot a safe course.
 Trigger updates when it's been a while since the last read from atc,
 	and then wait indefinitely for a read after the update
 	is complete or frame_no was unchanged.
@@ -9,7 +7,6 @@ Read cmds from stdin (eg, + and - to incr. & decr. speed)
 	-- And proxy ^L thru for a board refresh.
 exit after specified #frames, real time, or saved planes
 expand tabs, remove trailing spaces
-print out (to the log) all planes' courses if get stuck in a loop.
 store revision ID (hash) in the object?
 Notice when we get a game over and "Press space".
 Figure out exits' directions by letting planes glide if safe.
@@ -37,12 +34,12 @@ Keep track of moves taken, so if a plane has "too long" of a route, we can
 	first, then 'c''s route is too long, because it gets pushed into
 	the NW corner by 'b'.  We need to forbid 'c' from matching 'b''s
 	velocity, so it can figure out a way to go around it, earlier than
-	getting cornered and forcing the matter.
+	getting cornered and forcing the matter.  [Done!]
 -- Maybe a distance-score penalty for matching the direction & altitude
 	of a blocking plane will work better.  (Done, but it seems in
 	a fraction of cases a plane can still be pushed away from its
 	exit until it reaches the boundary.  Eg, Killer 1377644268
-	with plane 'u'.) XXX(remove this a.i.)
+	with plane 'u'.) FIXME(remove this item.)
 -- Or maybe it'd be better to have all the planes move for one tick,
 	minimizing the sum of the distances to the targets, and then do
 	that repeatedly.  But maybe it'd be too costly, what with each
@@ -50,7 +47,7 @@ Keep track of moves taken, so if a plane has "too long" of a route, we can
 Do something better than the "getting desperate" stuff in calc_bearing().
 Record what the longest routes for jets & props are.
 Should we keep count_malloc and count_free around, even tho there are
-	no memleaks, just in case some get introduced?  Or remove them?
+	no memleaks, just in case some get introduced?
 Should have a --game (-g [or is '-g' already taken?]) option which fwd's
 	to "atc", instead of having to do -- -g <game>
 Test on different size displays.
@@ -77,6 +74,7 @@ Thread stuff:
     * Back in pthead-land...  When getting data from ptm, -not- from a
 	timeout, check to see if the frame_no has changed.  If it has,
 	move quickly to update_board
+    * Do something with CSP maybe?
 
 Interesting seeds:
 	1376278304 prop needs to backtrack tick ~1331.
@@ -124,8 +122,7 @@ Interesting seeds:
 		takeoff on the next turn, forcing a collision.
 	1376893850	prop backtrack at tick 117.
 	1377061305	plane 'c' runs out of fuel, after flying from
-		tick 13831 to 13884.  [fixed]  (Looks like a plane has 50 moves
-		of fuel)
+		tick 13831 to 13884.  [fixed]
 
 	1377534571 'Killer' - Due to exit blockage, atc-ai crashes
 		at tick 3229.  (Fixed)  Now, get an inf. loop at 27070.

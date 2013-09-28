@@ -358,14 +358,18 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
 	     }
 	     int da = abs(frame->cand[i].alt - blocking_planes[j].alt);
 	     if (da == 0) {
-		fprintf(logff, "Applying matchcourse penalty to plane %c "
-			       "bearing %s.\n", p->id, 
-			bearings[blocking_planes[j].bearing].longname); //FIXME
+		if (trace) {
+		    fprintf(logff, "Applying matchcourse penalty to plane %c "
+			           "bearing %s.\n", p->id, 
+			    bearings[blocking_planes[j].bearing].longname);
+		}
 		frame->cand[i].distance += MATCHCOURSE_PENALTY;
 	     } else if (da == 1) {
-		fprintf(logff, "Applying minor matchcourse penalty to plane %c "
-		       	       "bearing %s.\n", p->id, 
-                        bearings[blocking_planes[j].bearing].longname); //FIXME
+		if (trace) {
+		    fprintf(logff, "Applying minor matchcourse penalty to "
+				   "plane %c bearing %s.\n", p->id, 
+                            bearings[blocking_planes[j].bearing].longname);
+		}
 		frame->cand[i].distance += MATCHCOURSE_PENALTY/10;
 	     } else if (trace) {
 		fprintf(logff, "Not applying matchcourse penalty: "
