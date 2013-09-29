@@ -507,7 +507,7 @@ static void log_all_courses() {
 static void make_new_fr(struct frame **endp);
 
 // The "record" longest course planes of type jet & prop.
-struct record { char code; int frame_no; int len; };
+struct record { int steps, moves; };
 static struct record rec_jet, rec_prop;  // static init. == zeros
 
 void plot_course(struct plane *p, int row, int col, int alt) {
@@ -561,7 +561,7 @@ void plot_course(struct plane *p, int row, int col, int alt) {
     add_course_elem(p, row, col, alt, bearing, false, trace ? frame_no : 0);
     p->start_tm = p->current_tm = frame_no;
     int tick = frame_no+1;
-    int steps = 0;
+    int steps = 0, moves = 0;
 
     /* Operation of the "plotting course" machine:
      *	  (A) Get a frame for the current pos'n.
@@ -588,15 +588,20 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	    continue;
 	}
 
+	moves++;
 	calc_next_move(p, row, col, &alt, target, &bearing, cleared_exit,
 		       frend);
    	assert((alt < 0) == (frend->n_cand <= 0));
 	while (frend->n_cand <= 0) {
-	    fprintf(logff, "Backtracking at step %d tick %d\n", steps, tick);
+	    fprintf(logff, "Backtracking at step %d move %d tick %d\n",
+		    steps, moves, tick);
 	    struct xyz bt_pos = backtrack(&tick, &cleared_exit, &p->end,
 					  &frend);
+	    moves--;
 
 	    // Check for a prop. plane's non-move.
+	    // TODO: Do we have to worry about the "pop out of an exit" move
+	    // that props get at their first tick?
 	    if (frend->n_cand == -3) {
 		fprintf(logff, "Backtracking over prop's non-move at tick %d\n",
 			tick);
@@ -649,12 +654,14 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	    free_framelist(frstart);
 
 	    struct record *rec = p->isjet ? &rec_jet : &rec_prop;
-	    if (steps > rec->len) {
-	        rec->len = steps;
-		rec->code = p->id;
-		rec->frame_no = frame_no;
+	    if (steps > rec->steps || moves > rec->moves) {
+		if (steps > rec->steps)
+		    rec->steps = steps;
+		if (moves > rec->moves)
+		    rec->moves = moves;
 		fprintf(logff, "New record long route: plane '%c' at time "
-			       "%d in %d steps.\n", p->id, frame_no, steps);
+			       "%d in %d steps/%d moves.\n", p->id, frame_no,
+			steps, moves);
 		log_course(p);
 		log_all_courses();
 	    }
