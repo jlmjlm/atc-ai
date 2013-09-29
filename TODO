@@ -209,10 +209,35 @@ Interesting seeds:
 		[Esc 7] is "save cursor [position]".
 		--  Dangerously long records:  (Though it gets to tick
 			432580 just fine!)
-		   New record long route: plane 'f' at time 104072 in 47 steps.
-		   New record long route: plane 'm' at time 88231 in 43 steps.
 		   New record long route: plane 'D' at time 9373 in 99 steps.
-
+			-- This is due to excessive backtracking.
+		   New record long route: plane 'm' at time 88231 in 43 steps.
+			This is from getting pushed west:
+		        m 88241: (1, 8, 9) bearing W
+        		m 88242: (1, 7, 9) bearing W
+        		m 88243: (1, 6, 9) bearing W
+        		L 88241: (3, 10, 9) bearing NW
+        		L 88242: (2, 9, 9) bearing NW
+        		L 88243: (2, 9, 9) bearing NW
+			 56789abc
+			0========
+			1   m
+			2     \
+			3      L
+			4
+			Looks like it did what it had to, headed west until
+			'L' turned west, at which point it turned S.  It would
+			be better to turn S or SW sooner, but this is pretty
+			good, and it got 'm' back on track with a cost of 6
+			moves.  It wouldn't've been a record at all except
+			there was also a logjam at the exit point.
+		   New record long route: plane 'f' at time 104072 in 47 steps.
+			Looks like exit contention:  There's also planes
+			'B', 'D', and 'E' all headed for the same exit as
+			'f' is.  Only way I see to fix this would be to
+			handle plane re-routing to reorder the planes' arrival
+			to the exit to an order more natural than based on
+			best route to the first arrivals in the airspace.
 
 
 The 1377644268 fuel exhaustion scenario:
