@@ -28,29 +28,16 @@ Deal with exit clearance better.  It's pretty good now, but an arriving plane
 Keep track of moves taken, so if a plane has "too long" of a route, we can
 	recalculate routes by starting it off with a short route, and
 	having others recalculate their routes constrained by it.
--- That won't work for the 1377061305 case, though.  If 'c' calcs its
-	route first ignoring 'b', then 'b' will find it has no first
-	moves which aren't adjacent to 'c'.  If 'b' calcs the route
-	first, then 'c''s route is too long, because it gets pushed into
-	the NW corner by 'b'.  We need to forbid 'c' from matching 'b''s
-	velocity, so it can figure out a way to go around it, earlier than
-	getting cornered and forcing the matter.  [Done!]
--- Maybe a distance-score penalty for matching the direction & altitude
-	of a blocking plane will work better.  (Done, but it seems in
-	a fraction of cases a plane can still be pushed away from its
-	exit until it reaches the boundary.  Eg, Killer 1377644268
-	with plane 'u'.) FIXME(remove this item.)
 -- Or maybe it'd be better to have all the planes move for one tick,
 	minimizing the sum of the distances to the targets, and then do
 	that repeatedly.  But maybe it'd be too costly, what with each
 	plane having up to 15 possible moves.
 Do something better than the "getting desperate" stuff in calc_bearing().
-Record what the longest routes for jets & props are.
 Should we keep count_malloc and count_free around, even tho there are
 	no memleaks, just in case some get introduced?
 Should have a --game (-g [or is '-g' already taken?]) option which fwd's
 	to "atc", instead of having to do -- -g <game>
-Test on different size displays.
+Test on different size displays.  [Yup, seems to work fine!]
 Nothing to do with atc-ai per se, but atc in some conditions will stomp
 	the high score list.  (Hope the new ABRT handling fixes it.)
 	-- Nope!  At least not for SIGINT.  Might be abort_hand() [called
