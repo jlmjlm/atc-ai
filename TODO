@@ -1,4 +1,5 @@
 Organize all these crazy exit codes.
+Record all cmd-line args in the log.
 Trigger updates when it's been a while since the last read from atc,
 	and then wait indefinitely for a read after the update
 	is complete or frame_no was unchanged.
@@ -48,11 +49,7 @@ Nothing to do with atc-ai per se, but atc in some conditions will stomp
 	   error".]  Seems to be reliably killing the "atc" children,
 	   but not as resetting the console to "sane".  This is the case
 	   for SIGINT.  [Which I thought I'd fixed. :( ]
-The termios is left in a messed-up state after abort (or at least
-assert(false)).  I think that's because abort doesn't let raise return,
-so writing SIGABRT to the pipefd is no good because the select loop
-doesn't get a chance for one last run.  So, I need to do the tty attr
-restore in the ABRT handler itself.  [Yep, it looks like that fixed it.]
+Maybe make an inetd service of this to show it off?  :-)
 
 Thread stuff:
     Start of this on the branch "pthread".
@@ -64,6 +61,10 @@ Thread stuff:
 	check for new messages from atc.  Maybe instead of threads, the
 	procedures in orders.c should just queue up the orders to give
 	atc, and mainloop can slowly drain the queue.
+	-- That works, but then when you have too many orders, it takes
+	too long to "type".  Or else it goes by too fast.  Should have
+	a deadline, and slice up the orders so they all get submitted by
+	then.
     * Back in pthead-land...  When getting data from ptm, -not- from a
 	timeout, check to see if the frame_no has changed.  If it has,
 	move quickly to update_board
