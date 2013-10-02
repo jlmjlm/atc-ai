@@ -5,27 +5,35 @@
 
 int typing_delay_ms = 0;
 
+int tqhead = 0, tqtail = 0;
+char tqueue[TQ_SIZE];
 
-static void delay() {
-    if (typing_delay_ms)
-	usleep(typing_delay_ms * 1000);
+static void queue_string(const char s[]) {
+    while (*s) {
+	tqueue[tqtail] = *s;
+	tqtail = (tqtail+1)%TQ_SIZE;
+	s++;
+    }
 }
 
 void order_new_bearing(char id, int bearing) {
-    fprintf(outf, "%ct%c\n", id, bearings[bearing].key);
-    delay();
+    char order[20];
+    sprintf(order, "%ct%c\n", id, bearings[bearing].key);
+    queue_string(order);
 }
 
 void order_new_altitude(char id, int alt) {
-    fprintf(outf, "%ca%d\n", id, alt);
-    delay();
+    char order[20];
+    sprintf(order, "%ca%d\n", id, alt);
+    queue_string(order);
 }
 
 void land_at_airport(char id, int airport_num) {
-    fprintf(outf, "%ctta%d\n%ca0\n", id, airport_num, id);
-    delay();
+    char order[20];
+    sprintf(order, "%ctta%d\n%ca0\n", id, airport_num, id);
+    queue_string(order);
 }
 
 void next_tick() {
-    putc('\n', outf);
+    queue_string("\n");
 }

@@ -90,8 +90,11 @@ extern int frame_no;
 extern struct plane *plstart, *plend;
 
 
+#define TQ_SIZE 1024
 extern _Bool skip_tick;
 extern int typing_delay_ms;
+extern int tqhead, tqtail;
+extern char tqueue[TQ_SIZE];
 
 extern void order_new_bearing(char id, int bearing);
 extern void order_new_altitude(char id, int alt);

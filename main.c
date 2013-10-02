@@ -154,14 +154,32 @@ static void handle_input(char c) {
     write(ptm, &c, 1);
 }
 
+static void write_tqchar() {
+     write(ptm, tqueue+tqhead, 1);
+     tqhead = (tqhead+1)%TQ_SIZE;
+}
+
+static void write_queued_chars() {
+    if (tqhead != tqtail) {
+        if (typing_delay_ms)
+	    write_tqchar();
+	else {
+	    while (tqhead != tqtail)
+	        write_tqchar();
+	}
+    }
+}
+
 static void mainloop(int pfd) {
     int maxfd = 0;
     fd_set fds;
     FD_ZERO(&fds);
 
     for (;;) {
-        struct timeval tv = { .tv_sec = delay_ms / 1000,
-			      .tv_usec = (delay_ms % 1000) * 1000 };
+	int timeout_ms = (tqhead == tqtail || typing_delay_ms == 0) ? 
+			      delay_ms : typing_delay_ms;
+        struct timeval tv = { .tv_sec = timeout_ms / 1000,
+			      .tv_usec = (timeout_ms % 1000) * 1000 };
         //add_fd(0, &fds, &maxfd);
         add_fd(ptm, &fds, &maxfd);
         add_fd(pfd, &fds, &maxfd);
@@ -175,6 +193,7 @@ static void mainloop(int pfd) {
 	}
 	if (rv == 0) {	// timeout
 	    update_board();
+	    write_queued_chars();
 	    continue;
 	}
 	if (FD_ISSET(ptm, &fds))
