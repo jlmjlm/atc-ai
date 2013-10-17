@@ -355,6 +355,15 @@ static void process_cmd_args(int argc, char *const argv[]) {
     }
 }
 
+static void write_cmd_args(int argc, char *const *argv) {
+    fprintf(logff, "Command line args:");
+    while (argc--) {
+	fprintf(logff, " '%s'", *argv);
+	argv++;
+    }
+    fputc('\n', logff);
+}
+
 int main(int argc, char **argv) {
     int pipefd[2];
 
@@ -379,6 +388,7 @@ int main(int argc, char **argv) {
 
     logff = fopen(logfile_name, "w");
     setvbuf(logff, NULL, _IOLBF, 0);
+    write_cmd_args(argc, argv);
 
     if (do_self_test) {
 	return testmain();
