@@ -1,5 +1,4 @@
 Organize all these crazy exit codes.
-Record all cmd-line args in the log.
 Trigger updates when it's been a while since the last read from atc,
 	and then wait indefinitely for a read after the update
 	is complete or frame_no was unchanged.
