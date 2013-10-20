@@ -73,7 +73,6 @@ Should we keep count_malloc and count_free around, even tho there are
 	no memleaks, just in case some get introduced?
 Should have a --game (-g [or is '-g' already taken?]) option which fwd's
 	to "atc", instead of having to do -- -g <game>
-Test on different size displays.  [Yup, seems to work fine!]
 Nothing to do with atc-ai per se, but atc in some conditions will stomp
 	the high score list.  (Hope the new ABRT handling fixes it.)
 	-- Nope!  At least not for SIGINT.  Might be abort_hand() [called
@@ -100,6 +99,8 @@ Thread stuff:
 	too long to "type".  Or else it goes by too fast.  Should have
 	a deadline, and slice up the orders so they all get submitted by
 	then.
+	-- Got this taken care of & all fixed with the main eventloop,
+		no threads involved.
     * Back in pthead-land...  When getting data from ptm, -not- from a
 	timeout, check to see if the frame_no has changed.  If it has,
 	move quickly to update_board
