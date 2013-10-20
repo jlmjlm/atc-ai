@@ -15,6 +15,11 @@ Trigger updates when it's been a while since the last read from atc,
 	== Seems to work better with calc'ing the elapsed time, and "typing"
 		if it's at least half of what was chosen for the maximal 
 		typing delay.
+	== Hmm.  But now, with the typing delay turned off, it's running
+		just peachy, but the display to the user is skipping every
+		other frame!
+	== Swapping write_queued_chars() to run before update_board()
+		seems to have fixed that.
     -- Get -d of 0 or 1 (ie, very low, full speed) to work
 License, readme, INSTALL
 Read cmds from stdin (eg, + and - to incr. & decr. speed)

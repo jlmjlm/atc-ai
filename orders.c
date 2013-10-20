@@ -2,8 +2,6 @@
 #include "atc-ai.h"
 
 
-int typing_delay_ms = 0;
-
 int tqhead = 0, tqtail = 0;
 char tqueue[TQ_SIZE];
 

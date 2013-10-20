@@ -95,7 +95,6 @@ extern struct plane *plstart, *plend;
 
 #define TQ_SIZE 1024
 extern bool skip_tick;
-extern int typing_delay_ms;
 extern int tqhead, tqtail;
 extern char tqueue[TQ_SIZE];
 

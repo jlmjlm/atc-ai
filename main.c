@@ -26,6 +26,7 @@ static struct termios orig_termio;
 static int sigpipe;
 static int ptm;
 static int delay_ms = DEF_DELAY_MS;
+static int typing_delay_ms = 0;
 static const char *logfile_name = DEF_LOGFILE;
 static volatile sig_atomic_t cleanup_done = false;
 
@@ -186,7 +187,7 @@ static void mainloop(int pfd) {
 			 (deadline.tv_usec - now.tv_usec)/1000;
 	if (timeout_ms <= 0)
 	    timeout_ms = 0;
-	else if (tqhead != tqtail) {
+	else if (tqhead != tqtail && typing_delay_ms != 0) {
 	    int qsize = tqtail-tqhead;
 	    if (qsize < 0)
 		qsize += TQ_SIZE;
@@ -208,11 +209,11 @@ static void mainloop(int pfd) {
 			 (later.tv_usec - now.tv_usec)/1000;
 
 	if (elapsed_ms >= timeout_ms/2) {
+	    write_queued_chars();
 	    if (update_board()) {
 		deadline = last_atc;
 	        deadline.tv_usec += 1000*delay_ms;
 	    }
-	    write_queued_chars();
   	}
 
 	if (rv == -1) {
