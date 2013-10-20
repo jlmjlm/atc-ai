@@ -202,13 +202,14 @@ static void mainloop(int pfd) {
         //add_fd(0, &fds, &maxfd);
         add_fd(ptm, &fds, &maxfd);
         add_fd(pfd, &fds, &maxfd);
-	int rv = select(maxfd+1, &fds, NULL, NULL, &tv);
+	struct timeval *ptv = delay_ms ? &tv : NULL;
+	int rv = select(maxfd+1, &fds, NULL, NULL, ptv);
 	struct timeval later;
         gettimeofday(&later, NULL);
 	int elapsed_ms = (later.tv_sec - now.tv_sec)*1000 +
 			 (later.tv_usec - now.tv_usec)/1000;
 
-	if (elapsed_ms >= timeout_ms/2) {
+	if (elapsed_ms >= timeout_ms/2 && delay_ms) {
 	    write_queued_chars();
 	    if (update_board()) {
 		deadline = last_atc;
@@ -228,6 +229,8 @@ static void mainloop(int pfd) {
 	if (FD_ISSET(ptm, &fds)) {
 	    gettimeofday(&last_atc, NULL);
 	    process_data(ptm, BUFSIZE, &update_display);
+	    if (!delay_ms && update_board())
+		write_queued_chars();
 	}
 	if (FD_ISSET(0, &fds))
 	    process_data(0, 1, &handle_input);
@@ -410,11 +413,6 @@ int main(int argc, char **argv) {
     if (print_usage_message) {
 	fputs(usage, stdout);
 	return 1;
-    }
-
-    if (delay_ms == 0) {
-	printf("Bad delay amount.\n");
-	return 2;
     }
 
     logff = fopen(logfile_name, "w");

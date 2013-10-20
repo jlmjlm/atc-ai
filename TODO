@@ -21,6 +21,7 @@ Trigger updates when it's been a while since the last read from atc,
 	== Swapping write_queued_chars() to run before update_board()
 		seems to have fixed that.
     -- Get -d of 0 or 1 (ie, very low, full speed) to work
+	== Works by special-casing 0.  Gets confused when you ^C to interrupt.
 License, readme, INSTALL
 Read cmds from stdin (eg, + and - to incr. & decr. speed)
 	-- And proxy ^L thru for a board refresh.
