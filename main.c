@@ -62,10 +62,14 @@ void errexit(int exit_code, const char *fmt, ...) {
     exit(exit_code);
 }
 
+static inline void msleep(int ms) {
+    usleep(ms * 1000);
+}
+
 static void shutdown_atc(int signo) {
-    usleep(100000);  // .1 s
+    msleep(100);  // .1 s
     kill(atc_pid, signo);
-    usleep(100000);  // .1 s
+    msleep(100);  // .1 s
     write(ptm, "y", 1);
 }
 
@@ -73,7 +77,7 @@ static void exit_hand() {
     shutdown_atc(SIGINT);
     atc_pid = 0;
     cleanup();
-    usleep(100000);  // .1 s
+    msleep(100);  // .1 s
 }
 
 static void interrupt(int signo) {

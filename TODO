@@ -32,6 +32,9 @@ Trigger updates when it's been a while since the last read from atc,
     But at -d 30, it fails at 2996 again.  Fishy.  (Also, these assert fails
 	are leaving behind hung 'atc' procs pretty frequently.)
     Huh!  The old -d 0 got to at least tick 3732!  (In only 11s)
+    Got that fixed up.  
+    Also got ^C closer to correct, but still some broken termios stuff
+	being left behind.  :/
 Better to have a log-if-traced fcn?  Too many "if (trace) fprintf(logff, ..."
 	-- Done, but how do I avoid repeating the tracelog() definitions?
 License, readme, INSTALL
