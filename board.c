@@ -95,7 +95,7 @@ static int get_frame_no() {
     return fnum;
 }
 
-static const char *pmin(const char *a, const char *b) {
+static inline const char *pmin(const char *a, const char *b) {
     return (a < b) ? a : b;
 }
 

@@ -23,6 +23,12 @@ Trigger updates when it's been a while since the last read from atc,
     -- Get -d of 0 or 1 (ie, very low, full speed) to work
 	== Works by special-casing 0.  Gets confused when you ^C to interrupt.
     TODO:  Fix that!  :-)
+    That'll probably take checking for the pipefd early, before calling
+	update_board() which is going to get confused by what's on the
+	display.  Or could have update_board() check for the "game over"
+	indications.
+Better to have a log-if-traced fcn?  Too many "if (trace) fprintf(logff, ..."
+	-- Done, but how do I avoid repeating the tracelog() definitions?
 License, readme, INSTALL
 Read cmds from stdin (eg, + and - to incr. & decr. speed)
 	-- And proxy ^L thru for a board refresh.
