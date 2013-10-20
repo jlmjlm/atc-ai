@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <unistd.h>
 #include "atc-ai.h"
 

@@ -1,8 +1,6 @@
 #include <unistd.h>
-#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <ctype.h>
 #include <time.h>
 #include <stdarg.h>
@@ -30,6 +28,8 @@ static int ptm;
 static int delay_ms = DEF_DELAY_MS;
 static const char *logfile_name = DEF_LOGFILE;
 static volatile sig_atomic_t cleanup_done = false;
+static struct timeval deadline;
+
 
 void cleanup() {
     if (cleanup_done)
@@ -175,10 +175,8 @@ static void mainloop(int pfd) {
     int maxfd = 0;
     fd_set fds;
     FD_ZERO(&fds);
-    struct timeval last_atc, deadline;
-    gettimeofday(&last_atc, NULL);
-    deadline.tv_sec = last_atc.tv_sec;
-    deadline.tv_usec = last_atc.tv_usec + 1000*delay_ms;
+    gettimeofday(&deadline, NULL);
+    deadline.tv_usec += 1000*delay_ms;
 
     for (;;) {
         struct timeval now;
@@ -211,17 +209,15 @@ static void mainloop(int pfd) {
 	    errexit(errno, "select failed: %s", strerror(errno));
 	}
 	if (rv == 0) {	// timeout
-	    update_board();
+	    if (update_board()) {
+		gettimeofday(&deadline, NULL);
+		deadline.tv_usec += 1000*delay_ms;
+	    }
 	    write_queued_chars();
-	    deadline.tv_usec += 1000*delay_ms;
 	    continue;
 	}
-	if (FD_ISSET(ptm, &fds)) {
+	if (FD_ISSET(ptm, &fds))
 	    process_data(ptm, BUFSIZE, &update_display);
-	    gettimeofday(&last_atc, NULL);
-            deadline.tv_sec = last_atc.tv_sec;
-            deadline.tv_usec = last_atc.tv_usec + 1000*delay_ms;
-	}
 	if (FD_ISSET(0, &fds))
 	    process_data(0, 1, &handle_input);
 	if (FD_ISSET(pfd, &fds)) {

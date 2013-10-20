@@ -1,7 +1,5 @@
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
 #include <ctype.h>
 #include <assert.h>
 
@@ -455,14 +453,14 @@ static void update_plane_courses() {
     }
 }
 
-void update_board() {
+bool update_board() {
     if (frame_no == 0)
 	board_init();
 
     int new_frame_no = get_frame_no();
     if (new_frame_no == frame_no) {
 	// Clock hasn't ticked, no-op.
-	return;
+	return false;
     }
 
     if (new_frame_no != frame_no+1) {
@@ -485,4 +483,6 @@ void update_board() {
 	fprintf(logff, "n_malloc = %d; n_free = %d; difference = %d\n",
 		n_malloc, n_free, n_malloc - n_free);
     }
+
+    return true;
 }

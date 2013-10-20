@@ -1,7 +1,10 @@
+#include <stdbool.h>
+#include <stdio.h>
+
 extern int get_ptm(void);
 extern int spawn(char *cmd, char *args[], int ptm);
 extern void update_display(char);
-extern void update_board(void);
+extern bool update_board(void);
 extern void cleanup(void);
 extern int testmain(void);
 
@@ -67,7 +70,7 @@ extern struct airport *get_airport(int n);
 struct course {
     struct xyz pos;
     int bearing;
-    _Bool cleared_exit, at_exit;
+    bool cleared_exit, at_exit;
     struct course *prev, *next;
 };
 
@@ -75,8 +78,8 @@ extern struct course *free_course_entry(struct course *);
 
 struct plane {
     char id;
-    _Bool isjet;
-    _Bool target_airport;
+    bool isjet;
+    bool target_airport;
     int target_num;
     struct course *start, *current, *end;
     int start_tm, current_tm, end_tm;
@@ -91,7 +94,7 @@ extern struct plane *plstart, *plend;
 
 
 #define TQ_SIZE 1024
-extern _Bool skip_tick;
+extern bool skip_tick;
 extern int typing_delay_ms;
 extern int tqhead, tqtail;
 extern char tqueue[TQ_SIZE];

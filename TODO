@@ -4,6 +4,11 @@ Trigger updates when it's been a while since the last read from atc,
 	is complete or frame_no was unchanged.
     -- Work this out in detail.  (First ad-hoc try fails at frame 49 for
 		"--seed 1380348787 -d 250 -t 100 -- -g Killer")
+	== Keep track of the last time 'atc' updated the tick count.
+	== Upon a tick-count update, set a "deadline" of now+delay
+	== Slice up this deadline into 'qsize' quantity of pieces, 
+		and print them out with that delay between them.
+	This seems to work!  Woot
     -- Get -d of 0 or 1 (ie, very low, full speed) to work
 License, readme, INSTALL
 Read cmds from stdin (eg, + and - to incr. & decr. speed)
