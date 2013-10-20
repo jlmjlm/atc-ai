@@ -36,9 +36,15 @@ Trigger updates when it's been a while since the last read from atc,
     Also got ^C closer to correct, but still some broken termios stuff
 	being left behind.  :/
     "-d 0" fails with "-g airports" with seed 1382293913 at tick 38388
-	(6282 saved planes)  [Is this due to the plane list filling up?]
+	(6282 saved planes)  [Is this due to the plane list filling up?
+	Nope:  Can get past it at "-d 500".]
+    [Seems to be fixed, but I changed nothing that I'm aware of.  :\ ]
     "-d 0" also fails with "-g Tic-Tac-Toe" with seed 1382294247 at tick 34322
 	(6846 saved planes)
+    [Ha ha, but this still breaks right here!]
+    [Or not!  It seems to be very finicky.  :( ]
+There's still studdering between even-odd ticks.  Maybe some kind of feedback
+    to get that converged on a good timeout?
 Better to have a log-if-traced fcn?  Too many "if (trace) fprintf(logff, ..."
 	-- Done, but how do I avoid repeating the tracelog() definitions?
 License, readme, INSTALL

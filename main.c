@@ -50,6 +50,8 @@ void cleanup() {
 
 __attribute__((__noreturn__, format(printf, 2, 3) ))
 void errexit(int exit_code, const char *fmt, ...) {
+    fprintf(logff, "Contents of the display:\n%.*s\n",
+	    screen_height*screen_width, display);
     cleanup();
     putc('\n', stderr);
     
@@ -93,6 +95,9 @@ noreturn static void terminate(int signo) {
 }
 
 noreturn static void abort_hand(int signo) {
+    fprintf(logff, "Handling abort (signo == %d [%s]) in eventloop "
+		   "handler!  Danger!  Contents of the display:\n%.*s\n",
+	    signo, strsignal(signo), screen_height*screen_width, display);
     exit_hand();
     abort();
 }
@@ -115,6 +120,11 @@ static void handle_signal(int signo) {
 }
 
 static void handle_abort(int signo) {
+    int fd = fileno(logff);
+    static const char msg[] = "Caught abort signal.  Contents of the display:\n";
+    write(fd, msg, (sizeof msg)-1);
+    write(fd, display, screen_height*screen_width);
+    write(fd, "\n", 1);
     cleanup();
     handle_signal(signo);
 }
