@@ -22,7 +22,7 @@ Trigger updates when it's been a while since the last read from atc,
 		seems to have fixed that.
     -- Get -d of 0 or 1 (ie, very low, full speed) to work
 	== Works by special-casing 0.  Gets confused when you ^C to interrupt.
-    TODO:  Fix that!  :-)
+		{Fixed now!}
     That'll probably take checking for the pipefd early, before calling
 	update_board() which is going to get confused by what's on the
 	display.  Or could have update_board() check for the "game over"
@@ -35,6 +35,10 @@ Trigger updates when it's been a while since the last read from atc,
     Got that fixed up.  
     Also got ^C closer to correct, but still some broken termios stuff
 	being left behind.  :/
+    "-d 0" fails with "-g airports" with seed 1382293913 at tick 38388
+	(6282 saved planes)  [Is this due to the plane list filling up?]
+    "-d 0" also fails with "-g Tic-Tac-Toe" with seed 1382294247 at tick 34322
+	(6846 saved planes)
 Better to have a log-if-traced fcn?  Too many "if (trace) fprintf(logff, ..."
 	-- Done, but how do I avoid repeating the tracelog() definitions?
 License, readme, INSTALL
