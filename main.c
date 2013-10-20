@@ -32,6 +32,7 @@ static int delay_ms = DEF_DELAY_MS;
 static int typing_delay_ms = DEF_TYPING_DELAY_MS;
 static const char *logfile_name = DEF_LOGFILE;
 static volatile sig_atomic_t cleanup_done = false;
+static bool shutting_down = false;
 
 
 void cleanup() {
@@ -62,6 +63,7 @@ void errexit(int exit_code, const char *fmt, ...) {
 }
 
 static void shutdown_atc(int signo) {
+    usleep(100000);  // .1 s
     kill(atc_pid, signo);
     usleep(100000);  // .1 s
     write(ptm, "y", 1);
@@ -74,6 +76,23 @@ static void exit_hand() {
     usleep(100000);  // .1 s
 }
 
+static void interrupt(int signo) {
+    fprintf(logff, "Caught %s signal.  Contents of the display:\n%.*s\n",
+	    strsignal(signo), screen_height*screen_width, display);
+    shutdown_atc(signo);
+    shutting_down = true;
+}
+
+noreturn static void terminate(int signo) {
+    kill(atc_pid, signo);
+    exit(0);
+}
+
+noreturn static void abort_hand(int signo) {
+    exit_hand();
+    abort();
+}
+
 static void raw_mode() {
     tcgetattr(1, &orig_termio);
     atexit(&exit_hand);
@@ -84,22 +103,6 @@ static void raw_mode() {
     new_termio.c_cc[VMIN] = 1;
     new_termio.c_cc[VTIME] = 0;
     tcsetattr(1, TCSAFLUSH, &new_termio);
-}
-
-noreturn static void terminate(int signo) {
-    kill(atc_pid, signo);
-    exit(0);
-}
-
-static void interrupt(int signo) {
-    fprintf(logff, "Caught %s signal.  Contents of the display:\n%.*s\n",
-	    strsignal(signo), screen_height*screen_width, display);
-    shutdown_atc(signo);
-}
-
-noreturn static void abort_hand(int signo) {
-    exit_hand();
-    abort();
 }
 
 static void handle_signal(int signo) {
@@ -184,6 +187,8 @@ static void mainloop(int pfd) {
     deadline.tv_usec += 1000*delay_ms;
 
     inline void check_update() {
+	if (shutting_down)
+	    return;
         write_queued_chars();
         if (update_board()) {
             deadline = last_atc;

@@ -41,6 +41,7 @@ exit after specified #frames, real time, or saved planes
 expand tabs, remove trailing spaces
 store revision ID (hash) in the object?
 Notice when we get a game over and "Press space".
+    Specifically: "Hit space for top players list"
 Figure out exits' directions by letting planes glide if safe.
 Handle rogue planes which were shrouded by other planes
 	- figure out bearing based on neighboring shadowed squares from
