@@ -217,10 +217,6 @@ static void mainloop(int pfd) {
         add_fd(pfd, &fds, &maxfd);
 	struct timeval *ptv = delay_ms ? &tv : NULL;
 	int rv = select(maxfd+1, &fds, NULL, NULL, ptv);
-	struct timeval later;
-        gettimeofday(&later, NULL);
-	int elapsed_ms = (later.tv_sec - now.tv_sec)*1000 +
-			 (later.tv_usec - now.tv_usec)/1000;
 
 	if (rv == -1) {
 	    if (errno == EINTR) {
