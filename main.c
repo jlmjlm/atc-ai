@@ -16,6 +16,9 @@
 #define BUFSIZE 1000
 #define DEF_LOGFILE "atc-ai.log"
 #define DEF_DELAY_MS 500
+#define DEF_TYPING_DELAY_MS 150
+#define STR(x) XSTR(x)
+#define XSTR(x) #x
 
 
 FILE *logff;
@@ -26,7 +29,7 @@ static struct termios orig_termio;
 static int sigpipe;
 static int ptm;
 static int delay_ms = DEF_DELAY_MS;
-static int typing_delay_ms = 0;
+static int typing_delay_ms = DEF_TYPING_DELAY_MS;
 static const char *logfile_name = DEF_LOGFILE;
 static volatile sig_atomic_t cleanup_done = false;
 
@@ -316,7 +319,7 @@ static const char usage[] =
     "            Use '.' to not pass a seed to 'atc'.\n"
     "        -d|--delay <ms>\n"
     "            Milliseconds to wait after an 'atc' write before moving.\n"
-    "            (default 500)\n"
+    "            (default " STR(DEF_DELAY_MS) ")\n"
     "        -s|--skip\n"
     "            After moving, skip to the next tick.  (default)\n"
     "        -S|--dont-skip\n"
@@ -324,7 +327,7 @@ static const char usage[] =
     "        -T|--self-test\n"
     "            Run a self-test.\n"
     "        -L|--logfile <filename>\n"
-    "            Log to write to.  (default \"atc-ai.log\")\n"
+    "            Log to write to.  (default \"" DEF_LOGFILE "\")\n"
     "        -f|--frames <frame number>\n"
     "            Exit after this many frames.\n"
     "        -p|--saved-planes <number of planes>\n"
@@ -333,7 +336,7 @@ static const char usage[] =
     "            Exit after a duration of this many seconds.\n"
     "        -t|--typing-delay <ms>\n"
     "            Duration to pause between commands to 'atc' in milliseconds.\n"
-    "            (default 0)\n"
+    "            (default " STR(DEF_TYPING_DELAY_MS) ")\n"
     "        -h|--help\n"
     "            Display this usage message instead of running.\n"
     "        -a|--atc-cmd <command>\n"

@@ -27,6 +27,11 @@ Trigger updates when it's been a while since the last read from atc,
 	update_board() which is going to get confused by what's on the
 	display.  Or could have update_board() check for the "game over"
 	indications.
+    Also, Killer seed 1382235370 with -d 0 fails at tick 2996.
+    With -d 10, it fails at tick 3000.  Hmmm.  (Ditto -d 20)
+    But at -d 30, it fails at 2996 again.  Fishy.  (Also, these assert fails
+	are leaving behind hung 'atc' procs pretty frequently.)
+    Huh!  The old -d 0 got to at least tick 3732!  (In only 11s)
 Better to have a log-if-traced fcn?  Too many "if (trace) fprintf(logff, ..."
 	-- Done, but how do I avoid repeating the tracelog() definitions?
 License, readme, INSTALL
