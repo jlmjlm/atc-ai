@@ -28,7 +28,6 @@ static int ptm;
 static int delay_ms = DEF_DELAY_MS;
 static const char *logfile_name = DEF_LOGFILE;
 static volatile sig_atomic_t cleanup_done = false;
-static struct timeval deadline;
 
 
 void cleanup() {
@@ -175,7 +174,9 @@ static void mainloop(int pfd) {
     int maxfd = 0;
     fd_set fds;
     FD_ZERO(&fds);
-    gettimeofday(&deadline, NULL);
+    struct timeval deadline, last_atc;
+    gettimeofday(&last_atc, NULL);
+    deadline = last_atc;
     deadline.tv_usec += 1000*delay_ms;
 
     for (;;) {
@@ -201,6 +202,19 @@ static void mainloop(int pfd) {
         add_fd(ptm, &fds, &maxfd);
         add_fd(pfd, &fds, &maxfd);
 	int rv = select(maxfd+1, &fds, NULL, NULL, &tv);
+	struct timeval later;
+        gettimeofday(&later, NULL);
+	int elapsed_ms = (later.tv_sec - now.tv_sec)*1000 +
+			 (later.tv_usec - now.tv_usec)/1000;
+
+	if (elapsed_ms >= timeout_ms/2) {
+	    if (update_board()) {
+		deadline = last_atc;
+	        deadline.tv_usec += 1000*delay_ms;
+	    }
+	    write_queued_chars();
+  	}
+
 	if (rv == -1) {
 	    if (errno == EINTR) {
 		errno = 0;
@@ -208,16 +222,12 @@ static void mainloop(int pfd) {
 	    }
 	    errexit(errno, "select failed: %s", strerror(errno));
 	}
-	if (rv == 0) {	// timeout
-	    if (update_board()) {
-		gettimeofday(&deadline, NULL);
-		deadline.tv_usec += 1000*delay_ms;
-	    }
-	    write_queued_chars();
-	    continue;
-	}
-	if (FD_ISSET(ptm, &fds))
+	if (rv == 0)
+	    continue;    // timeout
+	if (FD_ISSET(ptm, &fds)) {
+	    gettimeofday(&last_atc, NULL);
 	    process_data(ptm, BUFSIZE, &update_display);
+	}
 	if (FD_ISSET(0, &fds))
 	    process_data(0, 1, &handle_input);
 	if (FD_ISSET(pfd, &fds)) {

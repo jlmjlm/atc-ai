@@ -9,6 +9,12 @@ Trigger updates when it's been a while since the last read from atc,
 	== Slice up this deadline into 'qsize' quantity of pieces, 
 		and print them out with that delay between them.
 	This seems to work!  Woot
+	Ack -- it fails for Killer seed 1382235370  :(
+	Decreasing delay_ms seems to make it go on for longer, so I guess
+	the timeouts aren't being sliced up properly.
+	== Seems to work better with calc'ing the elapsed time, and "typing"
+		if it's at least half of what was chosen for the maximal 
+		typing delay.
     -- Get -d of 0 or 1 (ie, very low, full speed) to work
 License, readme, INSTALL
 Read cmds from stdin (eg, + and - to incr. & decr. speed)

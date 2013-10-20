@@ -5,6 +5,8 @@
 
 #include "atc-ai.h"
 
+#define MAX_TRIES 5
+
 int board_width, board_height;
 bool skip_tick;
 int info_col;
@@ -77,8 +79,6 @@ static void find_airports() {
 	    }
 	}
     }
-    r = board_height-3;
-    c = board_width-10;
 }
 
 static int get_frame_no() {
@@ -99,9 +99,15 @@ static const char *pmin(const char *a, const char *b) {
     return (a < b) ? a : b;
 }
 
-static void board_init() {
+static bool board_init() {
     const char *tee = memchr(display, 'T', screen_width);
     if (tee == NULL) {
+	if (frame_no == 0) {
+	    static int n_tries = 0;
+	    fprintf(logff, "Failed to init board, try #%d\n", ++n_tries);
+	    if (n_tries < MAX_TRIES)
+		return false;
+	}
 	errexit(' ', "Can't determine board width.");
     }
     info_col = tee - display;
@@ -145,6 +151,8 @@ static void board_init() {
     find_airports();
     fprintf(logff, "Board is %d by %d and the info column is %d.\n",
 	board_width, board_height, info_col);
+
+    return true;
 }
 
 struct airport *get_airport(int n) {
@@ -454,8 +462,10 @@ static void update_plane_courses() {
 }
 
 bool update_board() {
-    if (frame_no == 0)
-	board_init();
+    if (frame_no == 0) {
+	if (!board_init())
+	    return false;  // Board not set-up yet.  Try again.
+    }
 
     int new_frame_no = get_frame_no();
     if (new_frame_no == frame_no) {
