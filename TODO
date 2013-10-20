@@ -2,6 +2,9 @@ Organize all these crazy exit codes.
 Trigger updates when it's been a while since the last read from atc,
 	and then wait indefinitely for a read after the update
 	is complete or frame_no was unchanged.
+    -- Work this out in detail.  (First ad-hoc try fails at frame 49 for
+		"--seed 1380348787 -d 250 -t 100 -- -g Killer")
+    -- Get -d of 0 or 1 (ie, very low, full speed) to work
 License, readme, INSTALL
 Read cmds from stdin (eg, + and - to incr. & decr. speed)
 	-- And proxy ^L thru for a board refresh.

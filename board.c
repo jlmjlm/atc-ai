@@ -25,7 +25,6 @@ int n_airports = 0;
 
 // The board's dynamic state.
 int frame_no = 0;
-int n_planes = 0;
 struct plane *plstart = NULL, *plend = NULL;
 
 

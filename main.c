@@ -10,6 +10,7 @@
 #include <termios.h>
 #include <signal.h>
 #include <sys/select.h>
+#include <sys/time.h>
 #include <getopt.h>
 
 #include "atc-ai.h"
@@ -174,10 +175,28 @@ static void mainloop(int pfd) {
     int maxfd = 0;
     fd_set fds;
     FD_ZERO(&fds);
+    struct timeval last_atc, deadline;
+    gettimeofday(&last_atc, NULL);
+    deadline.tv_sec = last_atc.tv_sec;
+    deadline.tv_usec = last_atc.tv_usec + 1000*delay_ms;
 
     for (;;) {
-	int timeout_ms = (tqhead == tqtail || typing_delay_ms == 0) ? 
-			      delay_ms : typing_delay_ms;
+        struct timeval now;
+	gettimeofday(&now, NULL);
+	int timeout_ms = (deadline.tv_sec - now.tv_sec)*1000 +
+			 (deadline.tv_usec - now.tv_usec)/1000;
+	if (timeout_ms <= 0)
+	    timeout_ms = 0;
+	else if (tqhead != tqtail) {
+	    int qsize = tqtail-tqhead;
+	    if (qsize < 0)
+		qsize += TQ_SIZE;
+	    timeout_ms /= qsize;
+
+	    if (timeout_ms > typing_delay_ms)
+		timeout_ms = typing_delay_ms;
+	}
+
         struct timeval tv = { .tv_sec = timeout_ms / 1000,
 			      .tv_usec = (timeout_ms % 1000) * 1000 };
         //add_fd(0, &fds, &maxfd);
@@ -194,10 +213,15 @@ static void mainloop(int pfd) {
 	if (rv == 0) {	// timeout
 	    update_board();
 	    write_queued_chars();
+	    deadline.tv_usec += 1000*delay_ms;
 	    continue;
 	}
-	if (FD_ISSET(ptm, &fds))
+	if (FD_ISSET(ptm, &fds)) {
 	    process_data(ptm, BUFSIZE, &update_display);
+	    gettimeofday(&last_atc, NULL);
+            deadline.tv_sec = last_atc.tv_sec;
+            deadline.tv_usec = last_atc.tv_usec + 1000*delay_ms;
+	}
 	if (FD_ISSET(0, &fds))
 	    process_data(0, 1, &handle_input);
 	if (FD_ISSET(pfd, &fds)) {
