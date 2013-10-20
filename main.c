@@ -165,7 +165,7 @@ static void write_tqchar() {
 
 static void write_queued_chars() {
     if (tqhead != tqtail) {
-        if (typing_delay_ms)
+        if (typing_delay_ms && delay_ms)
 	    write_tqchar();
 	else {
 	    while (tqhead != tqtail)
@@ -183,6 +183,16 @@ static void mainloop(int pfd) {
     deadline = last_atc;
     deadline.tv_usec += 1000*delay_ms;
 
+    inline void check_update() {
+        write_queued_chars();
+        if (update_board()) {
+            deadline = last_atc;
+            deadline.tv_usec += 1000*delay_ms;
+	    if (!delay_ms) 
+		write_queued_chars();
+        }
+    }
+
     for (;;) {
         struct timeval now;
 	gettimeofday(&now, NULL);
@@ -196,7 +206,7 @@ static void mainloop(int pfd) {
 		qsize += TQ_SIZE;
 	    timeout_ms /= qsize;
 
-	    if (timeout_ms > typing_delay_ms)
+	    if (typing_delay_ms && timeout_ms > typing_delay_ms)
 		timeout_ms = typing_delay_ms;
 	}
 
@@ -212,14 +222,6 @@ static void mainloop(int pfd) {
 	int elapsed_ms = (later.tv_sec - now.tv_sec)*1000 +
 			 (later.tv_usec - now.tv_usec)/1000;
 
-	if (elapsed_ms >= timeout_ms/2 && delay_ms) {
-	    write_queued_chars();
-	    if (update_board()) {
-		deadline = last_atc;
-	        deadline.tv_usec += 1000*delay_ms;
-	    }
-  	}
-
 	if (rv == -1) {
 	    if (errno == EINTR) {
 		errno = 0;
@@ -227,13 +229,16 @@ static void mainloop(int pfd) {
 	    }
 	    errexit(errno, "select failed: %s", strerror(errno));
 	}
-	if (rv == 0)
-	    continue;    // timeout
+	if (rv == 0) {   // timeout
+	    if (delay_ms) 
+		check_update();
+	    continue;    
+  	}
 	if (FD_ISSET(ptm, &fds)) {
 	    gettimeofday(&last_atc, NULL);
 	    process_data(ptm, BUFSIZE, &update_display);
-	    if (!delay_ms && update_board())
-		write_queued_chars();
+	    if (!delay_ms)
+		check_update();
 	}
 	if (FD_ISSET(0, &fds))
 	    process_data(0, 1, &handle_input);
