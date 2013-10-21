@@ -51,6 +51,9 @@ Trigger updates when it's been a while since the last read from atc,
 	to be updated.
 There's still studdering between even-odd ticks.  Maybe some kind of feedback
     to get that converged on a good timeout?
+At low -d (eg, "-d 10"), still getting "Can't det. board width" sometimes.
+	But I can't repo it now.  :(  Blindly changing MAX_TRIES in
+	board.c from 5 to 10.
 Better to have a log-if-traced fcn?  Too many "if (trace) fprintf(logff, ..."
 	-- Done, but how do I avoid repeating the tracelog() definitions?
 License, readme, INSTALL

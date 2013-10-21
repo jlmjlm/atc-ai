@@ -5,7 +5,7 @@
 
 #include "atc-ai.h"
 
-#define MAX_TRIES 5
+#define MAX_TRIES 10
 
 int board_width, board_height;
 bool skip_tick;
