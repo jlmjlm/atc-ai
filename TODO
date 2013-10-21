@@ -43,6 +43,12 @@ Trigger updates when it's been a while since the last read from atc,
 	(6846 saved planes)
     [Ha ha, but this still breaks right here!]
     [Or not!  It seems to be very finicky.  :( ]
+    Now "-d 0" fails at tick 10442 for "-g crosshatch" with seed 1382321877.
+    -- And now earlier at tick 9456, with the same build!  -- Hit #9456
+	again, very next run.  There was a scroll-up immediately before at
+	tick #9455, so something might be wrong about it.  Possibly the
+	frame_no got updated, but stuff on the board's display has yet
+	to be updated.
 There's still studdering between even-odd ticks.  Maybe some kind of feedback
     to get that converged on a good timeout?
 Better to have a log-if-traced fcn?  Too many "if (trace) fprintf(logff, ..."
