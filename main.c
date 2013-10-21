@@ -192,6 +192,7 @@ static void write_queued_chars() {
 }
 
 static void mainloop(int pfd) {
+    bool board_setup = false;
     int maxfd = 0;
     fd_set fds;
     FD_ZERO(&fds);
@@ -205,6 +206,7 @@ static void mainloop(int pfd) {
 	    return;
         write_queued_chars();
         if (update_board()) {
+	    board_setup = true;
             deadline = last_atc;
             deadline.tv_usec += 1000*delay_ms;
 	    if (!delay_ms) 
@@ -234,7 +236,7 @@ static void mainloop(int pfd) {
         //add_fd(0, &fds, &maxfd);
         add_fd(ptm, &fds, &maxfd);
         add_fd(pfd, &fds, &maxfd);
-	struct timeval *ptv = delay_ms ? &tv : NULL;
+	struct timeval *ptv = (delay_ms && board_setup) ? &tv : NULL;
 	int rv = select(maxfd+1, &fds, NULL, NULL, ptv);
 
 	if (rv == -1) {
@@ -245,14 +247,14 @@ static void mainloop(int pfd) {
 	    errexit(errno, "select failed: %s", strerror(errno));
 	}
 	if (rv == 0) {   // timeout
-	    if (delay_ms) 
+	    if (delay_ms)
 		check_update();
 	    continue;    
   	}
 	if (FD_ISSET(ptm, &fds)) {
 	    gettimeofday(&last_atc, NULL);
 	    process_data(ptm, BUFSIZE, &update_display);
-	    if (!delay_ms)
+	    if (!board_setup || !delay_ms)
 		check_update();
 	}
 	if (FD_ISSET(0, &fds))

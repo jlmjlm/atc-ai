@@ -54,6 +54,11 @@ There's still studdering between even-odd ticks.  Maybe some kind of feedback
 At low -d (eg, "-d 10"), still getting "Can't det. board width" sometimes.
 	But I can't repo it now.  :(  Blindly changing MAX_TRIES in
 	board.c from 5 to 10.
+    -- Blink!  A "-d 10 -g Killer" just failed for all 10 tries.
+	I think the better sol'n is to have the timeout be indefinite
+	if frame_no is 0.  (Actually used a new boolean flag internal to
+	mainloop(), because update_display() doesn't update frame_no,
+	that's done by update_board().)
 Better to have a log-if-traced fcn?  Too many "if (trace) fprintf(logff, ..."
 	-- Done, but how do I avoid repeating the tracelog() definitions?
 License, readme, INSTALL
