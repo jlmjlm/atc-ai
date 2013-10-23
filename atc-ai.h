@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 extern int get_ptm(void);
-extern int spawn(char *cmd, char *args[], int ptm);
+extern int spawn(const char *cmd, const char *args[], int ptm);
 extern void update_display(char);
 extern bool update_board(void);
 extern void cleanup(void);

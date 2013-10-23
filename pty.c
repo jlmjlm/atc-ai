@@ -26,7 +26,7 @@ int get_ptm() {
     return ptm;
 }
 
-int spawn(char *cmd, char *args[], int ptm) {
+int spawn(const char *cmd, const char *args[], int ptm) {
     fflush(stderr);
     int pid = fork();
     if (pid == 0) {
@@ -44,7 +44,8 @@ int spawn(char *cmd, char *args[], int ptm) {
 	dup2(pts, 1);
 	dup2(pts, 2);
 	args[0] = cmd;
-	execvp(cmd, args);
+	execvp(cmd, (char *const *)args);   // See SUS's rationale on the exec*
+					    // functions to explain the cast.
 	fprintf(stderr, "exec of %s failed: %s\n", cmd, strerror(errno));
     	fflush(stderr);
 	_exit(-1);

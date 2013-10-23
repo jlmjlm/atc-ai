@@ -49,6 +49,10 @@ Trigger updates when it's been a while since the last read from atc,
 	tick #9455, so something might be wrong about it.  Possibly the
 	frame_no got updated, but stuff on the board's display has yet
 	to be updated.
+    -- Perhaps I should add something to check that the board is "as
+	expected", and see if there's any more data from 'atc' which
+	will make it go from inconsistent to consistent with some
+	very low timeout.
 There's still studdering between even-odd ticks.  Maybe some kind of feedback
     to get that converged on a good timeout?
 At low -d (eg, "-d 10"), still getting "Can't det. board width" sometimes.
@@ -67,6 +71,13 @@ Read cmds from stdin
 exit after specified #frames, real time, or saved planes
 Clean up assert vs. errexit.
 expand tabs, remove trailing spaces
+Is there some kind of "Zen of VT escape sequences" I'm missing?  If I hit
+	an esc. seq. I don't know, it'd be nice to just be able to handle
+	it by reading it until the sequence terminated and ignore it and
+	hope for the best.  But there doesn't seem to be any easy principle
+	of what marks seq. termination.
+    -- Should go over the terminfo entry for vt100 to make sure I can handle
+	any seq which terminfo is going to spit out.
 store revision ID (hash) in the object?
 Notice when we get a game over and "Press space".
     Specifically: "Hit space for top players list"

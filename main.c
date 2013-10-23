@@ -26,6 +26,7 @@ FILE *logff;
 FILE *outf;
 
 static int atc_pid;
+static const char *atc_cmd = "atc";
 static struct termios orig_termio;
 static int sigpipe;
 static int ptm;
@@ -308,16 +309,16 @@ static void mainloop(int pfd) {
     }
 }
 
-static char **make_args(int argc, char **argv, int seed) {
+static const char **make_args(int argc, char **argv, int seed) {
     if (*argv && !strncmp("--", *argv, 3)) {
 	argc--;
 	argv++;
     }
 
-    char **args = malloc((argc+4)*sizeof(*args));
+    const char **args = malloc((argc+4)*sizeof(*args));
     int i = 0;
 
-    args[i++] = "atc";
+    args[i++] = atc_cmd;
 
     if (seed != -1) {
 	static char buf[30];
@@ -425,6 +426,9 @@ static void process_cmd_args(int argc, char *const argv[]) {
 	    case 'L':
 	        logfile_name = strdup(optarg);
 		break;
+	    case 'a':
+	        atc_cmd = strdup(optarg);
+		break;
 	    case 'r':
 		if (!strncmp(".", optarg, 2))
 		    random_seed = -1;
@@ -496,8 +500,8 @@ int main(int argc, char **argv) {
 	fprintf(logff, "Using no random seed.\n");
     else
         fprintf(logff, "Using RNG seed of %d\n", random_seed);
-    char **args = make_args(argc - optind, argv + optind, random_seed);
-    atc_pid = spawn("atc", args, ptm);
+    const char **args = make_args(argc - optind, argv + optind, random_seed);
+    atc_pid = spawn(atc_cmd, args, ptm);
     free(args);
 
     raw_mode();
