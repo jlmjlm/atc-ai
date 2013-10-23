@@ -36,6 +36,8 @@ static volatile sig_atomic_t cleanup_done = false;
 static bool shutting_down = false;
 static int interval = 100, imin = 100, imax = 900;
 
+static void write_queued_chars(void);
+
 
 void cleanup() {
     if (cleanup_done)
@@ -187,6 +189,8 @@ static void handle_input(char c) {
 	    delay_ms -= interval;
 	    if (delay_ms < imin)
 		delay_ms = imin;
+	    if (delay_ms == 0)
+		write_queued_chars();
 	    break;
 	default:
 	    write(1, "\a", 1);

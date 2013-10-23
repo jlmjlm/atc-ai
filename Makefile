@@ -3,7 +3,7 @@ INSTALLDIR = /usr/local/bin
 
 ####
 
-CFLAGS += -Wall -std=gnu99
+CFLAGS += -Wall -std=gnu99 -O
 
 all: test atc-ai
 

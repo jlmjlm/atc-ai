@@ -62,8 +62,8 @@ At low -d (eg, "-d 10"), still getting "Can't det. board width" sometimes.
 Better to have a log-if-traced fcn?  Too many "if (trace) fprintf(logff, ..."
 	-- Done, but how do I avoid repeating the tracelog() definitions?
 License, readme, INSTALL
-Read cmds from stdin (eg, + and - to incr. & decr. speed)
-	-- And proxy ^L thru for a board refresh.
+Read cmds from stdin
+    -- Done for '+', '-', ^C, ^L.  
 exit after specified #frames, real time, or saved planes
 Clean up assert vs. errexit.
 expand tabs, remove trailing spaces
