@@ -18,3 +18,5 @@ struct frame {
 extern void calc_next_move(const struct plane *p, int srow, int scol, int *alt,
 			   struct xyz target, int *bearing, bool cleared_exit,
 			   struct frame *frame);
+extern struct plane *remove_plane(struct plane *p);
+extern void remove_course_entries(struct course *c);

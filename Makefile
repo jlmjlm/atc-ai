@@ -21,7 +21,7 @@ pty.o: pty.c atc-ai.h
 
 vty.o: vty.c atc-ai.h
 
-board.o: board.c atc-ai.h
+board.o: board.c atc-ai.h pathfind.h
 
 pathfind.o: pathfind.c atc-ai.h pathfind.h
 

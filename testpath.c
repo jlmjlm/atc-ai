@@ -74,10 +74,10 @@ static void test_blocked() {
     }
     assert(n_checks == 6);
 
-    //printf("n_malloc = %d; n_free = %d\n", n_malloc, n_free);
     assert(n_malloc == 0);
     assert(n_free == 0);
 }
+
 
 // Test the matchcourse penalty:  Verify a jet ('i') at (1, 11, 9) bearing
 // west prevents a jet ('j') at (1, 9, 9) from going west.
@@ -246,8 +246,8 @@ static void test_plot_course(bool isprop) {
     for (int i = 0; i < EZ_SIZE; i++) {
 	G.exc[i].row = G.exc[i].col = 0;
     }
-    airports[0] = G;
-    airports[1] = S;
+    airports[0] = S;
+    airports[1] = G;
 
     int alt = 0;
     frame_no = 1;
@@ -255,7 +255,6 @@ static void test_plot_course(bool isprop) {
     check_course(pls[4].start, excr, EXC_LEN, isprop);
     remove_course_entries(pls[4].start);
     pls[4].start = pls[4].end = NULL;
-    //printf("n_malloc = %d; n_free = %d\n", n_malloc, n_free);
     assert(n_malloc == n_free);
 
     // Test a double backtrack.

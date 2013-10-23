@@ -65,6 +65,7 @@ License, readme, INSTALL
 Read cmds from stdin (eg, + and - to incr. & decr. speed)
 	-- And proxy ^L thru for a board refresh.
 exit after specified #frames, real time, or saved planes
+Clean up assert vs. errexit.
 expand tabs, remove trailing spaces
 store revision ID (hash) in the object?
 Notice when we get a game over and "Press space".

@@ -104,11 +104,6 @@ extern void land_at_airport(char id, int airport_num);
 extern void next_tick(void);
 
 
-// So it can be called from testpath.c
-extern struct plane *remove_plane(struct plane *p);
-extern void remove_course_entries(struct course *c);
-
-
 // Cheapo check for mem leaks
 extern int n_malloc, n_free;
 extern void *count_malloc(const char *, size_t);

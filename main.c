@@ -19,6 +19,7 @@
 #define DEF_TYPING_DELAY_MS 150
 #define STR(x) XSTR(x)
 #define XSTR(x) #x
+#undef CTRL
 
 
 FILE *logff;
@@ -33,6 +34,7 @@ static int typing_delay_ms = DEF_TYPING_DELAY_MS;
 static const char *logfile_name = DEF_LOGFILE;
 static volatile sig_atomic_t cleanup_done = false;
 static bool shutting_down = false;
+static int interval = 100, imin = 100, imax = 900;
 
 
 void cleanup() {
@@ -167,12 +169,29 @@ static void process_data(int src, int amt, void (*handler)(char)) {
 	handler(buf[i]);
 }
 
+#define CNTRL(x) (x-'A'+1)
 static void handle_input(char c) {
-    if (c == 3) {
-    	raise(SIGINT);
-    	return;
+    switch (c) {
+	case CNTRL('C'):
+	    raise(SIGINT);
+	    return;
+	case CNTRL('L'):
+    	    write(ptm, &c, 1);
+	    break;
+	case '+':
+	    delay_ms += interval;
+	    if (delay_ms > imax)
+		delay_ms = imax;
+	    break;
+	case '-':
+	    delay_ms -= interval;
+	    if (delay_ms < imin)
+		delay_ms = imin;
+	    break;
+	default:
+	    write(1, "\a", 1);
+	    break;
     }
-    write(ptm, &c, 1);
 }
 
 static void write_tqchar() {
@@ -233,7 +252,7 @@ static void mainloop(int pfd) {
 
         struct timeval tv = { .tv_sec = timeout_ms / 1000,
 			      .tv_usec = (timeout_ms % 1000) * 1000 };
-        //add_fd(0, &fds, &maxfd);
+        add_fd(0, &fds, &maxfd);
         add_fd(ptm, &fds, &maxfd);
         add_fd(pfd, &fds, &maxfd);
 	struct timeval *ptv = (delay_ms && board_setup) ? &tv : NULL;
@@ -407,6 +426,21 @@ static void process_cmd_args(int argc, char *const argv[]) {
 		    random_seed = -1;
 		else
 		    random_seed = atoi(optarg);
+		break;
+	    case 'i':;
+		const char *istr = strtok(optarg, ":");
+		if (!istr)
+		    errexit('i', "strtok of \"%s\" failed", optarg);
+		interval = atoi(istr);
+		istr = strtok(NULL, ":");
+		if (istr) {
+		    imax = atoi(istr);
+		    istr = strtok(NULL, ":");
+		    if (istr)
+			imin = atoi(istr);
+		    else
+		  	print_usage_message = true;
+		}
 		break;
 	    //FIXME: Rest of the args
 	    //FIXME: -g/--game (so don't have to "-- -g <game>")

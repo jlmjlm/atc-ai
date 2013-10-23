@@ -4,6 +4,7 @@
 #include <assert.h>
 
 #include "atc-ai.h"
+#include "pathfind.h"
 
 #define MAX_TRIES 10
 
