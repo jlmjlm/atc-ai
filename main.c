@@ -23,10 +23,10 @@
 
 
 FILE *logff;
-FILE *outf;
 
 static int atc_pid;
 static const char *atc_cmd = "atc";
+static const char *game = NULL;
 static struct termios orig_termio;
 static int sigpipe;
 static int ptm;
@@ -315,7 +315,7 @@ static const char **make_args(int argc, char **argv, int seed) {
 	argv++;
     }
 
-    const char **args = malloc((argc+4)*sizeof(*args));
+    const char **args = malloc((argc+6)*sizeof(*args));
     int i = 0;
 
     args[i++] = atc_cmd;
@@ -325,6 +325,11 @@ static const char **make_args(int argc, char **argv, int seed) {
 	sprintf(buf, "%d", seed);
 	args[i++] = "-r";
 	args[i++] = buf;
+    }
+
+    if (game) {
+	args[i++] = "-g";
+	args[i++] = game;
     }
 
     for (;;) {
@@ -350,12 +355,13 @@ static const struct option ai_opts[] = {
     { .name = "help", .has_arg = no_argument, .flag = NULL, .val = 'h' },
     { .name = "atc-cmd", .has_arg = required_argument, .flag = NULL,
           .val = 'a' },
+    { .name = "game", .has_arg = required_argument, .flag = NULL, .val = 'g' },
     { .name = "interval", .has_arg = required_argument, .flag = NULL,
           .val = 'i' },
     { .name = NULL, .has_arg = 0, .flag = NULL, .val = '\0' }
 };
 
-static const char optstring[] = ":r:d:sSTL:f:p:D:t:ha:i:";
+static const char optstring[] = ":r:d:sSTL:f:p:D:t:ha:i:g:";
 
 static const char usage[] =
     "Usage:  atc-ai <ai-args> [-- <atc-args>]\n"
@@ -366,6 +372,8 @@ static const char usage[] =
     "        -d|--delay <ms>\n"
     "            Milliseconds to wait after an 'atc' write before moving.\n"
     "            (default " STR(DEF_DELAY_MS) ")\n"
+    "        -g|--game <name>\n"
+    "            Name of game board to use.  (no default)\n"
     "        -s|--skip\n"
     "            After moving, skip to the next tick.  (default)\n"
     "        -S|--dont-skip\n"
@@ -429,6 +437,9 @@ static void process_cmd_args(int argc, char *const argv[]) {
 	    case 'a':
 	        atc_cmd = strdup(optarg);
 		break;
+	    case 'g':
+		game = strdup(optarg);
+		break;
 	    case 'r':
 		if (!strncmp(".", optarg, 2))
 		    random_seed = -1;
@@ -451,7 +462,6 @@ static void process_cmd_args(int argc, char *const argv[]) {
 		}
 		break;
 	    //FIXME: Rest of the args
-	    //FIXME: -g/--game (so don't have to "-- -g <game>")
 	}
     }
 }
@@ -505,8 +515,6 @@ int main(int argc, char **argv) {
     free(args);
 
     raw_mode();
-    outf = fdopen(ptm, "w");
-    setvbuf(outf, NULL, _IOLBF, 0);
     mainloop(pipefd[0]);
     return 0;
 }
