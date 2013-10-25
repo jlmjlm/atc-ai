@@ -107,8 +107,6 @@ Keep track of moves taken, so if a plane has "too long" of a route, we can
 Do something better than the "getting desperate" stuff in calc_bearing().
 Should we keep count_malloc and count_free around, even tho there are
 	no memleaks, just in case some get introduced?
-Should have a --game (-g [or is '-g' already taken?]) option which fwd's
-	to "atc", instead of having to do -- -g <game>
 Nothing to do with atc-ai per se, but atc in some conditions will stomp
 	the high score list.  (Hope the new ABRT handling fixes it.)
 	-- Nope!  At least not for SIGINT.  Might be abort_hand() [called

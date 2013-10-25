@@ -24,7 +24,7 @@
 
 FILE *logff;
 
-static int atc_pid;
+static volatile sig_atomic_t atc_pid;
 static const char *atc_cmd = "atc";
 static const char *game = NULL;
 static struct termios orig_termio;
