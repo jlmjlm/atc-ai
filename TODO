@@ -105,8 +105,16 @@ Keep track of moves taken, so if a plane has "too long" of a route, we can
 	that repeatedly.  But maybe it'd be too costly, what with each
 	plane having up to 15 possible moves.
 Do something better than the "getting desperate" stuff in calc_bearing().
+Do we have to strdup(optarg), or is it safe to assume we can use a copy
+	after other calls to getopt_long() ?
 Should we keep count_malloc and count_free around, even tho there are
 	no memleaks, just in case some get introduced?
+signalfd() [Linux extension] is a great idea.  It really should be the
+	case that anything you can block on can have a wait handle,
+	and using fd's for the handles for use in select/poll is unix-y.
+	Gets rid of the hacky signal pipe trick.  Don't think I'll be
+	able to use it for SIGABRT though, as abort() and assert(false)
+	aren't allowed to return.
 Nothing to do with atc-ai per se, but atc in some conditions will stomp
 	the high score list.  (Hope the new ABRT handling fixes it.)
 	-- Nope!  At least not for SIGINT.  Might be abort_hand() [called

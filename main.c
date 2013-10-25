@@ -23,8 +23,9 @@
 
 
 FILE *logff;
+static volatile sig_atomic_t logfd;    // For use in the SIGABRT handler.
 
-static volatile sig_atomic_t atc_pid;
+static volatile sig_atomic_t atc_pid = 0;
 static const char *atc_cmd = "atc";
 static const char *game = NULL;
 static struct termios orig_termio;
@@ -125,11 +126,10 @@ static void handle_signal(int signo) {
 }
 
 static void handle_abort(int signo) {
-    int fd = fileno(logff);
     static const char msg[] = "Caught abort signal.  Contents of the display:\n";
-    write(fd, msg, (sizeof msg)-1);
-    write(fd, display, screen_height*screen_width);
-    write(fd, "\n", 1);
+    write(logfd, msg, (sizeof msg)-1);
+    write(logfd, display, screen_height*screen_width);
+    write(logfd, "\n", 1);
     cleanup();
     handle_signal(signo);
 }
@@ -494,6 +494,7 @@ int main(int argc, char **argv) {
 
     logff = fopen(logfile_name, "w");
     setvbuf(logff, NULL, _IOLBF, 0);
+    logfd = fileno(logff);
     write_cmd_args(argc, argv);
 
     if (do_self_test) {
