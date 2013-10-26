@@ -215,7 +215,7 @@ static void write_queued_chars() {
     }
 }
 
-static void mainloop(int pfd) {
+static noreturn void mainloop(int pfd) {
     bool board_setup = false;
     int maxfd = 0;
     fd_set fds;
@@ -305,6 +305,7 @@ static void mainloop(int pfd) {
 		default:
 		    errexit(signo, "Caught unexpected signal %s",
 			    strsignal(signo));
+		    // No return
 	    }
 	}
     }
