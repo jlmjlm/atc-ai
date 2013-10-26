@@ -1,0 +1,5 @@
+Set INSTALLDIR in the Makefile to whatever you want.
+
+To install:      make && sudo make install
+
+To uninstall:    sudo make uninstall

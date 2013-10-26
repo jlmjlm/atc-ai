@@ -71,6 +71,8 @@ Read cmds from stdin
 exit after specified #frames, real time, or saved planes
 Clean up assert vs. errexit.
 expand tabs, remove trailing spaces
+	And after this, make a "wslint" Makefile target which checks this,
+	and perhaps a "wsfix" target which fixes it up.
 Is there some kind of "Zen of VT escape sequences" I'm missing?  If I hit
 	an esc. seq. I don't know, it'd be nice to just be able to handle
 	it by reading it until the sequence terminated and ignore it and

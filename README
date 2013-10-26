@@ -1,0 +1,76 @@
+atc-ai:  
+A bot which plays the old "atc" game, often found in the "bsdgames" package.
+
+
+This is a hobby project I did to sharpen my skills in some areas
+I'd grown a little unfamiliar with, my job over the last three years
+having been network-related programming in Java and Scala.  An atc bot
+is pretty much completely unrelated, on the system end involving setting 
+up a pseudoterminal for atc to run inside, parsing terminal escape codes,
+and working with the terminal I/O settings of the bot's own terminal.  
+Also pathfinding is needed to figure out how to get the planes from
+source to destination, and it has to interpret the contents of the display
+to know when planes arrive.  And it's a passably complex project in C.
+Scala is a great language, and much as I enjoy it, C is still my favorite
+language, and it's been too long since I did significant work with it.
+
+I make heavy use of C99's struct initialization mechanism and "//" comments
+and 'inline' several times, but otherwise mostly stick to C89 and POSIX.  
+(Though I haven't tested it on other than gcc and Linux yet.)  I use the 
+GNU language extension for nested functions in a few places, and use 
+__attribute__ noreturn and format(printf) for bugcatching; and use the 
+getopt_long() GNU library extension for parsing the flags.
+
+I learned about Linux's signalfd() call after I'd written the event loop
+with the well known self-pipe trick.  How did I miss this?  It's been 
+supported by Linux for years, and having handles for everything you could
+want to wait on is a great idea.  Unix's mismash of interfaces here is a
+big unnecessary mess.  POSIX should adopt signalfd(), and provide ways to
+get handles for all the conditions you could want to wait on.  (Such as the
+pthread functions pthread_cond_wait(), pthread_join(), pthread_mutex_lock().)
+This really should have been recognized long ago -- consider waiting on a
+child process.  If fork() had given us a wait handle, we could stick it in
+the event loop's select() call and have a very clean interface.  Instead,
+Unix hacks around it by giving us a SIGCLD signal to pop us out of the
+select(), and in the SIGCLD handler we'll probably have to set a flag or
+write to a self-pipe because we want to handle it in the event loop, not
+asynchronously in the signal handler.  I haven't switched to signalfd()
+because I had the self-pipe already working and I haven't put in any
+deliberate Linux-isms yet.
+
+The pathfinding core is very simple:  Try the move which brings you closest
+to the target, repeat until you're there.  If you get stuck, backtrack and
+try the next-best move.  Landing at an airport takes some extra work, because
+you have to match direction in addition to lat/lon/alt.  So, for them I have
+the target be the space you have to land from on the final move instead of
+the airport's location, and "manually" land from there (this is handled by
+land_at_airport(); getting the plane to the target is repeated calls to
+calc_next_move()).  This doesn't work if the plane has to turn by more than
+90 degrees, so I prohibit planes from getting within one space of the target
+if they'd have to turn by >90 to land.  This sets up a "wall" for planes 
+approaching the airport from the wrong direction.  To get planes over the
+wall I discourage them from low-altitude flight on the wrong side of the
+airport, and to help them get around the wall I have the pathfinding target
+the spaces laterally adjacent to the primary target as "secondary targets"
+(whichever one is closer).  Planes are also discouraged from flight levels
+6, 7, 8 within two spaces of an exit to avoid problems when a plane spawns
+from it.
+
+This technique has some failure modes which I've added heuristics to avoid.
+First, a plane can push you off course to avoid colliding with it.  If you
+match courses with it, you'll be in the same situation next turn, and so go
+further and further off course until you hit another obstacle or the other
+plane changes course.  This can often lead you with insufficient fuel.  So,
+I give a 1000-space penalty for matching orientation and altitude, and a
+100-space penalty for matching orientation but not altitude.  Jets can
+effectively match courses with prop planes by doing a zig-zag route which
+has them do in two moves what the props do in one, even though they never
+match orientations, so I penalize a jet aligning itself with a prop by
+500 spaces.  These penalties do good jobs of keeping planes from being
+pushed far off course by a single other plane, but sometimes a pair conspire
+to cause trouble.  These situations can usually be resolved by changing
+altitude to go over or under them, so if a plane is pushed away from its
+target, a bonus is applied to moves which change altitude.  These heuristics
+are entirely ad-hoc, but with these three I've never had a failure to
+generate a route within the game's 50 move limit and I've had games run 
+for millions of moves.

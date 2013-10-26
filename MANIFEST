@@ -1,5 +1,7 @@
+INSTALL
 MANIFEST
 Makefile
+README
 TODO
 atc-ai.h
 board.c
