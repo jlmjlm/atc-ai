@@ -232,6 +232,16 @@ static void add_blocking_plane(struct blp *blocking_planes, int *n_blp,
         blocking_planes[(*n_blp)++] = adjacent_plane;
 }
 
+__attribute__((format(printf, 2, 3) ))
+static inline void tracelog(const bool trace, const char *fmt, ...) {
+    if (trace) {
+	va_list va;
+    	va_start(va, fmt);
+        vfprintf(logff, fmt, va);
+	va_end(va);
+    }
+}
+
 void calc_next_move(const struct plane *p, const int srow, const int scol,
 		    int *alt, const struct xyz target, int *bearing,
 		    const bool cleared_exit, struct frame *frame) {
@@ -250,15 +260,6 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
     const bool trace = (p->id == 'j' && srow == 1 && scol == 9 && *alt == 9 &&
 		  bearings[*bearing].aircode == '<' &&
 		  target.row == 0 && target.col == 29 && target.alt == 9);
-    __attribute__((format(printf, 1, 2) ))
-    inline void tracelog(const char *fmt, ...) {
-	if (trace) {
-	    va_list va;
-    	    va_start(va, fmt);
-            vfprintf(logff, fmt, va);
-	    va_end(va);
-	}
-    }
 
     // If the plane's at the airport, it can only hold or take off.
     if (*alt == 0) {
@@ -308,8 +309,9 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
 	    
 	    if (adjacent_plane.alt > 0) {
 		add_blocking_plane(blocking_planes, &n_blp, adjacent_plane);
-		tracelog("Candidate move to (%d, %d, %d) bearing %s blocked "
-			 "by %s plane at altitude %d bearing %s\n",
+		tracelog(trace, "Candidate move to (%d, %d, %d) bearing %s "
+				"blocked by %s plane at altitude %d "
+				"bearing %s\n",
 			 rc.row, rc.col, nalt, bearings[nb].shortname,
 			 adjacent_plane.isjet ? "jet" : "prop",
 			 adjacent_plane.alt, 
@@ -326,25 +328,27 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
 	    int distance = penalty + cdist(rc.row, rc.col, nalt, target, p,
 			                   srow, scol);
 	    new_cand(frame, nb, nalt, distance);
-	    tracelog("Adding candidate move to (%d, %d, %d) bearing %s "
-		     "distance=%d\n", rc.row, rc.col, nalt,
+	    tracelog(trace, "Adding candidate move to (%d, %d, %d) bearing %s "
+		            "distance=%d\n", rc.row, rc.col, nalt,
 		     bearings[nb].longname, distance);
 	}
     }
     assert(frame->n_cand <= 15);
     if (frame->n_cand == 0) {
-	tracelog("Warning: Can't find safe path for plane '%c'\n", p->id);
+	tracelog(trace, "Warning: Can't find safe path for plane '%c'\n", 
+		 p->id);
 	*alt = -1;
 	return;
     }
-    tracelog("Checking %d candidate moves against %d blocking planes.\n", 
+    tracelog(trace, "Checking %d candidate moves against %d blocking planes.\n",
 	     frame->n_cand, n_blp);
     for (int i = 0; i < frame->n_cand; i++) {
 	for (int j = 0; j < n_blp; j++) {
 	     if (frame->cand[i].bearing != blocking_planes[j].bearing ||
 		    p->isjet != blocking_planes[j].isjet) {
-		tracelog("Not applying matchcourse penalty: %s c_bearing %s "
-		         "vs. %s b_bearing %s (%d/%d vs. %d/%d)\n",
+		tracelog(trace, "Not applying matchcourse penalty: "
+				"%s c_bearing %s vs. %s b_bearing %s "
+				"(%d/%d vs. %d/%d)\n",
 			 p->isjet ? "jet" : "prop", 
 			 bearings[frame->cand[i].bearing].shortname,
 			 blocking_planes[j].isjet ? "jet" : "prop", 
@@ -355,18 +359,18 @@ void calc_next_move(const struct plane *p, const int srow, const int scol,
 	     }
 	     int da = abs(frame->cand[i].alt - blocking_planes[j].alt);
 	     if (da == 0) {
-		tracelog("Applying matchcourse penalty to plane %c "
-			 "bearing %s.\n", p->id, 
-			 bearings[blocking_planes[j].bearing].longname);
+		tracelog(trace, "Applying matchcourse penalty to plane %c "
+			        "bearing %s.\n", 
+			 p->id, bearings[blocking_planes[j].bearing].longname);
 		frame->cand[i].distance += MATCHCOURSE_PENALTY;
 	     } else if (da == 1) {
-		tracelog("Applying minor matchcourse penalty to plane %c "
-		         "bearing %s.\n", p->id, 
-			 bearings[blocking_planes[j].bearing].longname);
+		tracelog(trace, "Applying minor matchcourse penalty to "
+				"plane %c bearing %s.\n", 
+			 p->id, bearings[blocking_planes[j].bearing].longname);
 		frame->cand[i].distance += MATCHCOURSE_PENALTY/10;
 	     } else {
-		tracelog("Not applying matchcourse penalty: "
-			 "c_alt %d vs. b_alt %d\n", 
+		tracelog(trace, "Not applying matchcourse penalty: "
+			 	"c_alt %d vs. b_alt %d\n", 
 		         frame->cand[i].alt, blocking_planes[j].alt);
 	     }
 	}
@@ -503,17 +507,9 @@ static void make_new_fr(struct frame **endp);
 struct record { int steps, moves; };
 static struct record rec_jet, rec_prop;  // static init. == zeros
 
+
 void plot_course(struct plane *p, int row, int col, int alt) {
     const bool trace = (p->id == 'i' && frame_no == 575);
-    __attribute__((format(printf, 1, 2) ))
-    inline void tracelog(const char *fmt, ...) {
-	if (trace) {
-	    va_list va;
-    	    va_start(va, fmt);
-            vfprintf(logff, fmt, va);
-	    va_end(va);
-	}
-    }
 
     struct frame *frstart = malloc(sizeof *frstart);
     struct frame *frend = frstart;
@@ -553,8 +549,8 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	target.row = e->row;
         target.col = e->col;
     }
-    tracelog("Tracing plane %c's course from %d:(%d, %d, %d)@%d to "
-	     "(%d, %d, %d)\n",
+    tracelog(trace, "Tracing plane %c's course from %d:(%d, %d, %d)@%d to "
+	            "(%d, %d, %d)\n",
              p->id, frame_no, row, col, alt, bearings[bearing].degree, 
              target.row, target.col, target.alt);
     
@@ -593,7 +589,7 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 		       frend);
    	assert((alt < 0) == (frend->n_cand <= 0));
 	while (frend->n_cand <= 0) {
-	    tracelog("Backtracking at step %d move %d tick %d\n",
+	    tracelog(trace, "Backtracking at step %d move %d tick %d\n",
 		     steps, moves, tick);
 	    struct xyz bt_pos = backtrack(&tick, &cleared_exit, &p->end,
 					  &frend);
@@ -603,7 +599,8 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	    // TODO: Do we have to worry about the "pop out of an exit" move
 	    // that props get at their first tick?
 	    if (frend->n_cand == -3) {
-		tracelog("Backtracking over prop's non-move at tick %d\n", 
+		tracelog(trace, 
+			 "Backtracking over prop's non-move at tick %d\n", 
 			 tick);
 		assert(!p->isjet);
 		bt_pos = backtrack(&tick, &cleared_exit, &p->end, &frend);
@@ -611,8 +608,8 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	    }
 
 	    row = bt_pos.row;  col = bt_pos.col;
-            tracelog("After backtracking:  %d: pos(%d, %d, %d) and %d "
-		     "remaining candidates\n", tick, bt_pos.row, 
+            tracelog(trace, "After backtracking:  %d: pos(%d, %d, %d) and %d "
+		     	    "remaining candidates\n", tick, bt_pos.row, 
 		     bt_pos.col, bt_pos.alt, frend->n_cand - 1);
 
 	    if (--frend->n_cand > 0) {
@@ -622,8 +619,8 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 	        bearing = frend->cand[frend->n_cand-1].bearing;
 		break;
 	    }
-	    tracelog("No new candidates found at tick %d.  Backtracking "
-		     "again.\n", tick);
+	    tracelog(trace, "No new candidates found at tick %d.  Backtracking "
+		            "again.\n", tick);
 	}
 	if (alt) {
             row += bearings[bearing].drow;

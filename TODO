@@ -32,9 +32,14 @@ Assert fails tend to leave behind hung 'atc' procs pretty frequently.
 	     is supposed to exactly match authorization to send a signal to.
 Better to have a log-if-traced fcn?  Too many "if (trace) fprintf(logff, ..."
 	-- Done, but how do I avoid repeating the tracelog() definitions?
+	-- Pulled it out into a static inline procedure.
 License (AGPLv3, I'm thinking).  Author & copyright on all source code.
 Read cmds from stdin
     -- Done for '+', '-', ^C, ^L.  
+Should have a 'g' command, which halts the current game and shows a game board
+    list, from calling "atc -l", numbered.  Then that number will start a
+    game from that board.  This will require handling multiple atc children
+    in one atc-ai parent (though only one child at a time).
 exit after specified #frames, real time, or saved planes
 Clean up assert vs. errexit.
 expand tabs, remove trailing spaces
