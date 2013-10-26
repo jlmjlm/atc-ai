@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <termios.h>
 #include <signal.h>
+#include <inttypes.h>
 #include <sys/select.h>
 #include <sys/time.h>
 #include <getopt.h>
@@ -37,6 +38,7 @@ static const char *logfile_name = DEF_LOGFILE;
 static volatile sig_atomic_t cleanup_done = false;
 static bool shutting_down = false;
 static int interval = 100, imin = 100, imax = 900;
+static int duration = 0;
 
 static void write_queued_chars(void);
 
@@ -224,6 +226,7 @@ static noreturn void mainloop(int pfd) {
     gettimeofday(&last_atc, NULL);
     deadline = last_atc;
     deadline.tv_usec += 1000*delay_ms;
+    const time_t end_time = last_atc.tv_sec + duration;
 
     inline void check_update() {
 	if (shutting_down)
@@ -241,6 +244,10 @@ static noreturn void mainloop(int pfd) {
     for (;;) {
         struct timeval now;
 	gettimeofday(&now, NULL);
+	if (duration && now.tv_sec > end_time && !shutting_down) {
+	    shutdown_atc(SIGINT);
+	    shutting_down = true;
+ 	}
 	int timeout_ms = (deadline.tv_sec - now.tv_sec)*1000 +
 			 (deadline.tv_usec - now.tv_usec)/1000;
 	if (timeout_ms <= 0)
@@ -311,7 +318,7 @@ static noreturn void mainloop(int pfd) {
     }
 }
 
-static const char **make_args(int argc, char **argv, int seed) {
+static const char **make_args(int argc, char **argv, intmax_t seed) {
     if (*argv && !strncmp("--", *argv, 3)) {
 	argc--;
 	argv++;
@@ -324,7 +331,7 @@ static const char **make_args(int argc, char **argv, int seed) {
 
     if (seed != -1) {
 	static char buf[30];
-	sprintf(buf, "%d", seed);
+	sprintf(buf, "%jd", seed);
 	args[i++] = "-r";
 	args[i++] = buf;
     }
@@ -388,8 +395,8 @@ static const char usage[] =
     "            Exit after this many frames.\n"
     "        -p|--saved-planes <number of planes>\n"
     "            Exit after \"saving\" this many planes.\n"
-    "        -D|--time <number of seconds>\n"
-    "            Exit after a duration of this many seconds.\n"
+    "        -D|--time [[hh:]mm:]ss\n"
+    "            Exit after a duration of this many hours:minutes:seconds.\n"
     "        -t|--typing-delay <ms>\n"
     "            Duration to pause between commands to 'atc' in milliseconds.\n"
     "            (default " STR(DEF_TYPING_DELAY_MS) ")\n"
@@ -405,7 +412,7 @@ static const char usage[] =
 
 static bool do_self_test = false;
 static bool print_usage_message = false;
-static int random_seed = -2;
+static intmax_t random_seed = -2;
 static bool do_skip = false, dont_skip = false;
 
 static void process_cmd_args(int argc, char *const argv[]) {
@@ -413,6 +420,7 @@ static void process_cmd_args(int argc, char *const argv[]) {
     for (;;) {
         arg = getopt_long(argc, argv, optstring, ai_opts, NULL);
 	switch (arg) {
+	    const char *istr;
 	    case -1: 
 		return;
 	    case ':': case '?': case 'h':
@@ -446,10 +454,10 @@ static void process_cmd_args(int argc, char *const argv[]) {
 		if (!strncmp(".", optarg, 2))
 		    random_seed = -1;
 		else
-		    random_seed = atoi(optarg);
+		    random_seed = atoll(optarg);
 		break;
-	    case 'i':;
-		const char *istr = strtok(optarg, ":");
+	    case 'i':
+		istr = strtok(optarg, ":");
 		if (!istr)
 		    errexit('i', "strtok of \"%s\" failed", optarg);
 		interval = atoi(istr);
@@ -461,6 +469,13 @@ static void process_cmd_args(int argc, char *const argv[]) {
 			imin = atoi(istr);
 		    else
 		  	print_usage_message = true;
+		}
+		break;
+	    case 'D':
+		istr = strtok(optarg, ":");
+		while (istr) {
+		    duration = 60*duration + atoi(istr);
+		    istr = strtok(NULL, ":");
 		}
 		break;
 	    //FIXME: Rest of the args
@@ -512,7 +527,7 @@ int main(int argc, char **argv) {
     if (random_seed == -1)
 	fprintf(logff, "Using no random seed.\n");
     else
-        fprintf(logff, "Using RNG seed of %d\n", random_seed);
+        fprintf(logff, "Using RNG seed of %jd\n", random_seed);
     const char **args = make_args(argc - optind, argv + optind, random_seed);
     atc_pid = spawn(atc_cmd, args, ptm);
     free(args);
