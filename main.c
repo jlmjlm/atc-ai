@@ -301,6 +301,7 @@ static void mainloop(int pfd) {
 		    break;
 		case SIGCLD:
 		    exit(0);
+		    // No return
 		default:
 		    errexit(signo, "Caught unexpected signal %s",
 			    strsignal(signo));

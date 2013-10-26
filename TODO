@@ -27,14 +27,6 @@ Trigger updates when it's been a while since the last read from atc,
 	update_board() which is going to get confused by what's on the
 	display.  Or could have update_board() check for the "game over"
 	indications.
-    Also, Killer seed 1382235370 with -d 0 fails at tick 2996.
-    With -d 10, it fails at tick 3000.  Hmmm.  (Ditto -d 20)
-    But at -d 30, it fails at 2996 again.  Fishy.  (Also, these assert fails
-	are leaving behind hung 'atc' procs pretty frequently.)
-    Huh!  The old -d 0 got to at least tick 3732!  (In only 11s)
-    Got that fixed up.  
-    Also got ^C closer to correct, but still some broken termios stuff
-	being left behind.  :/
     "-d 0" fails with "-g airports" with seed 1382293913 at tick 38388
 	(6282 saved planes)  [Is this due to the plane list filling up?
 	Nope:  Can get past it at "-d 500".]
@@ -63,6 +55,11 @@ At low -d (eg, "-d 10"), still getting "Can't det. board width" sometimes.
 	if frame_no is 0.  (Actually used a new boolean flag internal to
 	mainloop(), because update_display() doesn't update frame_no,
 	that's done by update_board().)
+Assert fails tend to leave behind hung 'atc' procs pretty frequently.
+    And the ^C handling closer to correct, but still some broken termios stuff
+	being left behind.  :/
+    Should I have prctl(PR_SET_PDEATHSIG, SIGTERM) on the child's fork so 
+	that it can clean itself up if 'atc-ai' terminates abruptly?
 Better to have a log-if-traced fcn?  Too many "if (trace) fprintf(logff, ..."
 	-- Done, but how do I avoid repeating the tracelog() definitions?
 License (AGPLv3, I'm thinking).  Author & copyright on all source code.
@@ -91,7 +88,7 @@ Handle rogue planes which were shrouded by other planes
 	- turn plane in a direction compatible with all poss. bearings
  	- guess based on proximity of exits
 Recalculate other planes' courses if they're interfering with a new plane's.
-'make dist'
+"make dist"
 A different "error log" for bugs.
 Planes can go for 50 moves (which is 100 ticks for props).  Re-calc some
 	other planes' courses if the new plane requires > 50 moves.
