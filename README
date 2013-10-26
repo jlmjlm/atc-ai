@@ -24,7 +24,7 @@ getopt_long() GNU library extension for parsing the flags.
 I learned about Linux's signalfd() call after I'd written the event loop
 with the well known self-pipe trick.  How did I miss this?  It's been 
 supported by Linux for years, and having handles for everything you could
-want to wait on is a great idea.  Unix's mismash of interfaces here is a
+want to wait on is a great idea.  Unix's mishmash of interfaces here is a
 big unnecessary mess.  POSIX should adopt signalfd(), and provide ways to
 get handles for all the conditions you could want to wait on.  (Such as the
 pthread functions pthread_cond_wait(), pthread_join(), pthread_mutex_lock().)
@@ -61,16 +61,16 @@ First, a plane can push you off course to avoid colliding with it.  If you
 match courses with it, you'll be in the same situation next turn, and so go
 further and further off course until you hit another obstacle or the other
 plane changes course.  This can often lead you with insufficient fuel.  So,
-I give a 1000-space penalty for matching orientation and altitude, and a
-100-space penalty for matching orientation but not altitude.  Jets can
+I give a large penalty for matching orientation and altitude, and a
+small penalty for matching orientation but not altitude.  Jets can
 effectively match courses with prop planes by doing a zig-zag route which
 has them do in two moves what the props do in one, even though they never
-match orientations, so I penalize a jet aligning itself with a prop by
-500 spaces.  These penalties do good jobs of keeping planes from being
-pushed far off course by a single other plane, but sometimes a pair conspire
-to cause trouble.  These situations can usually be resolved by changing
-altitude to go over or under them, so if a plane is pushed away from its
-target, a bonus is applied to moves which change altitude.  These heuristics
-are entirely ad-hoc, but with these three I've never had a failure to
-generate a route within the game's 50 move limit and I've had games run 
-for millions of moves.
+match orientations, so I give a jet aligning itself with a prop an
+intermediate penalty.  These penalties do good jobs of keeping planes
+from being pushed far off course by a single other plane, but sometimes a
+pair conspire to cause trouble.  These situations can usually be resolved
+by changing altitude to go over or under them, so if a plane is pushed
+away from its target, a bonus is applied to moves which change altitude.
+These heuristics are entirely ad-hoc, but with these three I've never
+had a failure to generate a route within the game's 50 move limit and
+I've had games run for millions of moves.

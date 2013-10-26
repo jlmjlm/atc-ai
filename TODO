@@ -65,7 +65,7 @@ At low -d (eg, "-d 10"), still getting "Can't det. board width" sometimes.
 	that's done by update_board().)
 Better to have a log-if-traced fcn?  Too many "if (trace) fprintf(logff, ..."
 	-- Done, but how do I avoid repeating the tracelog() definitions?
-License, readme, INSTALL
+License (AGPLv3, I'm thinking).  Author & copyright on all source code.
 Read cmds from stdin
     -- Done for '+', '-', ^C, ^L.  
 exit after specified #frames, real time, or saved planes
