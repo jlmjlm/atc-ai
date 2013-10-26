@@ -260,8 +260,6 @@ static void verify_planes() {
 	assert(i->current_tm == frame_no);
 	struct course *next = i->current->next;
 	if (!next) {
-	    //fprintf(logff, "Plane '%c' safe at tick %d frame %d\n",
-            //        i->id, i->end_tm, frame_no);
 	    assert(i->end_tm == frame_no);
 	    i = remove_plane(i);
 	    continue;
@@ -407,8 +405,6 @@ static void handle_found_plane(char code, int alt, int row, int col) {
 }
 
 static void handle_new_plane(char code, int row, int col, int alt) {
-    //fprintf(logff, "New plane '%c' found at (%d, %d, %d) on turn %d.\n",
-    //        code, row, col, alt, frame_no);
     struct plane *p = malloc(sizeof(*p));
     p->id = code;
     p->isjet = islower(code);
