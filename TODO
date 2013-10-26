@@ -27,6 +27,9 @@ Assert fails tend to leave behind hung 'atc' procs pretty frequently.
       -- Doesn't seem to work.  When run on a "-d 0 -g box" until it
 	     assert_failed, it left behind a wedged "atc" blocked on
 	     a mutex and unresponsive to signals.
+      -- Maybe the exec() resets the death sig, because "atc" is setgid games?
+	     But I can 'kill' the atc process, and deathsig preservation
+	     is supposed to exactly match authorization to send a signal to.
 Better to have a log-if-traced fcn?  Too many "if (trace) fprintf(logff, ..."
 	-- Done, but how do I avoid repeating the tracelog() definitions?
 License (AGPLv3, I'm thinking).  Author & copyright on all source code.
