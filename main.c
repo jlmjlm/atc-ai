@@ -385,7 +385,7 @@ static const struct option ai_opts[] = {
     { .name = NULL, .has_arg = 0, .flag = NULL, .val = '\0' }
 };
 
-static const char optstring[] = ":r:d:sSTL:f:p:D:t:ha:i:g:";
+static const char optstring[] = ":hd:t:sSTL:a:g:r:i:D:f:P:";
 
 static const char usage[] =
     "Usage:  atc-ai <ai-args> [-- <atc-args>]\n"
@@ -438,7 +438,7 @@ static void process_cmd_args(int argc, char *const argv[]) {
 	    const char *istr;
 	    case -1: 
 		return;
-	    case ':': case '?': case 'h':
+	    case ':': case '?': case 'h': default:
 	        print_usage_message = true;
 		return;
 	    case 'd':
@@ -501,7 +501,6 @@ static void process_cmd_args(int argc, char *const argv[]) {
 	    case 'p':
 		duration_planes = atoi(optarg);
 		break;
-	    //FIXME: Rest of the args
 	}
     }
 }
