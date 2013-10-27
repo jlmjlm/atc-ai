@@ -14,14 +14,11 @@ to know when planes arrive.  And it's a passably complex project in C.
 Scala is a great language, and much as I enjoy it, C is still my favorite
 language, and it's been too long since I did significant work with it.
 
-I make heavy use of C99's struct initialization mechanism, "//" comments,
-and declarations in the middle of blocks; and also have used 'inline' 
-several times, and intmax_t so I can printf epoch time with %jd.  I use 
-the GNU language extension for nested functions in a few places, and 
-use __attribute__ noreturn and format(printf) for bugcatching; and use 
-the getopt_long() GNU library extension for parsing the flags.  Otherwise 
-I try to stick with C89 and POSIX.  (Though I haven't tested it on other 
-than gcc and Linux yet.)
+I use the GNU language extension for nested functions in a few places,
+and use __attribute__ noreturn and format(printf) for bugcatching.
+I also use the getopt_long() GNU library extension for parsing the flags.
+Otherwise I try to stick with C99 and POSIX.  (Though I haven't tested
+it on other than gcc and Linux yet.)
 
 I learned about Linux's signalfd() call after I'd written the event loop
 with the well known self-pipe trick.  How did I miss this?  It's been 
