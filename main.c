@@ -38,7 +38,8 @@ static const char *logfile_name = DEF_LOGFILE;
 static volatile sig_atomic_t cleanup_done = false;
 static bool shutting_down = false;
 static int interval = 100, imin = 100, imax = 900;
-static int duration = 0;
+static int duration_sec = 0;
+static int duration_frame = -10;
 
 static void write_queued_chars(void);
 
@@ -77,6 +78,9 @@ static inline void msleep(int ms) {
 }
 
 static void shutdown_atc(int signo) {
+    if (shutting_down)
+	return;
+    shutting_down = true;
     msleep(100);  // .1 s
     kill(atc_pid, signo);
     msleep(100);  // .1 s
@@ -94,7 +98,6 @@ static void interrupt(int signo) {
     fprintf(logff, "Caught %s signal.  Contents of the display:\n%.*s\n",
 	    strsignal(signo), screen_height*screen_width, display);
     shutdown_atc(signo);
-    shutting_down = true;
 }
 
 noreturn static void terminate(int signo) {
@@ -226,13 +229,15 @@ static noreturn void mainloop(int pfd) {
     gettimeofday(&last_atc, NULL);
     deadline = last_atc;
     deadline.tv_usec += 1000*delay_ms;
-    const time_t end_time = last_atc.tv_sec + duration;
+    const time_t end_time = last_atc.tv_sec + duration_sec;
 
     inline void check_update() {
 	if (shutting_down)
 	    return;
         write_queued_chars();
         if (update_board()) {
+	    if (frame_no == duration_frame)
+		shutdown_atc(SIGINT);
 	    board_setup = true;
             deadline = last_atc;
             deadline.tv_usec += 1000*delay_ms;
@@ -244,9 +249,9 @@ static noreturn void mainloop(int pfd) {
     for (;;) {
         struct timeval now;
 	gettimeofday(&now, NULL);
-	if (duration && now.tv_sec > end_time && !shutting_down) {
+	if (duration_sec && now.tv_sec > end_time) {
 	    shutdown_atc(SIGINT);
-	    shutting_down = true;
+	    duration_sec = 0;
  	}
 	int timeout_ms = (deadline.tv_sec - now.tv_sec)*1000 +
 			 (deadline.tv_usec - now.tv_usec)/1000;
@@ -474,9 +479,14 @@ static void process_cmd_args(int argc, char *const argv[]) {
 	    case 'D':
 		istr = strtok(optarg, ":");
 		while (istr) {
-		    duration = 60*duration + atoi(istr);
+		    duration_sec = 60*duration_sec + atoi(istr);
 		    istr = strtok(NULL, ":");
 		}
+		break;
+	    case 'f':
+		duration_frame = atoi(optarg);
+		if (!duration_frame)
+		    print_usage_message = true;
 		break;
 	    //FIXME: Rest of the args
 	}

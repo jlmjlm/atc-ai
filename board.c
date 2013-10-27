@@ -486,7 +486,7 @@ bool update_board() {
     if (skip_tick)
         next_tick();
 
-    if (frame_no % 1000 == 0) {
+    if (frame_no % 1024u == 0) {
 	fprintf(logff, "n_malloc = %d; n_free = %d; difference = %d\n",
 		n_malloc, n_free, n_malloc - n_free);
     }

@@ -40,6 +40,9 @@ Should have a 'g' command, which halts the current game and shows a game board
     list, from calling "atc -l", numbered.  Then that number will start a
     game from that board.  This will require handling multiple atc children
     in one atc-ai parent (though only one child at a time).
+Should figure out how to detect when atc makes termios changes which
+	are significant to me.  (Eg, the flag for whether a linefeed ('\n')
+	resets the current column back to 0 a-la CR ('\r') or not.)
 exit after specified #frames, real time, or saved planes
 Clean up assert vs. errexit.
 expand tabs, remove trailing spaces
