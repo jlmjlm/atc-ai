@@ -7,7 +7,7 @@ CFLAGS += -Wall -std=gnu99 -O
 
 all: test atc-ai
 
-.PHONY: clean install uninstall all test
+.PHONY: clean install uninstall all test wslint
 
 atc-ai: main.o pty.o vty.o board.o orders.o pathfind.o testpath.o
 	$(CC) $(CFLAGS) -o $@ $^
@@ -37,3 +37,7 @@ install: atc-ai
 
 uninstall:
 	rm ${INSTALLDIR}/atc-ai
+
+wslint:
+	! grep -l ' $$' `<MANIFEST`
+	! grep -l -F --exclude 'Makefile*' $$'\t' `<MANIFEST`

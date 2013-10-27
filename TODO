@@ -45,9 +45,7 @@ Should figure out how to detect when atc makes termios changes which
         resets the current column back to 0 a-la CR ('\r') or not.)
 (Also, what's the macro CTRL in termios.h do?)
 Clean up assert vs. errexit.
-expand tabs, remove trailing spaces.  [This part done.]
-        And after this, make a "wslint" Makefile target which checks this,
-        and perhaps a "wsfix" target which fixes it up.
+Perhaps make a "wsfix" target which fixes tabs & trailing spaces.
 Is there some kind of "Zen of VT escape sequences" I'm missing?  If I hit
         an esc. seq. I don't know, it'd be nice to just be able to handle
         it by reading it until the sequence terminated and ignore it and
