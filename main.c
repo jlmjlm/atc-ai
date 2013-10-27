@@ -49,7 +49,7 @@ static inline void write_all_qchars(void);
 
 void cleanup() {
     if (cleanup_done)
-	return;
+        return;
 
     cleanup_done = true;
     // Restore termio
@@ -63,10 +63,10 @@ void cleanup() {
 __attribute__((__noreturn__, format(printf, 2, 3) ))
 void errexit(int exit_code, const char *fmt, ...) {
     fprintf(logff, "Contents of the display:\n%.*s\n",
-	    screen_height*screen_width, display);
+            screen_height*screen_width, display);
     cleanup();
     putc('\n', stderr);
-    
+
     va_list va;
     va_start(va, fmt);
     vfprintf(stderr, fmt, va);
@@ -82,7 +82,7 @@ static inline void msleep(int ms) {
 
 static void shutdown_atc(int signo) {
     if (shutting_down)
-	return;
+        return;
     shutting_down = true;
     msleep(100);  // .1 s
     kill(atc_pid, signo);
@@ -99,7 +99,7 @@ static void exit_hand() {
 
 static void interrupt(int signo) {
     fprintf(logff, "Caught %s signal.  Contents of the display:\n%.*s\n",
-	    strsignal(signo), screen_height*screen_width, display);
+            strsignal(signo), screen_height*screen_width, display);
     shutdown_atc(signo);
 }
 
@@ -110,8 +110,8 @@ noreturn static void terminate(int signo) {
 
 noreturn static void abort_hand(int signo) {
     fprintf(logff, "Handling abort (signo == %d [%s]) in eventloop "
-		   "handler!  Danger!  Contents of the display:\n%.*s\n",
-	    signo, strsignal(signo), screen_height*screen_width, display);
+                   "handler!  Danger!  Contents of the display:\n%.*s\n",
+            signo, strsignal(signo), screen_height*screen_width, display);
     exit_hand();
     abort();
 }
@@ -157,7 +157,7 @@ static void reg_sighandler() {
 
 static void add_fd(int fd, fd_set *fds, int *max) {
     if (fd > *max)
-	*max = fd;
+        *max = fd;
     FD_SET(fd, fds);
 }
 
@@ -168,42 +168,42 @@ static void process_data(int src, int amt, void (*handler)(char)) {
     retry:
     nchar = read(src, buf, amt);
     if (nchar == 0)
-	exit(0);
+        exit(0);
     if (nchar == -1) {
-	if (errno == EINTR)
-	    goto retry;
- 	if (errno == EIO)
-	    exit(0);
+        if (errno == EINTR)
+            goto retry;
+        if (errno == EIO)
+            exit(0);
         errexit(errno, "read failed: %s", strerror(errno));
     }
     for (int i = 0; i < nchar; i++)
-	handler(buf[i]);
+        handler(buf[i]);
 }
 
 #define CNTRL(x) (x-'A'+1)
 static void handle_input(char c) {
     switch (c) {
-	case CNTRL('C'):
-	    raise(SIGINT);
-	    return;
-	case CNTRL('L'):
-    	    write(ptm, &c, 1);
-	    break;
-	case '+':
-	    delay_ms += interval;
-	    if (delay_ms > imax)
-		delay_ms = imax;
-	    break;
-	case '-':
-	    delay_ms -= interval;
-	    if (delay_ms < imin)
-		delay_ms = imin;
-	    if (delay_ms == 0)
-		write_queued_chars();
-	    break;
-	default:
-	    write(1, "\a", 1);
-	    break;
+        case CNTRL('C'):
+            raise(SIGINT);
+            return;
+        case CNTRL('L'):
+            write(ptm, &c, 1);
+            break;
+        case '+':
+            delay_ms += interval;
+            if (delay_ms > imax)
+                delay_ms = imax;
+            break;
+        case '-':
+            delay_ms -= interval;
+            if (delay_ms < imin)
+                delay_ms = imin;
+            if (delay_ms == 0)
+                write_queued_chars();
+            break;
+        default:
+            write(1, "\a", 1);
+            break;
     }
 }
 
@@ -220,9 +220,9 @@ static inline void write_all_qchars() {
 static void write_queued_chars() {
     if (tqhead != tqtail) {
         if (typing_delay_ms && delay_ms)
-	    write_tqchar();
-	else
-	    write_all_qchars();
+            write_tqchar();
+        else
+            write_all_qchars();
     }
 }
 
@@ -238,105 +238,105 @@ static noreturn void mainloop(int pfd) {
     const time_t end_time = last_atc.tv_sec + duration_sec;
 
     inline void check_update() {
-	if (shutting_down)
-	    return;
+        if (shutting_down)
+            return;
         write_queued_chars();
         if (update_board()) {
-	    if (frame_no == duration_frame)
-		shutdown_atc(SIGINT);
-	    else if (saved_planes >= duration_planes) {
-		write_all_qchars();
-		shutdown_atc(SIGINT);
-	    }
-	    board_setup = true;
+            if (frame_no == duration_frame)
+                shutdown_atc(SIGINT);
+            else if (saved_planes >= duration_planes) {
+                write_all_qchars();
+                shutdown_atc(SIGINT);
+            }
+            board_setup = true;
             deadline = last_atc;
             deadline.tv_usec += 1000*delay_ms;
-	    if (!delay_ms) 
-		write_queued_chars();
+            if (!delay_ms)
+                write_queued_chars();
         }
     }
 
     for (;;) {
         struct timeval now;
-	gettimeofday(&now, NULL);
-	if (duration_sec && now.tv_sec > end_time) {
-	    shutdown_atc(SIGINT);
-	    duration_sec = 0;
- 	}
-	int timeout_ms = (deadline.tv_sec - now.tv_sec)*1000 +
-			 (deadline.tv_usec - now.tv_usec)/1000;
-	if (timeout_ms <= 0)
-	    timeout_ms = 0;
-	else if (tqhead != tqtail && typing_delay_ms != 0) {
-	    int qsize = tqtail-tqhead;
-	    if (qsize < 0)
-		qsize += TQ_SIZE;
-	    timeout_ms /= qsize;
+        gettimeofday(&now, NULL);
+        if (duration_sec && now.tv_sec > end_time) {
+            shutdown_atc(SIGINT);
+            duration_sec = 0;
+        }
+        int timeout_ms = (deadline.tv_sec - now.tv_sec)*1000 +
+                         (deadline.tv_usec - now.tv_usec)/1000;
+        if (timeout_ms <= 0)
+            timeout_ms = 0;
+        else if (tqhead != tqtail && typing_delay_ms != 0) {
+            int qsize = tqtail-tqhead;
+            if (qsize < 0)
+                qsize += TQ_SIZE;
+            timeout_ms /= qsize;
 
-	    if (typing_delay_ms && timeout_ms > typing_delay_ms)
-		timeout_ms = typing_delay_ms;
-	}
+            if (typing_delay_ms && timeout_ms > typing_delay_ms)
+                timeout_ms = typing_delay_ms;
+        }
 
         struct timeval tv = { .tv_sec = timeout_ms / 1000,
-			      .tv_usec = (timeout_ms % 1000) * 1000 };
+                              .tv_usec = (timeout_ms % 1000) * 1000 };
         add_fd(0, &fds, &maxfd);
         add_fd(ptm, &fds, &maxfd);
         add_fd(pfd, &fds, &maxfd);
-	struct timeval *ptv = (delay_ms && board_setup) ? &tv : NULL;
-	int rv = select(maxfd+1, &fds, NULL, NULL, ptv);
+        struct timeval *ptv = (delay_ms && board_setup) ? &tv : NULL;
+        int rv = select(maxfd+1, &fds, NULL, NULL, ptv);
 
-	if (rv == -1) {
-	    if (errno == EINTR) {
-		errno = 0;
-		continue;
-	    }
-	    errexit(errno, "select failed: %s", strerror(errno));
-	}
-	if (rv == 0) {   // timeout
-	    if (delay_ms)
-		check_update();
-	    continue;    
-  	}
-	if (FD_ISSET(ptm, &fds)) {
-	    gettimeofday(&last_atc, NULL);
-	    process_data(ptm, BUFSIZE, &update_display);
-	    if (!board_setup || !delay_ms)
-		check_update();
-	}
-	if (FD_ISSET(0, &fds))
-	    process_data(0, 1, &handle_input);
-	if (FD_ISSET(pfd, &fds)) {
-	    char signo;
-	    read(pfd, &signo, 1);
-	    switch(signo) {
-		case SIGWINCH:
-		    errexit('w', "Can't handle window resize.");
-		    // No return
-		case SIGTERM:
-		    terminate(signo);
-		    // No return
-		case SIGABRT:
-		    abort_hand(signo);
-		    // No return
-		case SIGINT:
-		    interrupt(signo);
-		    break;
-		case SIGCLD:
-		    exit(0);
-		    // No return
-		default:
-		    errexit(signo, "Caught unexpected signal %s",
-			    strsignal(signo));
-		    // No return
-	    }
-	}
+        if (rv == -1) {
+            if (errno == EINTR) {
+                errno = 0;
+                continue;
+            }
+            errexit(errno, "select failed: %s", strerror(errno));
+        }
+        if (rv == 0) {   // timeout
+            if (delay_ms)
+                check_update();
+            continue;
+        }
+        if (FD_ISSET(ptm, &fds)) {
+            gettimeofday(&last_atc, NULL);
+            process_data(ptm, BUFSIZE, &update_display);
+            if (!board_setup || !delay_ms)
+                check_update();
+        }
+        if (FD_ISSET(0, &fds))
+            process_data(0, 1, &handle_input);
+        if (FD_ISSET(pfd, &fds)) {
+            char signo;
+            read(pfd, &signo, 1);
+            switch(signo) {
+                case SIGWINCH:
+                    errexit('w', "Can't handle window resize.");
+                    // No return
+                case SIGTERM:
+                    terminate(signo);
+                    // No return
+                case SIGABRT:
+                    abort_hand(signo);
+                    // No return
+                case SIGINT:
+                    interrupt(signo);
+                    break;
+                case SIGCLD:
+                    exit(0);
+                    // No return
+                default:
+                    errexit(signo, "Caught unexpected signal %s",
+                            strsignal(signo));
+                    // No return
+            }
+        }
     }
 }
 
 static const char **make_args(int argc, char **argv, intmax_t seed) {
     if (*argv && !strncmp("--", *argv, 3)) {
-	argc--;
-	argv++;
+        argc--;
+        argv++;
     }
 
     const char **args = malloc((argc+6)*sizeof(*args));
@@ -345,20 +345,20 @@ static const char **make_args(int argc, char **argv, intmax_t seed) {
     args[i++] = atc_cmd;
 
     if (seed != -1) {
-	static char buf[30];
-	sprintf(buf, "%jd", seed);
-	args[i++] = "-r";
-	args[i++] = buf;
+        static char buf[30];
+        sprintf(buf, "%jd", seed);
+        args[i++] = "-r";
+        args[i++] = buf;
     }
 
     if (game) {
-	args[i++] = "-g";
-	args[i++] = game;
+        args[i++] = "-g";
+        args[i++] = game;
     }
 
     for (;;) {
-	if (!(args[i++] = *(argv++)))
-	    return args;
+        if (!(args[i++] = *(argv++)))
+            return args;
     }
 }
 
@@ -369,13 +369,13 @@ static const struct option ai_opts[] = {
     { .name = "dont-skip", .has_arg = no_argument, .flag = NULL, .val = 'S' },
     { .name = "self-test", .has_arg = no_argument, .flag = NULL, .val = 'T' },
     { .name = "logfile", .has_arg = required_argument, .flag = NULL,
-	  .val = 'L' },
+          .val = 'L' },
     { .name = "frames", .has_arg = required_argument, .flag = NULL, .val = 'f'},
     { .name = "saved-planes", .has_arg = required_argument, .flag = NULL,
-	  .val = 'p' },
+          .val = 'p' },
     { .name = "time", .has_arg = required_argument, .flag = NULL, .val = 'D' },
     { .name = "typing-delay", .has_arg = required_argument, .flag = NULL,
-	  .val = 't' },
+          .val = 't' },
     { .name = "help", .has_arg = no_argument, .flag = NULL, .val = 'h' },
     { .name = "atc-cmd", .has_arg = required_argument, .flag = NULL,
           .val = 'a' },
@@ -434,82 +434,82 @@ static void process_cmd_args(int argc, char *const argv[]) {
     int arg;
     for (;;) {
         arg = getopt_long(argc, argv, optstring, ai_opts, NULL);
-	switch (arg) {
-	    const char *istr;
-	    case -1: 
-		return;
-	    case ':': case '?': case 'h': default:
-	        print_usage_message = true;
-		return;
-	    case 'd':
-		delay_ms = atoi(optarg);
-		break;
-	    case 't':
-		typing_delay_ms = atoi(optarg);
+        switch (arg) {
+            const char *istr;
+            case -1:
+                return;
+            case ':': case '?': case 'h': default:
+                print_usage_message = true;
+                return;
+            case 'd':
+                delay_ms = atoi(optarg);
                 break;
-	    case 's':
-		do_skip = true;
-		break;
-	    case 'S':
-		dont_skip = true;
-		break;
-	    case 'T':
-		do_self_test = true;
-		break;
-	    case 'L':
-	        logfile_name = strdup(optarg);
-		break;
-	    case 'a':
-	        atc_cmd = strdup(optarg);
-		break;
-	    case 'g':
-		game = strdup(optarg);
-		break;
-	    case 'r':
-		if (!strncmp(".", optarg, 2))
-		    random_seed = -1;
-		else
-		    random_seed = atoll(optarg);
-		break;
-	    case 'i':
-		istr = strtok(optarg, ":");
-		if (!istr)
-		    errexit('i', "strtok of \"%s\" failed", optarg);
-		interval = atoi(istr);
-		istr = strtok(NULL, ":");
-		if (istr) {
-		    imax = atoi(istr);
-		    istr = strtok(NULL, ":");
-		    if (istr)
-			imin = atoi(istr);
-		    else
-		  	print_usage_message = true;
-		}
-		break;
-	    case 'D':
-		istr = strtok(optarg, ":");
-		while (istr) {
-		    duration_sec = 60*duration_sec + atoi(istr);
-		    istr = strtok(NULL, ":");
-		}
-		break;
-	    case 'f':
-		duration_frame = atoi(optarg);
-		if (!duration_frame)
-		    print_usage_message = true;
-		break;
-	    case 'p':
-		duration_planes = atoi(optarg);
-		break;
-	}
+            case 't':
+                typing_delay_ms = atoi(optarg);
+                break;
+            case 's':
+                do_skip = true;
+                break;
+            case 'S':
+                dont_skip = true;
+                break;
+            case 'T':
+                do_self_test = true;
+                break;
+            case 'L':
+                logfile_name = strdup(optarg);
+                break;
+            case 'a':
+                atc_cmd = strdup(optarg);
+                break;
+            case 'g':
+                game = strdup(optarg);
+                break;
+            case 'r':
+                if (!strncmp(".", optarg, 2))
+                    random_seed = -1;
+                else
+                    random_seed = atoll(optarg);
+                break;
+            case 'i':
+                istr = strtok(optarg, ":");
+                if (!istr)
+                    errexit('i', "strtok of \"%s\" failed", optarg);
+                interval = atoi(istr);
+                istr = strtok(NULL, ":");
+                if (istr) {
+                    imax = atoi(istr);
+                    istr = strtok(NULL, ":");
+                    if (istr)
+                        imin = atoi(istr);
+                    else
+                        print_usage_message = true;
+                }
+                break;
+            case 'D':
+                istr = strtok(optarg, ":");
+                while (istr) {
+                    duration_sec = 60*duration_sec + atoi(istr);
+                    istr = strtok(NULL, ":");
+                }
+                break;
+            case 'f':
+                duration_frame = atoi(optarg);
+                if (!duration_frame)
+                    print_usage_message = true;
+                break;
+            case 'p':
+                duration_planes = atoi(optarg);
+                break;
+        }
     }
 }
 
 static void write_cmd_args(int argc, char *const *argv) {
     fprintf(logff, "Command line args:");
     while (argc--) {
-	fprintf(logff, " '%s'", *argv);
-	argv++;
+        fprintf(logff, " '%s'", *argv);
+        argv++;
     }
     fputc('\n', logff);
 }
@@ -520,15 +520,15 @@ int main(int argc, char **argv) {
     process_cmd_args(argc, argv);
 
     if (do_skip && dont_skip) {
- 	fprintf(stderr, "Both 'do' and 'dont' skip requested.\n");
-	print_usage_message = true;
+        fprintf(stderr, "Both 'do' and 'dont' skip requested.\n");
+        print_usage_message = true;
     } else {
-	skip_tick = !dont_skip;
+        skip_tick = !dont_skip;
     }
 
     if (print_usage_message) {
-	fputs(usage, stdout);
-	return 1;
+        fputs(usage, stdout);
+        return 1;
     }
 
     logff = fopen(logfile_name, "w");
@@ -537,7 +537,7 @@ int main(int argc, char **argv) {
     write_cmd_args(argc, argv);
 
     if (do_self_test) {
-	return testmain();
+        return testmain();
     }
 
     pipe(pipefd);
@@ -545,9 +545,9 @@ int main(int argc, char **argv) {
     ptm = get_ptm();
     reg_sighandler();
     if (random_seed == -2)
-	random_seed = time(NULL);
+        random_seed = time(NULL);
     if (random_seed == -1)
-	fprintf(logff, "Using no random seed.\n");
+        fprintf(logff, "Using no random seed.\n");
     else
         fprintf(logff, "Using RNG seed of %jd\n", random_seed);
     const char **args = make_args(argc - optind, argv + optind, random_seed);

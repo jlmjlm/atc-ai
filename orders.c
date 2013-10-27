@@ -7,9 +7,9 @@ char tqueue[TQ_SIZE];
 
 static void queue_string(const char s[]) {
     while (*s) {
-	tqueue[tqtail] = *s;
-	tqtail = (tqtail+1)%TQ_SIZE;
-	s++;
+        tqueue[tqtail] = *s;
+        tqtail = (tqtail+1)%TQ_SIZE;
+        s++;
     }
 }
 

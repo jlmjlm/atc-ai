@@ -1,106 +1,107 @@
 Organize all these crazy exit codes.
 "-d 0" fails with "-g airports" with seed 1382293913 at tick 38388
-	(6282 saved planes)  [Is this due to the plane list filling up?
-	Nope:  Can get past it at "-d 500".]
+        (6282 saved planes)  [Is this due to the plane list filling up?
+        Nope:  Can get past it at "-d 500".]
     [Seems to be fixed, but I changed nothing that I'm aware of.  :\ ]
     "-d 0" also fails with "-g Tic-Tac-Toe" with seed 1382294247 at tick 34322
-	(6846 saved planes)
+        (6846 saved planes)
     [Ha ha, but this still breaks right here!]
     [Or not!  It seems to be very finicky.  :( ]
     Now "-d 0" fails at tick 10442 for "-g crosshatch" with seed 1382321877.
     -- And now earlier at tick 9456, with the same build!  -- Hit #9456
-	again, very next run.  There was a scroll-up immediately before at
-	tick #9455, so something might be wrong about it.  Possibly the
-	frame_no got updated, but stuff on the board's display has yet
-	to be updated.
+        again, very next run.  There was a scroll-up immediately before at
+        tick #9455, so something might be wrong about it.  Possibly the
+        frame_no got updated, but stuff on the board's display has yet
+        to be updated.
     -- Perhaps I should add something to check that the board is "as
-	expected", and see if there's any more data from 'atc' which
-	will make it go from inconsistent to consistent with some
-	very low timeout.
+        expected", and see if there's any more data from 'atc' which
+        will make it go from inconsistent to consistent with some
+        very low timeout.
 There's still studdering between even-odd ticks.  Maybe some kind of feedback
     to get that converged on a good timeout?
 Assert fails tend to leave behind hung 'atc' procs pretty frequently.
     And the ^C handling closer to correct, but still some broken termios stuff
-	being left behind.  :/
-    Should I have prctl(PR_SET_PDEATHSIG, SIGTERM) on the child's fork so 
-	that it can clean itself up if 'atc-ai' terminates abruptly?
+        being left behind.  :/
+    Should I have prctl(PR_SET_PDEATHSIG, SIGTERM) on the child's fork so
+        that it can clean itself up if 'atc-ai' terminates abruptly?
       -- Doesn't seem to work.  When run on a "-d 0 -g box" until it
-	     assert_failed, it left behind a wedged "atc" blocked on
-	     a mutex and unresponsive to signals.
+             assert_failed, it left behind a wedged "atc" blocked on
+             a mutex and unresponsive to signals.
       -- Maybe the exec() resets the death sig, because "atc" is setgid games?
-	     But I can 'kill' the atc process, and deathsig preservation
-	     is supposed to exactly match authorization to send a signal to.
+             But I can 'kill' the atc process, and deathsig preservation
+             is supposed to exactly match authorization to send a signal to.
 Better to have a log-if-traced fcn?  Too many "if (trace) fprintf(logff, ..."
-	-- Done, but how do I avoid repeating the tracelog() definitions?
-	-- Pulled it out into a static inline procedure.
+        -- Done, but how do I avoid repeating the tracelog() definitions?
+        -- Pulled it out into a static inline procedure.
 License (AGPLv3, I'm thinking).  Author & copyright on all source code.
 Read cmds from stdin
-    -- Done for '+', '-', ^C, ^L.  
+    -- Done for '+', '-', ^C, ^L.
 Should have a 'g' command, which halts the current game and shows a game board
     list, from calling "atc -l", numbered.  Then that number will start a
     game from that board.  This will require handling multiple atc children
     in one atc-ai parent (though only one child at a time).
 Should figure out how to detect when atc makes termios changes which
-	are significant to me.  (Eg, the flag for whether a linefeed ('\n')
-	resets the current column back to 0 a-la CR ('\r') or not.)
+        are significant to me.  (Eg, the flag for whether a linefeed ('\n')
+        resets the current column back to 0 a-la CR ('\r') or not.)
+(Also, what's the macro CTRL in termios.h do?)
 Clean up assert vs. errexit.
-expand tabs, remove trailing spaces
-	And after this, make a "wslint" Makefile target which checks this,
-	and perhaps a "wsfix" target which fixes it up.
+expand tabs, remove trailing spaces.  [This part done.]
+        And after this, make a "wslint" Makefile target which checks this,
+        and perhaps a "wsfix" target which fixes it up.
 Is there some kind of "Zen of VT escape sequences" I'm missing?  If I hit
-	an esc. seq. I don't know, it'd be nice to just be able to handle
-	it by reading it until the sequence terminated and ignore it and
-	hope for the best.  But there doesn't seem to be any easy principle
-	of what marks seq. termination.
+        an esc. seq. I don't know, it'd be nice to just be able to handle
+        it by reading it until the sequence terminated and ignore it and
+        hope for the best.  But there doesn't seem to be any easy principle
+        of what marks seq. termination.
     -- Should go over the terminfo entry for vt100 to make sure I can handle
-	any seq which terminfo is going to spit out.
+        any seq which terminfo is going to spit out.
 store revision ID (hash) in the object?
 Notice when we get a game over and "Press space".
     Specifically: "Hit space for top players list"
 Figure out exits' directions by letting planes glide if safe.
 Handle rogue planes which were shrouded by other planes
-	- figure out bearing based on neighboring shadowed squares from
-			last turn and directions which lead directly
-			from an exit
-	- turn plane in a direction compatible with all poss. bearings
- 	- guess based on proximity of exits
+        - figure out bearing based on neighboring shadowed squares from
+                        last turn and directions which lead directly
+                        from an exit
+        - turn plane in a direction compatible with all poss. bearings
+        - guess based on proximity of exits
 Recalculate other planes' courses if they're interfering with a new plane's.
 "make dist"
 A different "error log" for bugs.
 Planes can go for 50 moves (which is 100 ticks for props).  Re-calc some
-	other planes' courses if the new plane requires > 50 moves.
+        other planes' courses if the new plane requires > 50 moves.
 Err if calc takes too long in realtime.
 Have airports/exits in their arrays in their number's position.
 Deal with exit clearance better.  It's pretty good now, but an arriving plane
-	could still in theory be completely path-blocked.
+        could still in theory be completely path-blocked.
 Keep track of moves taken, so if a plane has "too long" of a route, we can
-	recalculate routes by starting it off with a short route, and
-	having others recalculate their routes constrained by it.
+        recalculate routes by starting it off with a short route, and
+        having others recalculate their routes constrained by it.
 -- Or maybe it'd be better to have all the planes move for one tick,
-	minimizing the sum of the distances to the targets, and then do
-	that repeatedly.  But maybe it'd be too costly, what with each
-	plane having up to 15 possible moves.
+        minimizing the sum of the distances to the targets, and then do
+        that repeatedly.  But maybe it'd be too costly, what with each
+        plane having up to 15 possible moves.
 Do something better than the "getting desperate" stuff in calc_bearing().
 Do we have to strdup(optarg), or is it safe to assume we can use a copy
-	after other calls to getopt_long() ?
+        after other calls to getopt_long() ?
 Should we keep count_malloc and count_free around, even tho there are
-	no memleaks, just in case some get introduced?
+        no memleaks, just in case some get introduced?
 signalfd() [Linux extension] is a great idea.  It really should be the
-	case that anything you can block on can have a wait handle,
-	and using fd's for the handles for use in select/poll is unix-y.
-	Gets rid of the hacky signal pipe trick.  Don't think I'll be
-	able to use it for SIGABRT though, as abort() and assert(false)
-	aren't allowed to return.
+        case that anything you can block on can have a wait handle,
+        and using fd's for the handles for use in select/poll is unix-y.
+        Gets rid of the hacky signal pipe trick.  Don't think I'll be
+        able to use it for SIGABRT though, as abort() and assert(false)
+        aren't allowed to return.
 Nothing to do with atc-ai per se, but atc in some conditions will stomp
-	the high score list.  (Hope the new ABRT handling fixes it.)
-	-- Nope!  At least not for SIGINT.  Might be abort_hand() [called
-	   for assert fails and general aborts] versus errexit().  [The
-	   difference is fuzzy, but generally errexit() is for "didn't
-	   expect that from the environment & don't know how to deal with it"
-	   while assert() is for "damn, I screwed something up, internal
-	   error".]  Seems to be reliably killing the "atc" children,
-	   but not as resetting the console to "sane".  This is the case
-	   for SIGINT.  [Which I thought I'd fixed. :( ]
+        the high score list.  (Hope the new ABRT handling fixes it.)
+        -- Nope!  At least not for SIGINT.  Might be abort_hand() [called
+           for assert fails and general aborts] versus errexit().  [The
+           difference is fuzzy, but generally errexit() is for "didn't
+           expect that from the environment & don't know how to deal with it"
+           while assert() is for "damn, I screwed something up, internal
+           error".]  Seems to be reliably killing the "atc" children,
+           but not as resetting the console to "sane".  This is the case
+           for SIGINT.  [Which I thought I'd fixed. :( ]
 Maybe make an inetd service of this to show it off?  :-)
 
 Thread stuff:
@@ -112,174 +113,174 @@ Thread stuff:
     * Do something with CSP maybe?
 
 Interesting seeds:
-	1376278304 prop needs to backtrack tick ~1331.
+        1376278304 prop needs to backtrack tick ~1331.
 
-	1376278778 prop needs to backtrack tick 1114.
+        1376278778 prop needs to backtrack tick 1114.
 
-	1376279911 has a lot cf planes at the start
-		At around 1200, a bunch of planes around the same exit
-		push one to FL 7.
+        1376279911 has a lot cf planes at the start
+                At around 1200, a bunch of planes around the same exit
+                push one to FL 7.
 
-	1376508107 something goes wrong with the new plane 'D' at the UL
-		corner (Fixed)
-		Planes "M" and "N" "trap" each other around time 840.
-		Hits a prop backtrack at 1021.
-	1376515486 similar
-		Around time 225, crowding around exit 1 pulls planes to FL 7.
-		prop backtrack at t==600.
-		Looks awesome around time 3000.
-		Plane 'G' blocks plane 'H' from about 3500 on.
-		Another blockage around exit 0 stops a plane targeting 
-		exit 1 at ~11450.  (Uber-fixed:  Doesn't even bunch around
-		that exit now.)
-		'G' pushes 'H' at about t=27650.  (Hmm, missed that.)
-		Three planes together at E. border at ~32390.
-		Pretty at 41540.
-		Plane 'V' makes a major detour around 58400.  (No longer.
-		I wouldn't even recognize this game's behavior as being
-		seeded correctly, except checking from 'ps' shows that
-		it is.)
-		Have some very long routes:  
+        1376508107 something goes wrong with the new plane 'D' at the UL
+                corner (Fixed)
+                Planes "M" and "N" "trap" each other around time 840.
+                Hits a prop backtrack at 1021.
+        1376515486 similar
+                Around time 225, crowding around exit 1 pulls planes to FL 7.
+                prop backtrack at t==600.
+                Looks awesome around time 3000.
+                Plane 'G' blocks plane 'H' from about 3500 on.
+                Another blockage around exit 0 stops a plane targeting
+                exit 1 at ~11450.  (Uber-fixed:  Doesn't even bunch around
+                that exit now.)
+                'G' pushes 'H' at about t=27650.  (Hmm, missed that.)
+                Three planes together at E. border at ~32390.
+                Pretty at 41540.
+                Plane 'V' makes a major detour around 58400.  (No longer.
+                I wouldn't even recognize this game's behavior as being
+                seeded correctly, except checking from 'ps' shows that
+                it is.)
+                Have some very long routes:
 - New record long route: plane 'g' at time 193099 in 48 steps.
 - New record long route: plane 'd' at time 242633 in 51 steps.
-		(But somehow survives that last one.  I bet it hits
-		the exit portal right at out-of-gas.  Not quite realistic,
-		that!)  Recording these is going to be tough.
-	    [These two very-nearly-fatally-long courses are analyzed
-		below.]
+                (But somehow survives that last one.  I bet it hits
+                the exit portal right at out-of-gas.  Not quite realistic,
+                that!)  Recording these is going to be tough.
+            [These two very-nearly-fatally-long courses are analyzed
+                below.]
 
-	1376535757 On turn 23 produces a plane at (0, 29, 7)
-		[upper right corner].
-		This also has plane 'w' follow blocking place 's' at about
-		frame 150 on.
-		~800 a plane goes into exit 3 climbing from alt 8 to 9.
-		At ~1914, a jet takes off after a prop has committed to
-		takeoff on the next turn, forcing a collision.
-	1376893850	prop backtrack at tick 117.
-	1377061305	plane 'c' runs out of fuel, after flying from
-		tick 13831 to 13884.  [fixed]
+        1376535757 On turn 23 produces a plane at (0, 29, 7)
+                [upper right corner].
+                This also has plane 'w' follow blocking place 's' at about
+                frame 150 on.
+                ~800 a plane goes into exit 3 climbing from alt 8 to 9.
+                At ~1914, a jet takes off after a prop has committed to
+                takeoff on the next turn, forcing a collision.
+        1376893850      prop backtrack at tick 117.
+        1377061305      plane 'c' runs out of fuel, after flying from
+                tick 13831 to 13884.  [fixed]
 
-	1377534571 'Killer' - Due to exit blockage, atc-ai crashes
-		at tick 3229.  (Fixed)  Now, get an inf. loop at 27070.
-		This is because it gets near the exit at alt==5, and
-		so can't climb, just circles in the exit's exclusion zone.
-		Probably should say can't get within 2 of an exit at
-		alt in [6, 8] and can't get within 1 with an alt != 9.
-		-- Not enough.  Now at tick 27088 plane 'i' gets inf.
-		looped.  Caught at the corner at altitude 5.  Maybe we
-		should forbid alt != 9 for distance 2?
-	1377644268 'Killer' - Plane 'u' runs out of fuel at
-		tick 28306.  Though with the airport secondary targets
-		enabled, it switches to plane 'y' at tick 28266.
-		Maybe this could be fixed by having a penalty for matching
-		a blocking plane's route at a neighboring altitude too?
-		Whelp -- with those added, it goes to tick 28240 only, with
-		'h' being the plane that fails.  --  And now it's plane 'p'
-		at tick 28274.  --  How about reversing the bearing prefs
-		each tick?  Will that let these planes figure out how
-		to "go around"? - Ha!  That made it worse:  Now plane 'z'
-		exhausts fuel at tick 22076.  [Let's look at this in
-		detail.  See below.]  And after that stuff below, it
-		seems to be fixed!  Made it to 29000 with 6700 saved planes,
-		and still going strong.  And ran it until 40367 at 80 ms/frame
-		in 54m52s to save 9385 planes.
-	1377930389 'Killer' - runs on forever (or at least to 367536,
-		which takes 10h24m at 10 fps).
-	1378013339 'Killer' - Plane doesn't go to the exit direct sometime
-		in 300-320.  It doesn't realize that at the exit, it can't
-		be adj. to the approaching plane, just like the approaching
-		plane can't be abj. to an exiting airplane.  But, it turned
-		out to be the penalty for course matching being a
-		disincentive (fixed).
+        1377534571 'Killer' - Due to exit blockage, atc-ai crashes
+                at tick 3229.  (Fixed)  Now, get an inf. loop at 27070.
+                This is because it gets near the exit at alt==5, and
+                so can't climb, just circles in the exit's exclusion zone.
+                Probably should say can't get within 2 of an exit at
+                alt in [6, 8] and can't get within 1 with an alt != 9.
+                -- Not enough.  Now at tick 27088 plane 'i' gets inf.
+                looped.  Caught at the corner at altitude 5.  Maybe we
+                should forbid alt != 9 for distance 2?
+        1377644268 'Killer' - Plane 'u' runs out of fuel at
+                tick 28306.  Though with the airport secondary targets
+                enabled, it switches to plane 'y' at tick 28266.
+                Maybe this could be fixed by having a penalty for matching
+                a blocking plane's route at a neighboring altitude too?
+                Whelp -- with those added, it goes to tick 28240 only, with
+                'h' being the plane that fails.  --  And now it's plane 'p'
+                at tick 28274.  --  How about reversing the bearing prefs
+                each tick?  Will that let these planes figure out how
+                to "go around"? - Ha!  That made it worse:  Now plane 'z'
+                exhausts fuel at tick 22076.  [Let's look at this in
+                detail.  See below.]  And after that stuff below, it
+                seems to be fixed!  Made it to 29000 with 6700 saved planes,
+                and still going strong.  And ran it until 40367 at 80 ms/frame
+                in 54m52s to save 9385 planes.
+        1377930389 'Killer' - runs on forever (or at least to 367536,
+                which takes 10h24m at 10 fps).
+        1378013339 'Killer' - Plane doesn't go to the exit direct sometime
+                in 300-320.  It doesn't realize that at the exit, it can't
+                be adj. to the approaching plane, just like the approaching
+                plane can't be abj. to an exiting airplane.  But, it turned
+                out to be the penalty for course matching being a
+                disincentive (fixed).
 
-	1377809753 'crossover' - Starts with a plane in the NE exit (#3)
-	1377811790 'crossover' - At tick 56, plane 'j' is "out of place"
-		because in starts out bearing SW and can't turn to the east
-		in one tick.  (Fixed.)
+        1377809753 'crossover' - Starts with a plane in the NE exit (#3)
+        1377811790 'crossover' - At tick 56, plane 'j' is "out of place"
+                because in starts out bearing SW and can't turn to the east
+                in one tick.  (Fixed.)
 
-	1378611916 'Tic-Tac-Toe'
-		At tick 27, errors with "Found '+ ' where expected to find
-		a plane."
-	1378613004 'Tic-Tac-Toe'
-		Very much similar.  "Found '. ' where expected to find a plane."
-		Don't understand how the plane's getting to (9, 1) on the
-		display, but stays at (10, 1) on the board -- there's 
-		something to write it at (10, 1) at tick 11, but nothing
-		alters it for tick 12.  Probably I have to read up on
-		vt100 scrolling regions.  --  The new scoll handling helps,
-		as this now gets to frame 129 before fatal confusion.
-		--  And after fixing "Esc M" and "Esc D", seems to work just
-		fine.
+        1378611916 'Tic-Tac-Toe'
+                At tick 27, errors with "Found '+ ' where expected to find
+                a plane."
+        1378613004 'Tic-Tac-Toe'
+                Very much similar.  "Found '. ' where expected to find a plane."
+                Don't understand how the plane's getting to (9, 1) on the
+                display, but stays at (10, 1) on the board -- there's
+                something to write it at (10, 1) at tick 11, but nothing
+                alters it for tick 12.  Probably I have to read up on
+                vt100 scrolling regions.  --  The new scoll handling helps,
+                as this now gets to frame 129 before fatal confusion.
+                --  And after fixing "Esc M" and "Esc D", seems to work just
+                fine.
 
-	1378445708 'airports' -
-		* A south-facing airport (#5) gets misrecognized as a
-		plane (at FL 5) because of how 'v' is overloaded.  (Fixed)
-		* At tick 37, plane 'i' can't go from A0 to A2.  This
-		is because taking off from A0 puts it in A2's exclusion
-		zone.  (Fixed)
-		* And at tick 13939 or so, plane 'v' takes off from the 'v5'
-		airport and board.c gets confused again.  (Fixed)
-		* Jets seem to be taking a suboptimal route when approaching
-		A1 from the west.  --  That's OK, it's just the exclusion zone
-		meaning that the incoming plane can either be beside the
-		airport at alt==3 or one more square to the south at alt==2,
-		either of which is drow==1 and (dcol==0 && dalt == 1) or
-		(dcol==1 && dalt == 0) so the exact same distance away, and
-		the order we go thru the bearings means we hit these in
-		a different order depending on whether we approach from
-		WNW or WSW.
-		* A bona fide crash (assert failed) at tick 37369.
-		This is due to a [Esc M] seq which scrolls the list of
-		planes up (see http://www.termsys.demon.co.uk/vtansi.htm ),
-		so what atc-ai thinks the board is and what atc thinks
-		it is get de-sync'd.  (Fixed & fix confirmed.)
-		* At tick 44207, plane 'j' crashes into terrain, because it
-		reaches the alt==1 approach for ap #2 but can't complete the
-		turn to bearing 0.  This might be because it flies all the
-		way there in A2's exclusion zone at alt==1 and so never gets
-		the 'cleared_exit' flag set.  To fix that, hard-exclude
-		moving to the ap's primary target from the excl. zone,
-		even if cleared_exit is false.  (Done and tested.)
+        1378445708 'airports' -
+                * A south-facing airport (#5) gets misrecognized as a
+                plane (at FL 5) because of how 'v' is overloaded.  (Fixed)
+                * At tick 37, plane 'i' can't go from A0 to A2.  This
+                is because taking off from A0 puts it in A2's exclusion
+                zone.  (Fixed)
+                * And at tick 13939 or so, plane 'v' takes off from the 'v5'
+                airport and board.c gets confused again.  (Fixed)
+                * Jets seem to be taking a suboptimal route when approaching
+                A1 from the west.  --  That's OK, it's just the exclusion zone
+                meaning that the incoming plane can either be beside the
+                airport at alt==3 or one more square to the south at alt==2,
+                either of which is drow==1 and (dcol==0 && dalt == 1) or
+                (dcol==1 && dalt == 0) so the exact same distance away, and
+                the order we go thru the bearings means we hit these in
+                a different order depending on whether we approach from
+                WNW or WSW.
+                * A bona fide crash (assert failed) at tick 37369.
+                This is due to a [Esc M] seq which scrolls the list of
+                planes up (see http://www.termsys.demon.co.uk/vtansi.htm ),
+                so what atc-ai thinks the board is and what atc thinks
+                it is get de-sync'd.  (Fixed & fix confirmed.)
+                * At tick 44207, plane 'j' crashes into terrain, because it
+                reaches the alt==1 approach for ap #2 but can't complete the
+                turn to bearing 0.  This might be because it flies all the
+                way there in A2's exclusion zone at alt==1 and so never gets
+                the 'cleared_exit' flag set.  To fix that, hard-exclude
+                moving to the ap's primary target from the excl. zone,
+                even if cleared_exit is false.  (Done and tested.)
 
-	1380348787 'game_4' 
-		gives a failed assert at time 2336.  Looks like another 
-		previously unencountered esc. sequence.  Or two!
-		[Esc 7] and [Esc 8 015 012] (Huh?  Don't think I've ever
-		had one go into ctrl chars.  Maybe [Esc 8] is the entire
-		seq.?  Looks like it:  015==\r and 012==\n, so that's
-		just a CR LF.)  [Esc 8] is "restore cursor [position]".
-		[Esc 7] is "save cursor [position]".
-		--  Dangerously long records:  (Though it gets to tick
-			432580 just fine!)
-		   New record long route: plane 'D' at time 9373 in 99 steps.
-			-- This is due to excessive backtracking.
-		   New record long route: plane 'm' at time 88231 in 43 steps.
-			This is from getting pushed west:
-		        m 88241: (1, 8, 9) bearing W
-        		m 88242: (1, 7, 9) bearing W
-        		m 88243: (1, 6, 9) bearing W
-        		L 88241: (3, 10, 9) bearing NW
-        		L 88242: (2, 9, 9) bearing NW
-        		L 88243: (2, 9, 9) bearing NW
-			 56789abc
-			0========
-			1   m
-			2     \
-			3      L
-			4
-			Looks like it did what it had to, headed west until
-			'L' turned west, at which point it turned S.  It would
-			be better to turn S or SW sooner, but this is pretty
-			good, and it got 'm' back on track with a cost of 6
-			moves.  It wouldn't've been a record at all except
-			there was also a logjam at the exit point.
-		   New record long route: plane 'f' at time 104072 in 47 steps.
-			Looks like exit contention:  There's also planes
-			'B', 'D', and 'E' all headed for the same exit as
-			'f' is.  Only way I see to fix this would be to
-			handle plane re-routing to reorder the planes' arrival
-			to the exit to an order more natural than based on
-			best route to the first arrivals in the airspace.
+        1380348787 'game_4'
+                gives a failed assert at time 2336.  Looks like another
+                previously unencountered esc. sequence.  Or two!
+                [Esc 7] and [Esc 8 015 012] (Huh?  Don't think I've ever
+                had one go into ctrl chars.  Maybe [Esc 8] is the entire
+                seq.?  Looks like it:  015==\r and 012==\n, so that's
+                just a CR LF.)  [Esc 8] is "restore cursor [position]".
+                [Esc 7] is "save cursor [position]".
+                --  Dangerously long records:  (Though it gets to tick
+                        432580 just fine!)
+                   New record long route: plane 'D' at time 9373 in 99 steps.
+                        -- This is due to excessive backtracking.
+                   New record long route: plane 'm' at time 88231 in 43 steps.
+                        This is from getting pushed west:
+                        m 88241: (1, 8, 9) bearing W
+                        m 88242: (1, 7, 9) bearing W
+                        m 88243: (1, 6, 9) bearing W
+                        L 88241: (3, 10, 9) bearing NW
+                        L 88242: (2, 9, 9) bearing NW
+                        L 88243: (2, 9, 9) bearing NW
+                         56789abc
+                        0========
+                        1   m
+                        2     \
+                        3      L
+                        4
+                        Looks like it did what it had to, headed west until
+                        'L' turned west, at which point it turned S.  It would
+                        be better to turn S or SW sooner, but this is pretty
+                        good, and it got 'm' back on track with a cost of 6
+                        moves.  It wouldn't've been a record at all except
+                        there was also a logjam at the exit point.
+                   New record long route: plane 'f' at time 104072 in 47 steps.
+                        Looks like exit contention:  There's also planes
+                        'B', 'D', and 'E' all headed for the same exit as
+                        'f' is.  Only way I see to fix this would be to
+                        handle plane re-routing to reorder the planes' arrival
+                        to the exit to an order more natural than based on
+                        best route to the first arrivals in the airspace.
 
 
 The 1377644268 fuel exhaustion scenario:
@@ -300,8 +301,8 @@ should give a bonus for unmatching a blocking plane's altitude.
 -- --  Tried, but hit plane 'a' hitting empty at tick 18412.  So, this
 doesn't seem to be the way to go.
        -- So, now let's try only applying the "altchange" bonus only
-	  if we're forced to move away from the target (ie, increase
-	  our distance).  [And boy, do I use "so" too much.]
+          if we're forced to move away from the target (ie, increase
+          our distance).  [And boy, do I use "so" too much.]
        -- Okay, that worked for plane 'a' @ 18412.  And 'z' at 22043+.
 
 What's happening with 'default' seed #1376515486 around tick 193107:
@@ -317,15 +318,15 @@ Etc.
         F 193109: (8, 8, 9) bearing SE
 Etc.
 So we have:
-	 456789abcde
- 	5
-	6
-	7   F
-	8    \
-	9   g>
-	a    |
-	b
-	c
+         456789abcde
+        5
+        6
+        7   F
+        8    \
+        9   g>
+        a    |
+        b
+        c
 Hm.  Is there a good way to encourage the "g"s of the game to stick at
 alt. 8 when they go East, so they notice that they can go NW at alt. 7 ?
 Maybe a small penalty for matching a plane in two dimensions and d=2 on
@@ -343,13 +344,13 @@ Etc.
         A 242643: (9, 20, 9) bearing NE
         A 242644: (8, 21, 9) bearing NE
 Etc.
-	 789abcdefg (+a)
-	6
-	7
-	8     |
-	9   /d>
-	a  A
-	b
+         789abcdefg (+a)
+        6
+        7
+        8     |
+        9   /d>
+        a  A
+        b
 Hmm, this doesn't make much sense.  Why is 'd' turning E at ticks 242642,
 242644, and so on?  Shouldn't it turn NE?  It's not blocked by 'A'.  And
 there don't seem to be any other planes around to be blocking.  --  Ahh,
@@ -368,18 +369,18 @@ Let's look at j-125177 (target: (0, 29, 9)):
         j 125190: (1, 10, 9) bearing W
         j 125191: (1, 9, 9) bearing W
 
-	i 125188: (3, 14, 9) bearing NW
+        i 125188: (3, 14, 9) bearing NW
         i 125189: (2, 13, 9) bearing NW
         i 125190: (1, 12, 9) bearing NW
         i 125191: (1, 11, 9) bearing W
         i 125192: (1, 10, 9) bearing W
- 789abcdef 
+ 789abcdef
 0=========
 1    j\
 2      i
 3
 
-So, what we want is for 'j' to turn south to get around 'i'.  But as it's 
+So, what we want is for 'j' to turn south to get around 'i'.  But as it's
 heading W *anyway*, the turn to the SW is a greater distance to the target
 than staying straight W.  But, why doesn't the "matchcourse" penalty apply
 here?  --  Maybe it'd be better to make the "cleared_exit" flag more exact
@@ -397,4 +398,4 @@ Now it shows: "New record long route: plane 'd' at time 173207 in 69 steps."
 When the plane's path actually only took < 30 steps.  It's because
 it did a *lot* of backtracking, and backtracks don't decrement 'step'
 (tho they probably should).  Or maybe "step numbers" should be kept
-for both with and w/o backtracks. 
+for both with and w/o backtracks.

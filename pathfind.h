@@ -16,6 +16,6 @@ struct frame {
 
 // 'extern' for testing
 extern void calc_next_move(const struct plane *p, int srow, int scol, int *alt,
-			   struct xyz target, int *bearing, bool cleared_exit,
-			   struct frame *frame);
+                           struct xyz target, int *bearing, bool cleared_exit,
+                           struct frame *frame);
 extern void remove_course_entries(struct course *c);
