@@ -43,7 +43,6 @@ Should have a 'g' command, which halts the current game and shows a game board
 Should figure out how to detect when atc makes termios changes which
 	are significant to me.  (Eg, the flag for whether a linefeed ('\n')
 	resets the current column back to 0 a-la CR ('\r') or not.)
-exit after specified #frames, real time, or saved planes
 Clean up assert vs. errexit.
 expand tabs, remove trailing spaces
 	And after this, make a "wslint" Makefile target which checks this,
@@ -108,21 +107,8 @@ Thread stuff:
     Start of this on the branch "pthread".
     * Get out of a busy loop on SIGINT/SIGTERM.  (Do calc in another thread?)
     * Do I/O in its own thread?
-    * Have a mode where the operator "types" slow enough to see.
-        Tried this without threads, but typing delay doesn't work right,
-	because it all happens before there's a return to the mainloop to
-	check for new messages from atc.  Maybe instead of threads, the
-	procedures in orders.c should just queue up the orders to give
-	atc, and mainloop can slowly drain the queue.
-	-- That works, but then when you have too many orders, it takes
-	too long to "type".  Or else it goes by too fast.  Should have
-	a deadline, and slice up the orders so they all get submitted by
-	then.
-	-- Got this taken care of & all fixed with the main eventloop,
-		no threads involved.
-    * Back in pthead-land...  When getting data from ptm, -not- from a
-	timeout, check to see if the frame_no has changed.  If it has,
-	move quickly to update_board
+    * When getting data from ptm, -not- from a timeout, check to see if
+        the frame_no has changed.  If it has, move quickly to update_board.
     * Do something with CSP maybe?
 
 Interesting seeds:
