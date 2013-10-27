@@ -91,6 +91,7 @@ extern void plot_course(struct plane *, int row, int col, int alt);
 extern int frame_no;
 extern struct plane *plstart, *plend;
 
+extern int saved_planes;
 
 #define TQ_SIZE 1024
 extern bool skip_tick;

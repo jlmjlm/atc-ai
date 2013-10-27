@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <termios.h>
 #include <signal.h>
+#include <limits.h>
 #include <inttypes.h>
 #include <sys/select.h>
 #include <sys/time.h>
@@ -40,8 +41,10 @@ static bool shutting_down = false;
 static int interval = 100, imin = 100, imax = 900;
 static int duration_sec = 0;
 static int duration_frame = -10;
+static int duration_planes = INT_MAX;
 
 static void write_queued_chars(void);
+static inline void write_all_qchars(void);
 
 
 void cleanup() {
@@ -204,19 +207,22 @@ static void handle_input(char c) {
     }
 }
 
-static void write_tqchar() {
+static inline void write_tqchar() {
      write(ptm, tqueue+tqhead, 1);
      tqhead = (tqhead+1)%TQ_SIZE;
+}
+
+static inline void write_all_qchars() {
+    while (tqhead != tqtail)
+        write_tqchar();
 }
 
 static void write_queued_chars() {
     if (tqhead != tqtail) {
         if (typing_delay_ms && delay_ms)
 	    write_tqchar();
-	else {
-	    while (tqhead != tqtail)
-	        write_tqchar();
-	}
+	else
+	    write_all_qchars();
     }
 }
 
@@ -238,6 +244,10 @@ static noreturn void mainloop(int pfd) {
         if (update_board()) {
 	    if (frame_no == duration_frame)
 		shutdown_atc(SIGINT);
+	    else if (saved_planes >= duration_planes) {
+		write_all_qchars();
+		shutdown_atc(SIGINT);
+	    }
 	    board_setup = true;
             deadline = last_atc;
             deadline.tv_usec += 1000*delay_ms;
@@ -487,6 +497,9 @@ static void process_cmd_args(int argc, char *const argv[]) {
 		duration_frame = atoi(optarg);
 		if (!duration_frame)
 		    print_usage_message = true;
+		break;
+	    case 'p':
+		duration_planes = atoi(optarg);
 		break;
 	    //FIXME: Rest of the args
 	}

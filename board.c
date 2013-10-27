@@ -10,6 +10,7 @@
 
 int board_width, board_height;
 bool skip_tick;
+int saved_planes = 0;
 int info_col;
 static const char timestr[] = " Time: ";
 static const int timesize = sizeof(timestr)-1;
@@ -226,7 +227,7 @@ void remove_course_entries(struct course *c) {
 	c = free_course_entry(c);
 }
 
-struct plane *remove_plane(struct plane *p) {
+static struct plane *remove_plane(struct plane *p) {
     struct plane *rv = p->next;
     remove_course_entries(p->start);
     if (p->prev)
@@ -242,6 +243,7 @@ struct plane *remove_plane(struct plane *p) {
 	plend = p->prev;
     }
     free(p);
+    saved_planes++;
     return rv;
 }
 
