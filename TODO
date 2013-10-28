@@ -30,16 +30,13 @@ Assert fails tend to leave behind hung 'atc' procs pretty frequently.
       -- Maybe the exec() resets the death sig, because "atc" is setgid games?
              But I can 'kill' the atc process, and deathsig preservation
              is supposed to exactly match authorization to send a signal to.
-Better to have a log-if-traced fcn?  Too many "if (trace) fprintf(logff, ..."
-        -- Done, but how do I avoid repeating the tracelog() definitions?
-        -- Pulled it out into a static inline procedure.
-License (AGPLv3, I'm thinking).  Author & copyright on all source code.
-Read cmds from stdin
-    -- Done for '+', '-', ^C, ^L.
-Should have a 'g' command, which halts the current game and shows a game board
-    list, from calling "atc -l", numbered.  Then that number will start a
-    game from that board.  This will require handling multiple atc children
-    in one atc-ai parent (though only one child at a time).
+License (AGPLv3, I'm thinking).  Author & copyright on all source code,
+        and in the usage message.
+Should have a 'g' stdin command, which halts the current game and shows a
+    game board list, from calling "atc -l", numbered.  Then that number
+    will start a game from that board.  This will require handling
+    multiple atc children in one atc-ai parent (though only one child
+    at a time).
 Should figure out how to detect when atc makes termios changes which
         are significant to me.  (Eg, the flag for whether a linefeed ('\n')
         resets the current column back to 0 a-la CR ('\r') or not.)
@@ -111,52 +108,10 @@ Thread stuff:
     * Do something with CSP maybe?
 
 Interesting seeds:
-        1376278304 prop needs to backtrack tick ~1331.
-
-        1376278778 prop needs to backtrack tick 1114.
-
-        1376279911 has a lot cf planes at the start
-                At around 1200, a bunch of planes around the same exit
-                push one to FL 7.
-
-        1376508107 something goes wrong with the new plane 'D' at the UL
-                corner (Fixed)
-                Planes "M" and "N" "trap" each other around time 840.
-                Hits a prop backtrack at 1021.
-        1376515486 similar
-                Around time 225, crowding around exit 1 pulls planes to FL 7.
-                prop backtrack at t==600.
-                Looks awesome around time 3000.
-                Plane 'G' blocks plane 'H' from about 3500 on.
-                Another blockage around exit 0 stops a plane targeting
-                exit 1 at ~11450.  (Uber-fixed:  Doesn't even bunch around
-                that exit now.)
-                'G' pushes 'H' at about t=27650.  (Hmm, missed that.)
-                Three planes together at E. border at ~32390.
-                Pretty at 41540.
-                Plane 'V' makes a major detour around 58400.  (No longer.
-                I wouldn't even recognize this game's behavior as being
-                seeded correctly, except checking from 'ps' shows that
-                it is.)
-                Have some very long routes:
-- New record long route: plane 'g' at time 193099 in 48 steps.
-- New record long route: plane 'd' at time 242633 in 51 steps.
-                (But somehow survives that last one.  I bet it hits
-                the exit portal right at out-of-gas.  Not quite realistic,
-                that!)  Recording these is going to be tough.
-            [These two very-nearly-fatally-long courses are analyzed
-                below.]
-
-        1376535757 On turn 23 produces a plane at (0, 29, 7)
-                [upper right corner].
-                This also has plane 'w' follow blocking place 's' at about
-                frame 150 on.
-                ~800 a plane goes into exit 3 climbing from alt 8 to 9.
-                At ~1914, a jet takes off after a prop has committed to
-                takeoff on the next turn, forcing a collision.
-        1376893850      prop backtrack at tick 117.
-        1377061305      plane 'c' runs out of fuel, after flying from
-                tick 13831 to 13884.  [fixed]
+        1376515486 'default'
+            Hella lot of backtracks:
+New record long route: plane 'd' at time 173207 in 69 steps/26 moves.
+            I should look into this one in detail.
 
         1377534571 'Killer' - Due to exit blockage, atc-ai crashes
                 at tick 3229.  (Fixed)  Now, get an inf. loop at 27070.
