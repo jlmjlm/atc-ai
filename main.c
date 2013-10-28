@@ -19,6 +19,9 @@
 #define DEF_LOGFILE "atc-ai.log"
 #define DEF_DELAY_MS 500
 #define DEF_TYPING_DELAY_MS 150
+#define DEF_INTERVAL 50
+#define DEF_IMIN 10
+#define DEF_IMAX 900
 #define STR(x) XSTR(x)
 #define XSTR(x) #x
 #undef CTRL
@@ -38,7 +41,7 @@ static int typing_delay_ms = DEF_TYPING_DELAY_MS;
 static const char *logfile_name = DEF_LOGFILE;
 static volatile sig_atomic_t cleanup_done = false;
 static bool shutting_down = false;
-static int interval = 100, imin = 100, imax = 900;
+static int interval = DEF_INTERVAL, imin = DEF_IMIN, imax = DEF_IMAX;
 static int duration_sec = 0;
 static int duration_frame = -10;
 static int duration_planes = INT_MAX;
@@ -422,7 +425,7 @@ static const char usage[] =
     "        -i|--interval <ms>[:<ms>:<ms>]\n"
     "            Interval to change frame delay on a '+'/'-' keypress,\n"
     "            and maximum and minimum values in milliseconds.\n"
-    "            (defaults: 100, 900, 100)\n";
+    "            " STR((defaults: DEF_INTERVAL, DEF_IMAX, DEF_IMIN)) "\n";
 
 
 static bool do_self_test = false;
