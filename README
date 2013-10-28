@@ -14,6 +14,12 @@ to know when planes arrive.  And it's a passably complex project in C.
 Scala is a great language, and much as I enjoy it, C is still my favorite
 language, and it's been too long since I did significant work with it.
 
+atc-ai only parses vt100 escape sequences, so it sets the "TERM" environment
+variable to "vt100".  It passes the output of "atc" directly to stdout, so
+if you're going to run it inside a non-vt100-compatible terminal, you should
+run it from something like "screen" which will translate the vt100 escape
+sequences.
+
 I use the GNU language extension for nested functions in a few places,
 and use __attribute__ noreturn and format(printf) for bugcatching.
 I also use the getopt_long() GNU library extension for parsing the flags.
