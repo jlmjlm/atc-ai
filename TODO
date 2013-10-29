@@ -1,5 +1,6 @@
 Organize all these crazy exit codes.
-"-d 0" fails with "-g airports" with seed 1382293913 at tick 38388
+Can we handle "full speed"?  ("-d 0", no unneeded waiting at all):
+    "-d 0" fails with "-g airports" with seed 1382293913 at tick 38388
         (6282 saved planes)  [Is this due to the plane list filling up?
         Nope:  Can get past it at "-d 500".]
     [Seems to be fixed, but I changed nothing that I'm aware of.  :\ ]
@@ -122,7 +123,10 @@ New record long route: plane 'b' at time 9478 in 42 steps/40 moves.
 New record long route: plane 'g' at time 11850 in 44 steps/42 moves.
 
         1377930389 'Killer' - runs on forever (or at least to 367536,
-                which takes 10h24m at 10 fps).
+                which takes 10h24m at 10 fps [or 47m at 200 fps]).
+New record long route: plane 'r' at time 292657 in 68 steps/42 moves.
+    -- That's a lot of backtracks!
+
         1378013339 'Killer' - Plane doesn't go to the exit direct sometime
                 in 300-320.  It doesn't realize that at the exit, it can't
                 be adj. to the approaching plane, just like the approaching
