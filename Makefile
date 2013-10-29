@@ -41,3 +41,4 @@ uninstall:
 wslint:
 	! grep -l ' $$' `<MANIFEST`
 	! grep -l -F --exclude 'Makefile*' $$'\t' `<MANIFEST`
+	@echo PASS

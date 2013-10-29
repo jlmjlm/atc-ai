@@ -114,30 +114,13 @@ Interesting seeds:
 New record long route: plane 'd' at time 173207 in 69 steps/26 moves.
             I should look into this one in detail.
 
-        1377534571 'Killer' - Due to exit blockage, atc-ai crashes
-                at tick 3229.  (Fixed)  Now, get an inf. loop at 27070.
-                This is because it gets near the exit at alt==5, and
-                so can't climb, just circles in the exit's exclusion zone.
-                Probably should say can't get within 2 of an exit at
-                alt in [6, 8] and can't get within 1 with an alt != 9.
-                -- Not enough.  Now at tick 27088 plane 'i' gets inf.
-                looped.  Caught at the corner at altitude 5.  Maybe we
-                should forbid alt != 9 for distance 2?
-        1377644268 'Killer' - Plane 'u' runs out of fuel at
-                tick 28306.  Though with the airport secondary targets
-                enabled, it switches to plane 'y' at tick 28266.
-                Maybe this could be fixed by having a penalty for matching
-                a blocking plane's route at a neighboring altitude too?
-                Whelp -- with those added, it goes to tick 28240 only, with
-                'h' being the plane that fails.  --  And now it's plane 'p'
-                at tick 28274.  --  How about reversing the bearing prefs
-                each tick?  Will that let these planes figure out how
-                to "go around"? - Ha!  That made it worse:  Now plane 'z'
-                exhausts fuel at tick 22076.  [Let's look at this in
-                detail.  See below.]  And after that stuff below, it
-                seems to be fixed!  Made it to 29000 with 6700 saved planes,
-                and still going strong.  And ran it until 40367 at 80 ms/frame
-                in 54m52s to save 9385 planes.
+        1377534571 'Killer'
+            Longer than it should be, but not too bad:
+New record long route: plane 'b' at time 9478 in 42 steps/40 moves.
+
+        1377644268 'Killer'
+New record long route: plane 'g' at time 11850 in 44 steps/42 moves.
+
         1377930389 'Killer' - runs on forever (or at least to 367536,
                 which takes 10h24m at 10 fps).
         1378013339 'Killer' - Plane doesn't go to the exit direct sometime
