@@ -127,61 +127,9 @@ New record long route: plane 'g' at time 11850 in 44 steps/42 moves.
 New record long route: plane 'r' at time 292657 in 68 steps/42 moves.
     -- That's a lot of backtracks!
 
-        1378013339 'Killer' - Plane doesn't go to the exit direct sometime
-                in 300-320.  It doesn't realize that at the exit, it can't
-                be adj. to the approaching plane, just like the approaching
-                plane can't be abj. to an exiting airplane.  But, it turned
-                out to be the penalty for course matching being a
-                disincentive (fixed).
-
-        1377809753 'crossover' - Starts with a plane in the NE exit (#3)
-        1377811790 'crossover' - At tick 56, plane 'j' is "out of place"
-                because in starts out bearing SW and can't turn to the east
-                in one tick.  (Fixed.)
-
-        1378611916 'Tic-Tac-Toe'
-                At tick 27, errors with "Found '+ ' where expected to find
-                a plane."
-        1378613004 'Tic-Tac-Toe'
-                Very much similar.  "Found '. ' where expected to find a plane."
-                Don't understand how the plane's getting to (9, 1) on the
-                display, but stays at (10, 1) on the board -- there's
-                something to write it at (10, 1) at tick 11, but nothing
-                alters it for tick 12.  Probably I have to read up on
-                vt100 scrolling regions.  --  The new scoll handling helps,
-                as this now gets to frame 129 before fatal confusion.
-                --  And after fixing "Esc M" and "Esc D", seems to work just
-                fine.
-
-        1378445708 'airports' -
-                * A south-facing airport (#5) gets misrecognized as a
-                plane (at FL 5) because of how 'v' is overloaded.  (Fixed)
-                * At tick 37, plane 'i' can't go from A0 to A2.  This
-                is because taking off from A0 puts it in A2's exclusion
-                zone.  (Fixed)
-                * And at tick 13939 or so, plane 'v' takes off from the 'v5'
-                airport and board.c gets confused again.  (Fixed)
-                * Jets seem to be taking a suboptimal route when approaching
-                A1 from the west.  --  That's OK, it's just the exclusion zone
-                meaning that the incoming plane can either be beside the
-                airport at alt==3 or one more square to the south at alt==2,
-                either of which is drow==1 and (dcol==0 && dalt == 1) or
-                (dcol==1 && dalt == 0) so the exact same distance away, and
-                the order we go thru the bearings means we hit these in
-                a different order depending on whether we approach from
-                WNW or WSW.
-                * A bona fide crash (assert failed) at tick 37369.
-                This is due to a [Esc M] seq which scrolls the list of
-                planes up (see http://www.termsys.demon.co.uk/vtansi.htm ),
-                so what atc-ai thinks the board is and what atc thinks
-                it is get de-sync'd.  (Fixed & fix confirmed.)
-                * At tick 44207, plane 'j' crashes into terrain, because it
-                reaches the alt==1 approach for ap #2 but can't complete the
-                turn to bearing 0.  This might be because it flies all the
-                way there in A2's exclusion zone at alt==1 and so never gets
-                the 'cleared_exit' flag set.  To fix that, hard-exclude
-                moving to the ap's primary target from the excl. zone,
-                even if cleared_exit is false.  (Done and tested.)
+        1378445708 'airports'
+            Useful for the 'v5' airport and the plane ID 'v' taking off
+            from it at tick 13939.  (Otherwise seems pedestrian.)
 
         1380348787 'game_4'
                 gives a failed assert at time 2336.  Looks like another
