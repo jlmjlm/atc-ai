@@ -18,6 +18,9 @@ Can we handle "full speed"?  ("-d 0", no unneeded waiting at all):
         expected", and see if there's any more data from 'atc' which
         will make it go from inconsistent to consistent with some
         very low timeout.
+    -- Maybe it'd be better to have atc-ai issue some kind of a no-op
+        order (eg, mark/unmark on alternate turns), and know it's safe to
+        use the board state when atc echoes the order back to it.
 There's still studdering between even-odd ticks.  Maybe some kind of feedback
     to get that converged on a good timeout?
 Assert fails tend to leave behind hung 'atc' procs pretty frequently.

@@ -391,7 +391,7 @@ static const struct option ai_opts[] = {
 static const char optstring[] = ":hd:t:sSTL:a:g:r:i:D:f:P:";
 
 static const char usage[] =
-    "Usage:  atc-ai <ai-args> [-- <atc-args>]\n"
+    "Usage:  atc-ai [<ai-args>] [-- <atc-args>]\n"
     "    AI args:\n"
     "        -r|--seed <seed>\n"
     "            Random seed for 'atc' (default is epoch time).\n"

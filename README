@@ -1,24 +1,28 @@
 atc-ai:
-A bot which plays the old "atc" game, often found in the "bsdgames" package.
-
-
-This is a hobby project I did to sharpen my skills in some areas
-I'd grown a little unfamiliar with, my job over the last three years
-having been network-related programming in Java and Scala.  An atc bot
-is pretty much completely unrelated, on the system end involving setting
-up a pseudoterminal for atc to run inside, parsing terminal escape codes,
-and working with the terminal I/O settings of the bot's own terminal.
-Also pathfinding is needed to figure out how to get the planes from
-source to destination, and it has to interpret the contents of the display
-to know when planes arrive.  And it's a passably complex project in C.
-Scala is a great language, and much as I enjoy it, C is still my favorite
-language, and it's been too long since I did significant work with it.
+This is a bot which plays the old "atc" game (which is often found in the
+"bsdgames" package).  Run it as "atc-ai -h" to get a list of command-line
+options.  Press '+' to increase the delay interval between bot moves, and
+'-' to decrease the delay.  ^C ends the run, and ^L redraws the board.
 
 atc-ai only parses vt100 escape sequences, so it sets the "TERM" environment
 variable to "vt100".  It passes the output of "atc" directly to stdout, so
 if you're going to run it inside a non-vt100-compatible terminal, you should
 run it from something like "screen" which will translate the vt100 escape
 sequences.
+
+
+As for motivation, this is a hobby project I did to sharpen my skills
+in some areas I'd grown a little unfamiliar with, what with my job
+over the last three years having been network-related programming in
+Java and Scala.  An atc bot is pretty much completely unrelated, on
+the system end involving setting up a pseudoterminal for atc to run
+inside, parsing terminal escape codes, and working with the terminal
+I/O settings of the bot's own terminal.  Also pathfinding is needed to
+figure out how to get the planes from source to destination, and it has
+to interpret the contents of the display to know when planes arrive.
+And it's a passably complex project in C.  Scala is a great language,
+and much as I enjoy it, C is still my favorite language, and it's been
+too long since I did significant work with it.
 
 I use the GNU language extension for nested functions in a few places,
 and use __attribute__ noreturn and format(printf) for bugcatching.
