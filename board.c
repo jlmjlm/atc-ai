@@ -471,7 +471,7 @@ static void update_plane_courses() {
     }
 }
 
-bool update_board() {
+bool update_board(bool do_mark) {
     if (frame_no == 0 && !mark_sent) {
         if (!board_init())
             return false;  // Board not set-up yet.  Try again.
@@ -488,15 +488,18 @@ bool update_board() {
                 new_frame_no);
     }
 
-    if (!mark_sent) {
-        mark_msg();
-        return false;
+    if (frame_no == 0 || do_mark) {
+        if (!mark_sent) {
+            mark_msg();
+            return false;
+        }
+
+        if (!verify_mark())
+            return false;
     }
 
-    if (!verify_mark())
-        return false;
-
-    de_mark_msg();
+    if (mark_sent)
+        de_mark_msg();
 
     if (frame_no <= 3)
         check_for_exits();
@@ -508,7 +511,8 @@ bool update_board() {
     update_plane_courses();
     if (skip_tick) {
         next_tick();
-        mark_msg();
+        if (do_mark)
+            mark_msg();
     }
 
     if (verbose && frame_no % 1024u == 0) {

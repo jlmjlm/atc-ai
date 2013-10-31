@@ -4,7 +4,7 @@
 extern int get_ptm(void);
 extern int spawn(const char *cmd, const char *args[], int ptm);
 extern void update_display(char);
-extern bool update_board(void);
+extern bool update_board(bool do_mark);
 extern void cleanup(void);
 extern int testmain(void);
 
@@ -91,7 +91,6 @@ extern void plot_course(struct plane *, int row, int col, int alt);
 // The board's dynamic state.
 extern int frame_no;
 extern struct plane *plstart, *plend;
-
 extern int saved_planes;
 
 #define TQ_SIZE 1024u

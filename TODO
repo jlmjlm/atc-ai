@@ -26,6 +26,9 @@ Can we handle "full speed"?  ("-d 0", no unneeded waiting at all):
            ** And there's all these silly "mark"/"unmark" messages
               happening at the bottom of the screen.  Should make a
               flag on whether to have them, or maybe have a delay_ms threshold.
+           ** Got the "-d 0" working.
+           ** Have the threshold done.  (Brings back the even/odd stutter
+              when delay_ms is pulled above the threshold, which makes sense.)
 There's still studdering between even-odd ticks.  Maybe some kind of feedback
     to get that converged on a good timeout?
 Assert fails tend to leave behind hung 'atc' procs pretty frequently.
