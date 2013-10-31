@@ -24,8 +24,10 @@ static void scroll_up() {
     for (int i = 0; i < screen_width; i++)
         D(sr_end, i) = ' ';
 
-    fprintf(logff, "Scrolled up.  New display:\n%.*s\n",
-            screen_height*screen_width, display);
+    if (verbose) {
+        fprintf(logff, "Scrolled up.  New display:\n%.*s\n",
+                screen_height*screen_width, display);
+    }
 }
 
 static void scroll_down() {
@@ -37,8 +39,10 @@ static void scroll_down() {
     for (int i = 0; i < screen_width; i++)
         D(sr_start, i) = ' ';
 
-    fprintf(logff, "Scrolled down.  New display:\n%.*s\n",
-            screen_height*screen_width, display);
+    if (verbose) {
+        fprintf(logff, "Scrolled down.  New display:\n%.*s\n",
+                screen_height*screen_width, display);
+    }
 }
 
 

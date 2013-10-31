@@ -64,8 +64,10 @@ static void new_airport(int row, int col, int bearing, int id) {
     }
     airport->exc[5].row = row;
     airport->exc[5].col = col;
-    fprintf(logff, "Found airport #%d at (%d, %d) bearing %s\n",
-            id, row, col, bearings[bearing].longname);
+    if (verbose) {
+        fprintf(logff, "Found airport #%d at (%d, %d) bearing %s\n",
+                id, row, col, bearings[bearing].longname);
+    }
 }
 
 static void find_airports() {
@@ -74,10 +76,12 @@ static void find_airports() {
         for (c = 1; c < board_width-1; c++) {
             if (isdigit(D(r, 2*c+1)) && D(r, 2*c) != '*' &&
                     (D(r, 2*c) == 'v' || !isalpha(D(r, 2*c)))) {
-                fprintf(logff, "Found '%c%c' at (%d, %d)\n",
-                        D(r, 2*c), D(r, 2*c+1), r, c);
                 int bearing = get_bearing(D(r, 2*c));
                 new_airport(r, c, bearing, D(r, 2*c+1) - '0');
+                if (verbose) {
+                    fprintf(logff, "Found '%c%c' at (%d, %d)\n",
+                            D(r, 2*c), D(r, 2*c+1), r, c);
+                }
             }
         }
     }
@@ -99,8 +103,6 @@ static int get_frame_no() {
 
 static inline bool verify_mark() {
     const char *exm = mark_sense ? "z: mark" : "z: unmark";
-    //fprintf(logff, "Checking mark: expected \"%s\", actual \"%.*s\"\n",
-    //        exm, strlen(exm), &D(board_height, 0));   //XXX
     return !memcmp(exm, &D(board_height, 0), strlen(exm));
 }
 
@@ -194,7 +196,8 @@ static void new_exit(int row, int col) {
         errexit('e', "Too many exits found.");
     }
     spec->num = exit_num; spec->row = row; spec->col = col;
-    fprintf(logff, "Found exit %d at (%d, %d)\n", exit_num, row, col);
+    if (verbose)
+        fprintf(logff, "Found exit %d at (%d, %d)\n", exit_num, row, col);
 }
 
 static void check_for_exits() {
@@ -213,10 +216,11 @@ static void check_for_exits() {
             new_exit(i, 0);
         if (isdigit(D(i, 2*board_width-2)) && D(i, 2*board_width-1) == ' ')
             new_exit(i, board_width-1);
-        if (i == 0 || i == board_height-1)
+        if (verbose && (i == 0 || i == board_height-1)) {
             fprintf(logff, "D[%d, %d..%d] = '%c%c'\n", i, 2*board_width-2,
                     2*board_width-1, D(i, 2*board_width-2),
                     D(i, 2*board_width-1));
+        }
     }
 }
 
@@ -507,7 +511,7 @@ bool update_board() {
         mark_msg();
     }
 
-    if (frame_no % 1024u == 0) {
+    if (verbose && frame_no % 1024u == 0) {
         fprintf(logff, "n_malloc = %d; n_free = %d; difference = %d\n",
                 n_malloc, n_free, n_malloc - n_free);
     }

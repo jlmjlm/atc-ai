@@ -392,10 +392,11 @@ static const struct option ai_opts[] = {
     { .name = "interval", .has_arg = required_argument, .flag = NULL,
           .val = 'i' },
     { .name = "mark", .has_arg = required_argument, .flag = NULL, .val = 'm' },
+    { .name = "verbose", .has_arg = no_argument, .flag = NULL, .val = 'v' },
     { .name = NULL, .has_arg = 0, .flag = NULL, .val = '\0' }
 };
 
-static const char optstring[] = ":hd:t:sSTL:a:g:r:i:D:f:P:m:";
+static const char optstring[] = ":hd:t:sSTL:a:g:r:i:D:f:P:m:v";
 
 static const char usage[] =
     "Usage:  atc-ai [<ai-args>] [-- <atc-args>]\n"
@@ -436,13 +437,16 @@ static const char usage[] =
     "        -m|--mark <ms>\n"
     "            Apply mark/unmark synchronization when the move delay\n"
     "            is this value or smaller.  (default "
-                 STR(DEF_MARK_THRESHOLD) ")\n";
+                 STR(DEF_MARK_THRESHOLD) ")\n"
+    "        -v|--verbose\n"
+    "            Increase the verbosity in the log file.\n";
 
 
 static bool do_self_test = false;
 static bool print_usage_message = false;
 static intmax_t random_seed = -2;
 static bool do_skip = false, dont_skip = false;
+bool verbose = false;
 
 static void process_cmd_args(int argc, char *const argv[]) {
     int arg;
@@ -517,6 +521,9 @@ static void process_cmd_args(int argc, char *const argv[]) {
                 break;
             case 'm':
                 mark_threshold = atoi(optarg);
+                break;
+            case 'v':
+                verbose = true;
                 break;
         }
     }
