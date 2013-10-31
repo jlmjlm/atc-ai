@@ -11,4 +11,5 @@ pathfind.c
 pathfind.h
 pty.c
 testpath.c
+vt100seqs
 vty.c

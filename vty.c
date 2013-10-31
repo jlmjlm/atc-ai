@@ -257,6 +257,16 @@ void update_display(char c) {
             at_sr_bottom = false;
             return;
 
+        // LF
+        case '\n':
+            if (cur_row == sr_end)
+                scroll_up();
+            else if (cur_row+1 < screen_height)
+                cur_row++;
+            at_sr_bottom = false;
+            trace("line feed: going to (%d, %d)\n", cur_row, cur_col);
+            return;
+
         // BS
         case '\b':
             cur_col--;
@@ -268,6 +278,10 @@ void update_display(char c) {
 
         // normal text
         default:
+            if (!isprint(c)) {
+                fprintf(logff, "Warning: Got unhandled non-printable "
+                               "character \\%o\n", c);
+            }
             if (at_sr_bottom) {
                 scroll_up();
                 at_sr_bottom = false;
@@ -286,16 +300,6 @@ void update_display(char c) {
             else if (cur_row+1 < screen_height)
                 cur_row++;
             trace("going to (%d, %d)\n", cur_row, cur_col);
-            break;
-
-        // LF
-        case '\n':
-            if (cur_row == sr_end)
-                scroll_up();
-            else if (cur_row+1 < screen_height)
-                cur_row++;
-            at_sr_bottom = false;
-            trace("line feed: going to (%d, %d)\n", cur_row, cur_col);
             return;
     }
 }
