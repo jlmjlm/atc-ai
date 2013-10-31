@@ -22,6 +22,7 @@
 #define DEF_INTERVAL 50
 #define DEF_IMIN 10
 #define DEF_IMAX 900
+#define DEF_MARK_THRESHOLD 50
 #define STR(x) XSTR(x)
 #define XSTR(x) #x
 #undef CTRL
@@ -46,6 +47,7 @@ static int interval = DEF_INTERVAL, imin = DEF_IMIN, imax = DEF_IMAX;
 static int duration_sec = 0;
 static int duration_frame = -10;
 static int duration_planes = INT_MAX;
+static int mark_threshold = DEF_MARK_THRESHOLD;
 
 static void write_queued_chars(void);
 static inline void write_all_qchars(void);
@@ -231,6 +233,26 @@ static void write_queued_chars() {
     }
 }
 
+static inline void check_update(bool *board_setup, struct timeval *deadline,
+                                const struct timeval last_atc) {
+    if (shutting_down)
+        return;
+    write_queued_chars();
+    if (update_board()) {
+        if (frame_no == duration_frame)
+            shutdown_atc(SIGINT);
+        else if (saved_planes >= duration_planes) {
+            write_all_qchars();
+            shutdown_atc(SIGINT);
+        }
+        *board_setup = true;
+        *deadline = last_atc;
+        deadline->tv_usec += 1000*delay_ms;
+    }
+    if (!delay_ms)
+        write_queued_chars();
+}
+
 static noreturn void mainloop(int pfd) {
     bool board_setup = false;
     int maxfd = 0;
@@ -241,25 +263,6 @@ static noreturn void mainloop(int pfd) {
     deadline = last_atc;
     deadline.tv_usec += 1000*delay_ms;
     const time_t end_time = last_atc.tv_sec + duration_sec;
-
-    inline void check_update() {
-        if (shutting_down)
-            return;
-        write_queued_chars();
-        if (update_board()) {
-            if (frame_no == duration_frame)
-                shutdown_atc(SIGINT);
-            else if (saved_planes >= duration_planes) {
-                write_all_qchars();
-                shutdown_atc(SIGINT);
-            }
-            board_setup = true;
-            deadline = last_atc;
-            deadline.tv_usec += 1000*delay_ms;
-            if (!delay_ms)
-                write_queued_chars();
-        }
-    }
 
     for (;;) {
         struct timeval now;
@@ -300,14 +303,14 @@ static noreturn void mainloop(int pfd) {
         }
         if (rv == 0) {   // timeout
             if (delay_ms)
-                check_update();
+                check_update(&board_setup, &deadline, last_atc);
             continue;
         }
         if (FD_ISSET(ptm, &fds)) {
             gettimeofday(&last_atc, NULL);
             process_data(ptm, BUFSIZE, &update_display);
             if (!board_setup || !delay_ms)
-                check_update();
+                check_update(&board_setup, &deadline, last_atc);
         }
         if (FD_ISSET(0, &fds))
             process_data(0, 1, &handle_input);
@@ -388,10 +391,11 @@ static const struct option ai_opts[] = {
     { .name = "game", .has_arg = required_argument, .flag = NULL, .val = 'g' },
     { .name = "interval", .has_arg = required_argument, .flag = NULL,
           .val = 'i' },
+    { .name = "mark", .has_arg = required_argument, .flag = NULL, .val = 'm' },
     { .name = NULL, .has_arg = 0, .flag = NULL, .val = '\0' }
 };
 
-static const char optstring[] = ":hd:t:sSTL:a:g:r:i:D:f:P:";
+static const char optstring[] = ":hd:t:sSTL:a:g:r:i:D:f:P:m:";
 
 static const char usage[] =
     "Usage:  atc-ai [<ai-args>] [-- <atc-args>]\n"
@@ -428,7 +432,11 @@ static const char usage[] =
     "        -i|--interval <ms>[:<ms>:<ms>]\n"
     "            Interval to change frame delay on a '+'/'-' keypress,\n"
     "            and maximum and minimum values in milliseconds.\n"
-    "            " STR((defaults: DEF_INTERVAL, DEF_IMAX, DEF_IMIN)) "\n";
+    "            " STR((defaults: DEF_INTERVAL, DEF_IMAX, DEF_IMIN)) "\n"
+    "        -m|--mark <ms>\n"
+    "            Apply mark/unmark synchronization when the move delay\n"
+    "            is this value or smaller.  (default "
+                 STR(DEF_MARK_THRESHOLD) ")\n";
 
 
 static bool do_self_test = false;
@@ -506,6 +514,9 @@ static void process_cmd_args(int argc, char *const argv[]) {
                 break;
             case 'p':
                 duration_planes = atoi(optarg);
+                break;
+            case 'm':
+                mark_threshold = atoi(optarg);
                 break;
         }
     }

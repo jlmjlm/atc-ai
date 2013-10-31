@@ -99,8 +99,8 @@ static int get_frame_no() {
 
 static inline bool verify_mark() {
     const char *exm = mark_sense ? "z: mark" : "z: unmark";
-    fprintf(logff, "Checking mark: expected \"%s\", actual \"%.*s\"\n",
-            exm, strlen(exm), &D(board_height, 0));   //XXX
+    //fprintf(logff, "Checking mark: expected \"%s\", actual \"%.*s\"\n",
+    //        exm, strlen(exm), &D(board_height, 0));   //XXX
     return !memcmp(exm, &D(board_height, 0), strlen(exm));
 }
 

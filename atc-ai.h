@@ -94,9 +94,9 @@ extern struct plane *plstart, *plend;
 
 extern int saved_planes;
 
-#define TQ_SIZE 1024
+#define TQ_SIZE 1024u
 extern bool skip_tick;
-extern int tqhead, tqtail;
+extern unsigned int tqhead, tqtail;
 extern char tqueue[TQ_SIZE];
 
 extern void order_new_bearing(char id, int bearing);

@@ -2,7 +2,7 @@
 #include "atc-ai.h"
 
 
-int tqhead = 0, tqtail = 0;
+unsigned int tqhead = 0, tqtail = 0;
 char tqueue[TQ_SIZE];
 
 static void queue_string(const char s[]) {
