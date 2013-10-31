@@ -242,8 +242,6 @@ static inline void check_update(bool *board_setup, struct timeval *deadline,
     if (shutting_down)
         return;
     write_queued_chars();
-    //fprintf(logff, "Checking for update(%d <= %d [%s])\n",
-    //        delay_ms, mark_threshold, bstr(delay_ms <= mark_threshold));
     if (update_board(delay_ms <= mark_threshold)) {
         if (frame_no == duration_frame)
             shutdown_atc(SIGINT);
