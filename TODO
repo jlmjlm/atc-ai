@@ -46,7 +46,11 @@ Is there some kind of "Zen of VT escape sequences" I'm missing?  If I hit
         hope for the best.  But there doesn't seem to be any easy principle
         of what marks seq. termination.
     -- Should go over the terminfo entry for vt100 to make sure I can handle
-        any seq which terminfo is going to spit out.
+        any seq which terminfo is going to spit out.  -- Done!
+    -- Looks like the sequences fall into three categories:
+        Variable length, terminated by alphabetic character:  \33 [ ...
+        Length 3:  \33 ( _    \33 ) _
+        Length 2:  \33 _    [for _ as anything not "[()"]
 store revision ID (hash) in the object?
 Notice when we get a game over and "Press space".
     Specifically: "Hit space for top players list"

@@ -1,5 +1,5 @@
 According to infocmp, the escape sequences used for the vt100 are:
-        Seq                                             Handled
+        Sequence                                        Handled
         ^G                                              *
         ^[[5m                                           *
         ^[[1m                                           *
@@ -36,7 +36,7 @@ According to infocmp, the escape sequences used for the vt100 are:
         ^[[m\017                                        *
         ^N                                              *
         ^[[?7h                                          *
-        ^[[?1h^[=                                       NO
+        ^[[?1h^[=                                       *
         ^[[7m                                           *
         ^[[4m                                           *
         ^[[3g                                           *

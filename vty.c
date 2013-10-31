@@ -101,7 +101,7 @@ void update_display(char c) {
             return;
         }
 
-        if (esc[1] == '>' && esc_size == 2) {
+        if ((esc[1] == '>' || esc[1] == '=') && esc_size == 2) {
             // keypad -- ignore
             trace("ignoring: %.*s\n", esc_size, esc);
             esc_size = 0;
@@ -250,6 +250,12 @@ void update_display(char c) {
             display_esc_seq(stderr);
             fprintf(stderr, "\n");
             exit('\33');
+        }
+
+        if (esc_size == 2 && esc[1] != '[' && esc[1] != '(' && esc[1] != ')') {
+            fprintf(logff, "Warning: Ignoring unknown escape sequence "
+                           "[\\33 \\%o]\n", esc[1]);
+            esc_size = 0;
         }
 
         return;
