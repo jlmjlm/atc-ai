@@ -142,6 +142,12 @@ void update_display(char c) {
             return;
         }
 
+        if (esc[1] == 'H' && esc_size == 2) {
+            fprintf(logff, "Warning: Ignoring request to set tab-stop.\n");
+            esc_size = 0;
+            return;
+        }
+
         if (esc[1] == '[' && isalpha(c)) {
             // control sequence
             int rv;
@@ -155,8 +161,13 @@ void update_display(char c) {
                 case 'm': // display attributes (inverse, bold, etc.) -- ignore
                 case 'h': // terminal mode -- ignore
                 case 'l': // terminal mode reset -- ignore
+                case 'i': // print (as in, to a line printer) -- ignore
                 case 'J': case 'K': // erase -- ignore
                     trace("ignoring: %.*s\n", esc_size, esc);
+                    break;
+                case 'g': // clear tab-stop
+                    fprintf(logff, "Warning: Ignoring request to clear "
+                                   "tab-stop.\n");
                     break;
                 case 'r': // scrolling region
                     if (esc_size == 3) {
@@ -245,9 +256,9 @@ void update_display(char c) {
     }
 
     switch (c) {
-        // swallow beeps & ^O
-        case '\a': case 15:
-            trace("ignoring: %c\n", c);
+        // swallow beeps & SI/SO (^N/^O)
+        case '\a': case 016: case 017:
+            trace("ignoring: \\%o\n", c);
             return;
 
         // CR
@@ -257,6 +268,15 @@ void update_display(char c) {
             at_sr_bottom = false;
             return;
 
+        // tab
+        case '\t':
+            cur_col = (cur_col+8) & ~7;
+            if (cur_col < screen_width)
+                return;
+
+            // wrap-around
+            cur_col = 0;
+            // fallthrough to LF
         // LF
         case '\n':
             if (cur_row == sr_end)

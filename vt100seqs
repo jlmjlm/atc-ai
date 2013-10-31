@@ -20,9 +20,9 @@ According to infocmp, the escape sequences used for the vt100 are:
         ^[[1K                                           *
         ^[(B^])0                                        *
         ^[[H                                            *
-        ^I                                              NO
-        ^[H                                             NO
-        ^[[%i                                           NO
+        ^I                                              *
+        ^[H                                             *
+        ^[[%i                                           *
         ^[8                                             *
         ^[[7m                                           *
         ^[M                                             *
@@ -32,11 +32,11 @@ According to infocmp, the escape sequences used for the vt100 are:
         ^[[m                                            *
         ^[>^[[?3l^[[?4l^[[?5l^[[?7h^[[?8h               *
         ^[7                                             *
-        ^[[0%;1%;4%;7%;5%m \016 \017                    NO
-        ^[[m\017                                        NO
-        ^N                                              NO
+        ^[[0%;1%;4%;7%;5%m \016 \017                    *
+        ^[[m\017                                        *
+        ^N                                              *
         ^[[?7h                                          *
         ^[[?1h^[=                                       NO
         ^[[7m                                           *
         ^[[4m                                           *
-        ^[[3g                                           NO
+        ^[[3g                                           *
