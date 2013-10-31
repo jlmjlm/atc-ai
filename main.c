@@ -28,6 +28,7 @@
 
 
 FILE *logff;
+char erase_char;
 static volatile sig_atomic_t logfd;    // For use in the SIGABRT handler.
 
 static volatile sig_atomic_t atc_pid = 0;
@@ -129,6 +130,7 @@ static void raw_mode() {
     new_termio.c_cc[VMIN] = 1;
     new_termio.c_cc[VTIME] = 0;
     tcsetattr(1, TCSAFLUSH, &new_termio);
+    erase_char = orig_termio.c_cc[VERASE];
 }
 
 static void handle_signal(int signo) {
@@ -285,7 +287,8 @@ static noreturn void mainloop(int pfd) {
         add_fd(0, &fds, &maxfd);
         add_fd(ptm, &fds, &maxfd);
         add_fd(pfd, &fds, &maxfd);
-        struct timeval *ptv = (delay_ms && board_setup) ? &tv : NULL;
+        struct timeval *ptv = (delay_ms && (board_setup || tqhead != tqtail))
+                                  ? &tv : NULL;
         int rv = select(maxfd+1, &fds, NULL, NULL, ptv);
 
         if (rv == -1) {

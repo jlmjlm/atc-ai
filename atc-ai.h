@@ -16,6 +16,7 @@ extern int screen_height, screen_width;
 extern char *display;
 
 extern FILE *logff;
+extern char erase_char;
 
 #define D(row, col) (display[(row)*screen_width + (col)])
 #define EXIT_MAX 10
@@ -102,6 +103,9 @@ extern void order_new_bearing(char id, int bearing);
 extern void order_new_altitude(char id, int alt);
 extern void land_at_airport(char id, int airport_num);
 extern void next_tick(void);
+extern bool mark_sense, mark_sent;
+extern void mark_msg(void);
+extern void de_mark_msg(void);
 
 
 // Cheapo check for mem leaks

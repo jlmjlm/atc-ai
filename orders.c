@@ -34,3 +34,18 @@ void land_at_airport(char id, int airport_num) {
 void next_tick() {
     queue_string("\n");
 }
+
+
+bool mark_sense, mark_sent;
+
+void mark_msg() {
+    mark_sense = !mark_sense;
+    mark_sent = true;
+    queue_string(mark_sense ? "zm" : "zu");
+}
+
+void de_mark_msg() {
+    char str[3] = { erase_char, erase_char, '\0' };
+    queue_string(str);
+    mark_sent = false;
+}

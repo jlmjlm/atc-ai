@@ -97,6 +97,13 @@ static int get_frame_no() {
     return fnum;
 }
 
+static inline bool verify_mark() {
+    const char *exm = mark_sense ? "z: mark" : "z: unmark";
+    fprintf(logff, "Checking mark: expected \"%s\", actual \"%.*s\"\n",
+            exm, strlen(exm), &D(board_height, 0));   //XXX
+    return !memcmp(exm, &D(board_height, 0), strlen(exm));
+}
+
 static inline const char *pmin(const char *a, const char *b) {
     return (a < b) ? a : b;
 }
@@ -461,7 +468,7 @@ static void update_plane_courses() {
 }
 
 bool update_board() {
-    if (frame_no == 0) {
+    if (frame_no == 0 && !mark_sent) {
         if (!board_init())
             return false;  // Board not set-up yet.  Try again.
     }
@@ -477,6 +484,16 @@ bool update_board() {
                 new_frame_no);
     }
 
+    if (!mark_sent) {
+        mark_msg();
+        return false;
+    }
+
+    if (!verify_mark())
+        return false;
+
+    de_mark_msg();
+
     if (frame_no <= 3)
         check_for_exits();
 
@@ -485,8 +502,10 @@ bool update_board() {
     find_new_planes();
     new_airport_planes();
     update_plane_courses();
-    if (skip_tick)
+    if (skip_tick) {
         next_tick();
+        mark_msg();
+    }
 
     if (frame_no % 1024u == 0) {
         fprintf(logff, "n_malloc = %d; n_free = %d; difference = %d\n",
