@@ -21,8 +21,9 @@ int get_ptm() {
     ioctl(ptm, TIOCSWINSZ, &ws);
     screen_height = ws.ws_row;
     screen_width = ws.ws_col;
-    display = malloc(screen_height*screen_width);
+    display = malloc(screen_height*screen_width+1);
     memset(display, ' ', screen_height*screen_width);
+    display[screen_height*screen_width] = '\0';
     return ptm;
 }
 

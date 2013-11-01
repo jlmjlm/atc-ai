@@ -177,8 +177,10 @@ static void process_data(int src, int amt, void (*handler)(char)) {
     if (nchar == 0)
         exit(0);
     if (nchar == -1) {
-        if (errno == EINTR)
+        if (errno == EINTR) {
+            errno = 0;
             goto retry;
+        }
         if (errno == EIO)
             exit(0);
         errexit(errno, "read failed: %s", strerror(errno));
@@ -267,6 +269,8 @@ static noreturn void mainloop(int pfd) {
     deadline = last_atc;
     deadline.tv_usec += 1000*delay_ms;
     const time_t end_time = last_atc.tv_sec + duration_sec;
+    mark_msg();
+    write_all_qchars();
 
     for (;;) {
         struct timeval now;

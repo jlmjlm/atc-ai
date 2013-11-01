@@ -101,8 +101,12 @@ static int get_frame_no() {
     return fnum;
 }
 
+static inline const char *markstr() {
+    return mark_sense ? "z: mark" : "z: unmark";
+}
+
 static inline bool verify_mark() {
-    const char *exm = mark_sense ? "z: mark" : "z: unmark";
+    const char *exm = markstr();
     return !memcmp(exm, &D(board_height, 0), strlen(exm));
 }
 
@@ -137,7 +141,7 @@ static bool board_init() {
         errexit(board_width, "Board unreasonably wide.");
     }
     for (int i = 1; i < screen_height; i++) {
-        if (D(i, 0) == ' ') {
+        if (D(i, 0) == 'z') {
             board_height = i;
             break;
         }
@@ -472,9 +476,28 @@ static void update_plane_courses() {
 }
 
 bool update_board(bool do_mark) {
-    if (frame_no == 0 && !mark_sent) {
-        if (!board_init())
-            return false;  // Board not set-up yet.  Try again.
+    if (frame_no == 0) {
+        assert(mark_sent);
+        assert(mark_sense);
+
+        const char *markp = strstr(display, markstr());
+        if (!markp)
+            return false;
+
+        assert((markp - display) % screen_width == 0);
+        bool board_ok = board_init();
+        if (!board_ok)
+            errexit('b', "Board is invalid.");
+    }
+
+    if (do_mark) {
+        if (!mark_sent) {
+            mark_msg();
+            return false;
+        }
+
+        if (!verify_mark())
+            return false;
     }
 
     int new_frame_no = get_frame_no();
@@ -486,16 +509,6 @@ bool update_board(bool do_mark) {
     if (new_frame_no != frame_no+1) {
         errexit('f', "Frame number jumped from %d to %d.", frame_no,
                 new_frame_no);
-    }
-
-    if (frame_no == 0 || do_mark) {
-        if (!mark_sent) {
-            mark_msg();
-            return false;
-        }
-
-        if (!verify_mark())
-            return false;
     }
 
     if (mark_sent)
