@@ -28,6 +28,8 @@ Can we handle "full speed"?  ("-d 0", no unneeded waiting at all):
        update_board(). [Done]
 There's studdering between even-odd ticks.  Maybe some kind of feedback
     to get that converged on a good timeout?
+Have a --quiet|-q flag which doesn't record things like record routes
+    into the logfile.
 Assert fails tend to leave behind hung 'atc' procs pretty frequently.
     And the ^C handling closer to correct, but still some broken termios stuff
         being left behind.  :/
