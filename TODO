@@ -53,6 +53,12 @@ Should figure out how to detect when atc makes termios changes which
         are significant to me.  (Eg, the flag for whether a linefeed ('\n')
         resets the current column back to 0 a-la CR ('\r') or not.)
 (Also, what's the macro CTRL in termios.h do?)
+        It's from ttydefaults.h:
+                #define CTRL(x) (x&037)
+        ... which is a better macro than my own
+                #define CNTRL(x) (x-'A'+1)
+        ... but doesn't seem to be documented anywhere I can find, much
+            less standardized.
 Clean up assert vs. errexit.
 Perhaps make a "wsfix" target which fixes tabs & trailing spaces.
 Is there some kind of "Zen of VT escape sequences" I'm missing?  If I hit
