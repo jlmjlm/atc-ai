@@ -117,12 +117,6 @@ static inline const char *pmin(const char *a, const char *b) {
 static bool board_init() {
     const char *tee = memchr(display, 'T', screen_width);
     if (tee == NULL) {
-        if (frame_no == 0) {
-            static int n_tries = 0;
-            fprintf(logff, "Failed to init board, try #%d\n", ++n_tries);
-            if (n_tries < MAX_TRIES)
-                return false;
-        }
         errexit(' ', "Can't determine board width.");
     }
     info_col = tee - display;
@@ -481,8 +475,14 @@ bool update_board(bool do_mark) {
         assert(mark_sense);
 
         const char *markp = strstr(display, markstr());
-        if (!markp)
-            return false;
+        if (!markp) {
+            static int n_tries = 0;
+            fprintf(logff, "Failed to init board, try #%d\n", ++n_tries);
+            if (n_tries < MAX_TRIES)
+                return false;
+            else
+                errexit(' ', "Can't find the initial mark.");
+        }
 
         assert((markp - display) % screen_width == 0);
         bool board_ok = board_init();

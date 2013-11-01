@@ -20,7 +20,7 @@
 #define DEF_DELAY_MS 500
 #define DEF_TYPING_DELAY_MS 150
 #define DEF_INTERVAL 50
-#define DEF_IMIN 10
+#define DEF_IMIN 0
 #define DEF_IMAX 900
 #define DEF_MARK_THRESHOLD 50
 #define STR(x) XSTR(x)
