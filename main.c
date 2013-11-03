@@ -168,7 +168,7 @@ static void add_fd(int fd, fd_set *fds, int *max) {
     FD_SET(fd, fds);
 }
 
-static void process_data(int src, int amt, void (*handler)(char)) {
+static void process_data(int src, int amt, void (*handler)(const char *, int)) {
     char buf[amt];
     int nchar;
 
@@ -185,12 +185,11 @@ static void process_data(int src, int amt, void (*handler)(char)) {
             exit(0);
         errexit(errno, "read failed: %s", strerror(errno));
     }
-    for (int i = 0; i < nchar; i++)
-        handler(buf[i]);
+    handler(buf, nchar);
 }
 
 #define CNTRL(x) (x-'A'+1)
-static void handle_input(char c) {
+static void handle_input_char(char c) {
     switch (c) {
         case CNTRL('C'):
             raise(SIGINT);
@@ -214,6 +213,11 @@ static void handle_input(char c) {
             write(1, "\a", 1);
             break;
     }
+}
+
+static void handle_input(const char *buf, int nchar) {
+    for (int i = 0; i < nchar; i++)
+        handle_input_char(buf[i]);
 }
 
 static inline void write_tqchar() {
@@ -320,8 +324,11 @@ static noreturn void mainloop(int pfd) {
             if (!board_setup || !delay_ms)
                 check_update(&board_setup, &deadline, last_atc);
         }
-        if (FD_ISSET(0, &fds))
-            process_data(0, 1, &handle_input);
+        if (FD_ISSET(0, &fds)) {
+            process_data(0, BUFSIZE, &handle_input);
+            if (!delay_ms)
+                check_update(&board_setup, &deadline, last_atc);
+        }
         if (FD_ISSET(pfd, &fds)) {
             char signo;
             read(pfd, &signo, 1);

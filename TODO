@@ -3,33 +3,23 @@ Can we handle "full speed"?  ("-d 0", no unneeded waiting at all):
     -- Works with issuing mark/unmark on alternate turns, pending the
        scraping until we see the (un)mark echoed back, and then
        immediately backspacing over them after scraping the board.
-           ** This works for positive delay_ms, and seems to help with the
-              even/odd tick stutter, but fails for "-d 0"
-           ** And there's all these silly "mark"/"unmark" messages
+           ** There's all these silly "mark"/"unmark" messages
               happening at the bottom of the screen.  Should make a flag
               on whether to have them, or maybe have a delay_ms threshold.
-           ** Got the "-d 0" working.
            ** Have the threshold done.  (Brings back the even/odd stutter
               when delay_ms is pulled above the threshold, which makes sense.)
-           ** Should we write everything in the tqueue when delay_ms == 0
-              or typing_delay_ms == 0 ?
-           ** Aaaa, this still can get tripped up, by having the "Time"
-              field be incompletely updated.  Example:
-                  -g crosshatch -d 0 --seed 1383255856
-                  Frame number jumped from 283299 to 283309.
-              So... if not init'ing, have the mark checked first, then
-              the frame #.  Have the mark sent first prior to the board
-              init even, and use the presence of "z: mark" to let us know
-              the board is ready for init.  [Done!  And it works on
-              "-g crosshatch -d 0 --seed 1383255856" all the way up to
-              frame one million at least.]
-    -- Now that the "real" init check is in update_board() checking for
-       "z: mark", should move the retry counter from board_init() to
-       update_board(). [Done]
-There's studdering between even-odd ticks.  Maybe some kind of feedback
-    to get that converged on a good timeout?
+           ** Hmm, got one hang when switching intervals, but haven't been
+              able to repro.  --  Have encountered it several times, always
+              when going down to delay_ms==0.  Putting in a "check_update()"
+              for that case, see if it helps.
+There's stuttering between even-odd ticks.  Maybe some kind of feedback
+    to get that converged on a good timeout?  Or take the "last atc time"
+    to use to get the deadline to be from when the display was last updated
+    with a new frame # or a z:mark/unmark sync.
 Have a --quiet|-q flag which doesn't record things like record routes
     into the logfile.
+When get a many-character message when read()ing from the atc ptm, have
+    them all write()n in one call, instead of one char at a time.  [Done!]
 Assert fails tend to leave behind hung 'atc' procs pretty frequently.
     And the ^C handling closer to correct, but still some broken termios stuff
         being left behind.  :/

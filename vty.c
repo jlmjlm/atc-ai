@@ -58,7 +58,7 @@ static inline void trace(const char *fmt, ...) {
     }
 }
 
-void update_display(char c) {
+static void update_display_char(char c) {
     static int cur_row, cur_col;
     static bool at_sr_bottom;
     static int esc_size;
@@ -73,8 +73,6 @@ void update_display(char c) {
         }
     }
 
-
-    write(1, &c, 1);
 
     if (sr_end == 0)
         sr_end = screen_height-1;
@@ -328,4 +326,11 @@ void update_display(char c) {
             trace("going to (%d, %d)\n", cur_row, cur_col);
             return;
     }
+}
+
+void update_display(const char *buf, int nchar) {
+    write(1, buf, nchar);
+
+    for (int i = 0; i < nchar; i++)
+        update_display_char(buf[i]);
 }

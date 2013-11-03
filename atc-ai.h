@@ -3,7 +3,7 @@
 
 extern int get_ptm(void);
 extern int spawn(const char *cmd, const char *args[], int ptm);
-extern void update_display(char);
+extern void update_display(const char *, int);
 extern bool update_board(bool do_mark);
 extern void cleanup(void);
 extern int testmain(void);
