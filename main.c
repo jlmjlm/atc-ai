@@ -239,15 +239,9 @@ static void write_queued_chars() {
     }
 }
 
-static inline const char *bstr(bool b) {
-    return b ? "true" : "false";
-}
-
-static inline void check_update(bool *board_setup, struct timeval *deadline,
-                                const struct timeval last_atc) {
+static void check_update(struct timeval *deadline, struct timeval *last_atc) {
     if (shutting_down)
         return;
-    write_queued_chars();
     if (update_board(delay_ms <= mark_threshold)) {
         if (frame_no == duration_frame)
             shutdown_atc(SIGINT);
@@ -255,55 +249,74 @@ static inline void check_update(bool *board_setup, struct timeval *deadline,
             write_all_qchars();
             shutdown_atc(SIGINT);
         }
-        *board_setup = true;
-        *deadline = last_atc;
-        deadline->tv_usec += 1000*delay_ms;
+        gettimeofday(last_atc, NULL);
+        *deadline = *last_atc;
+        deadline->tv_usec += 1000*delay_ms;  //FIXME: Should we really be doing
+                                             //       this if delay_ms==0 ?
     }
-    if (!delay_ms)
-        write_queued_chars();
+    if (!delay_ms || !typing_delay_ms)
+        write_all_qchars();
 }
 
 static noreturn void mainloop(int pfd) {
-    bool board_setup = false;
-    int maxfd = 0;
-    fd_set fds;
-    FD_ZERO(&fds);
-    struct timeval deadline, last_atc;
+    /* 'last_atc' is the time at which we last processed the board and
+     * noticed that 'atc' had updated it with a new frame.
+     * 'deadline' is the time before which we should have all our orders
+     * "typed" into atc's terminal, and is when we will check the display
+     * for an update from 'atc'.  If deadline.tv_sec == 0, we are pended on
+     * data coming from 'atc', so we wait in the select() indefinitely, and
+     * upon getting data from atc's terminal, we set deadline to now+delay_ms.
+     */
+    struct timeval deadline = { .tv_sec = 0, .tv_usec = 0 }, last_atc;
     gettimeofday(&last_atc, NULL);
-    deadline = last_atc;
-    deadline.tv_usec += 1000*delay_ms;
+
     const time_t end_time = last_atc.tv_sec + duration_sec;
     mark_msg();
     write_all_qchars();
 
+    int maxfd = 0;
+    fd_set fds;
+    FD_ZERO(&fds);
+
     for (;;) {
-        struct timeval now;
+        struct timeval now, waittv, *ptv;
         gettimeofday(&now, NULL);
         if (duration_sec && now.tv_sec > end_time) {
             shutdown_atc(SIGINT);
             duration_sec = 0;
         }
-        int timeout_ms = (deadline.tv_sec - now.tv_sec)*1000 +
-                         (deadline.tv_usec - now.tv_usec)/1000;
-        if (timeout_ms <= 0)
-            timeout_ms = 0;
-        else if (tqhead != tqtail && typing_delay_ms != 0) {
-            int qsize = tqtail-tqhead;
-            if (qsize < 0)
-                qsize += TQ_SIZE;
-            timeout_ms /= qsize;
 
-            if (typing_delay_ms && timeout_ms > typing_delay_ms)
-                timeout_ms = typing_delay_ms;
+        if (deadline.tv_sec == 0) {
+            if (tqhead == tqtail)
+                ptv = NULL;
+            else {
+                waittv.tv_sec = typing_delay_ms / 1000;
+                waittv.tv_usec = (typing_delay_ms % 1000) * 1000;
+                ptv = &waittv;
+            }
+        } else {
+            int timeout_ms = (deadline.tv_sec - now.tv_sec)*1000 +
+                             (deadline.tv_usec - now.tv_usec)/1000;
+            if (timeout_ms < 0)
+                timeout_ms = 0;
+            else if (tqhead != tqtail) {
+                int qsize = tqtail-tqhead;
+                if (qsize < 0)
+                    qsize += TQ_SIZE;
+                timeout_ms /= qsize;
+
+                if (timeout_ms > typing_delay_ms)
+                    timeout_ms = typing_delay_ms;
+            }
+
+            waittv.tv_sec = timeout_ms / 1000;
+            waittv.tv_usec = (timeout_ms % 1000) * 1000;
+            ptv = &waittv;
         }
 
-        struct timeval tv = { .tv_sec = timeout_ms / 1000,
-                              .tv_usec = (timeout_ms % 1000) * 1000 };
         add_fd(0, &fds, &maxfd);
         add_fd(ptm, &fds, &maxfd);
         add_fd(pfd, &fds, &maxfd);
-        struct timeval *ptv = (delay_ms && (board_setup || tqhead != tqtail))
-                                  ? &tv : NULL;
         int rv = select(maxfd+1, &fds, NULL, NULL, ptv);
 
         if (rv == -1) {
@@ -314,20 +327,31 @@ static noreturn void mainloop(int pfd) {
             errexit(errno, "select failed: %s", strerror(errno));
         }
         if (rv == 0) {   // timeout
-            if (delay_ms)
-                check_update(&board_setup, &deadline, last_atc);
+            if (tqhead != tqtail) {
+                write_queued_chars();
+            } else if (deadline.tv_sec == 0) {
+                fprintf(logff, "Danger: timeout when pended and no chars "
+                               "to type from the queue.\n");
+            } else {
+                deadline.tv_sec = 0;
+                check_update(&deadline, &last_atc);
+            }
+
             continue;
         }
         if (FD_ISSET(ptm, &fds)) {
-            gettimeofday(&last_atc, NULL);
             process_data(ptm, BUFSIZE, &update_display);
-            if (!board_setup || !delay_ms)
-                check_update(&board_setup, &deadline, last_atc);
+            if (delay_ms && deadline.tv_sec == 0) {
+                gettimeofday(&deadline, NULL);
+                deadline.tv_usec += delay_ms * 1000;
+            }
+            if (frame_no == 0 || !delay_ms)
+                check_update(&deadline, &last_atc);
         }
         if (FD_ISSET(0, &fds)) {
             process_data(0, BUFSIZE, &handle_input);
             if (!delay_ms)
-                check_update(&board_setup, &deadline, last_atc);
+                check_update(&deadline, &last_atc);
         }
         if (FD_ISSET(pfd, &fds)) {
             char signo;

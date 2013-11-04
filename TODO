@@ -10,12 +10,32 @@ Can we handle "full speed"?  ("-d 0", no unneeded waiting at all):
               when delay_ms is pulled above the threshold, which makes sense.)
            ** Hmm, got one hang when switching intervals, but haven't been
               able to repro.  --  Have encountered it several times, always
-              when going down to delay_ms==0.  Putting in a "check_update()"
-              for that case, see if it helps.
+              when going down to delay_ms==0, though it happens rarely
+              when transitioning from positive delay to zero delay.  I'm
+              putting in a "check_update()" for that case, see if it helps.
 There's stuttering between even-odd ticks.  Maybe some kind of feedback
     to get that converged on a good timeout?  Or take the "last atc time"
     to use to get the deadline to be from when the display was last updated
     with a new frame # or a z:mark/unmark sync.
+        -- Tried that, but it still stutters.
+        -- Moved the writing of queued chars to the "timeout" branch
+           of the select loop, but doesn't seem to help either.  Might
+           even be worse this way.  :(
+    OK, here's the problem:  On timeout, check_update() is called.
+        If there has been no "typing", then this means it's been a full
+        delay_ms since atc updated the display any.  But if there is
+        typing from atc-ai, then we get timeouts earlier (to type the
+        orders in), and so check_update() is called earlier, and notices
+        the frame update sooner than delay_ms.
+    Grrr.  Even checking for tqhead == tqtail before calling check_update()
+            leaves it still stuttering.  :(
+    I think I need to distinguish "waiting for atc to do something" from
+            "waiting until time T at which I'll do something".
+        -- That was a bigger refactor than I expected, but it seems to
+           have solved the stuttering problem.  Unfortunately, when crossing
+           the "mark" threshold, it crashes.  --  Fixed that by having the
+           timeout set to the typing_delay (not infinity) when pended, but
+           there are chars queued.
 Have a --quiet|-q flag which doesn't record things like record routes
     into the logfile.
 When get a many-character message when read()ing from the atc ptm, have

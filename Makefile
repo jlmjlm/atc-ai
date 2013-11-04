@@ -7,13 +7,15 @@ CFLAGS += -Wall -std=gnu99 -O
 
 all: test atc-ai
 
-.PHONY: clean install uninstall all test wslint
+.PHONY: clean install uninstall all test wslint check
 
 atc-ai: main.o pty.o vty.o board.o orders.o pathfind.o testpath.o
 	$(CC) $(CFLAGS) -o $@ $^
 
 test: atc-ai
 	./atc-ai --self-test -L self-test.log
+
+check: test wslint
 
 main.o: main.c atc-ai.h
 
