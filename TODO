@@ -29,15 +29,13 @@ There's stuttering between even-odd ticks.  Maybe some kind of feedback
         -- That was a bigger refactor than I expected, but it seems to
            have solved the stuttering problem.  Unfortunately, when crossing
            the "mark" threshold, it crashes.  --  Fixed that by having the
-           timeout set to the typing_delay (not infinity) when pended, but
+           timeout set to the typing_delay (not infinity) when pended while
            there are chars queued.
-Have a --quiet|-q flag which doesn't record things like record routes
-    into the logfile.
-When get a many-character message when read()ing from the atc ptm, have
-    them all write()n in one call, instead of one char at a time.  [Done!]
 Assert fails tend to leave behind hung 'atc' procs pretty frequently.
-    And the ^C handling closer to correct, but still some broken termios stuff
-        being left behind.  :/
+    (The ^C handling seems to be correct now, I've ^C'd it plenty of times,
+     and no 'atc' process left behind or scorefile corruption.  Can't do
+     the exact same thing with SIGABRT though, because SIGINT returns to
+     the select loop after sending the signal and 'y' char.)
     Should I have prctl(PR_SET_PDEATHSIG, SIGTERM) on the child's fork so
         that it can clean itself up if 'atc-ai' terminates abruptly?
       -- Doesn't seem to work.  When run on a "-d 0 -g box" until it
@@ -48,8 +46,6 @@ Assert fails tend to leave behind hung 'atc' procs pretty frequently.
              is supposed to exactly match authorization to send a signal to.
 License (AGPLv3, I'm thinking).  Author & copyright on all source code,
         and in the usage message.
-Maybe have '*' and '/' stdin commands, to double and halve the frame delay.
-Verify that imax > imin.  (Done by letting them be specified in either order.)
 Should have a 'g' stdin command, which halts the current game and shows a
     game board list, from calling "atc -l", numbered.  Then that number
     will start a game from that board.  This will require handling
@@ -108,8 +104,13 @@ Keep track of moves taken, so if a plane has "too long" of a route, we can
 Do something better than the "getting desperate" stuff in calc_bearing().
 Do we have to strdup(optarg), or is it safe to assume we can use a copy
         after other calls to getopt_long() ?
+    -- Seems to be OK for persisting after getopt_long(), but we need
+       to use it for stuff we strtok(), because strtok() mangles the
+       string used.
 Should we keep count_malloc and count_free around, even tho there are
         no memleaks, just in case some get introduced?
+    -- Now that I have the --quiet flag, I'm having this be reported
+       unless -q is set.
 signalfd() [Linux extension] is a great idea.  It really should be the
         case that anything you can block on can have a wait handle,
         and using fd's for the handles for use in select/poll is unix-y.

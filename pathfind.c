@@ -650,17 +650,19 @@ void plot_course(struct plane *p, int row, int col, int alt) {
 
             free_framelist(frstart);
 
-            struct record *rec = p->isjet ? &rec_jet : &rec_prop;
-            if (steps > rec->steps || moves > rec->moves) {
-                if (steps > rec->steps)
-                    rec->steps = steps;
-                if (moves > rec->moves)
-                    rec->moves = moves;
-                fprintf(logff, "New record long route: plane '%c' at time "
-                               "%d in %d steps/%d moves.\n", p->id, frame_no,
-                        steps, moves);
-                log_course(p);
-                log_all_courses();
+            if (!quiet) {
+                struct record *rec = p->isjet ? &rec_jet : &rec_prop;
+                if (steps > rec->steps || moves > rec->moves) {
+                    if (steps > rec->steps)
+                        rec->steps = steps;
+                    if (moves > rec->moves)
+                        rec->moves = moves;
+                    fprintf(logff, "New record long route: plane '%c' at time "
+                                   "%d in %d steps/%d moves.\n",
+                            p->id, frame_no, steps, moves);
+                    log_course(p);
+                    log_all_courses();
+                }
             }
 
             return;

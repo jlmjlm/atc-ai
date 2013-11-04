@@ -528,7 +528,7 @@ bool update_board(bool do_mark) {
             mark_msg();
     }
 
-    if (verbose && frame_no % 1024u == 0) {
+    if (!quiet && frame_no % 1024u == 0) {
         fprintf(logff, "n_malloc = %d; n_free = %d; difference = %d\n",
                 n_malloc, n_free, n_malloc - n_free);
     }

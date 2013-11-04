@@ -188,7 +188,7 @@ static void process_data(int src, int amt, void (*handler)(const char *, int)) {
     handler(buf, nchar);
 }
 
-static inline void newdelay(unsigned int nd) {
+static inline void newdelay(int nd) {
     if (nd > imax)
         delay_ms = imax;
     else if (nd < imin)
@@ -198,6 +198,9 @@ static inline void newdelay(unsigned int nd) {
 
     if (!nd)
         write_queued_chars();
+
+    if (verbose)
+        fprintf(logff, "Setting frame delay to %d.\n", delay_ms);
 }
 
 #define CNTRL(x) (x-'A'+1)
@@ -316,9 +319,7 @@ static noreturn void mainloop(int pfd) {
             if (timeout_ms < 0)
                 timeout_ms = 0;
             else if (tqhead != tqtail) {
-                int qsize = tqtail-tqhead;
-                if (qsize < 0)
-                    qsize += TQ_SIZE;
+                unsigned int qsize = (tqtail-tqhead)%TQ_SIZE;
                 timeout_ms /= qsize;
 
                 if (timeout_ms > typing_delay_ms)
@@ -447,10 +448,11 @@ static const struct option ai_opts[] = {
           .val = 'i' },
     { .name = "mark", .has_arg = required_argument, .flag = NULL, .val = 'm' },
     { .name = "verbose", .has_arg = no_argument, .flag = NULL, .val = 'v' },
+    { .name = "quiet", .has_arg = no_argument, .flag = NULL, .val = 'q' },
     { .name = NULL, .has_arg = 0, .flag = NULL, .val = '\0' }
 };
 
-static const char optstring[] = ":hd:t:sSTL:a:g:r:i:D:f:P:m:v";
+static const char optstring[] = ":hd:t:sSTL:a:g:r:i:D:f:P:m:vq";
 
 static const char usage[] =
     "Usage:  atc-ai [<ai-args>] [-- <atc-args>]\n"
@@ -493,14 +495,16 @@ static const char usage[] =
     "            is this value or smaller.  (default "
                  STR(DEF_MARK_THRESHOLD) ")\n"
     "        -v|--verbose\n"
-    "            Increase the verbosity in the log file.\n";
+    "            Increase the verbosity in the log file.\n"
+    "        -q|--quiet\n"
+    "            Decrease the verbosity in the log file.\n";
 
 
 static bool do_self_test = false;
 static bool print_usage_message = false;
 static intmax_t random_seed = -2;
 static bool do_skip = false, dont_skip = false;
-bool verbose = false;
+bool verbose = false, quiet = false;
 
 static void process_cmd_args(int argc, char *const argv[]) {
     int arg;
@@ -529,13 +533,13 @@ static void process_cmd_args(int argc, char *const argv[]) {
                 do_self_test = true;
                 break;
             case 'L':
-                logfile_name = strdup(optarg);
+                logfile_name = optarg;
                 break;
             case 'a':
-                atc_cmd = strdup(optarg);
+                atc_cmd = optarg;
                 break;
             case 'g':
-                game = strdup(optarg);
+                game = optarg;
                 break;
             case 'r':
                 if (!strncmp(".", optarg, 2))
@@ -544,7 +548,7 @@ static void process_cmd_args(int argc, char *const argv[]) {
                     random_seed = atoll(optarg);
                 break;
             case 'i':
-                istr = strtok(optarg, ":");
+                istr = strtok(strdup(optarg), ":");
                 if (!istr)
                     errexit('i', "strtok of \"%s\" failed", optarg);
                 interval = atoi(istr);
@@ -564,7 +568,7 @@ static void process_cmd_args(int argc, char *const argv[]) {
                 }
                 break;
             case 'D':
-                istr = strtok(optarg, ":");
+                istr = strtok(strdup(optarg), ":");
                 while (istr) {
                     duration_sec = 60*duration_sec + atoi(istr);
                     istr = strtok(NULL, ":");
@@ -583,6 +587,9 @@ static void process_cmd_args(int argc, char *const argv[]) {
                 break;
             case 'v':
                 verbose = true;
+                break;
+            case 'q':
+                quiet = true;
                 break;
         }
     }
@@ -607,6 +614,11 @@ int main(int argc, char **argv) {
         print_usage_message = true;
     } else {
         skip_tick = !dont_skip;
+    }
+
+    if (verbose && quiet) {
+        fprintf(stderr, "Both 'verbose' and 'quiet' requested.\n");
+        print_usage_message = true;
     }
 
     if (print_usage_message) {

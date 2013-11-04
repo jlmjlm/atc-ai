@@ -96,7 +96,7 @@ extern int saved_planes;
 #define TQ_SIZE 1024u
 extern unsigned int tqhead, tqtail;
 extern char tqueue[TQ_SIZE];
-extern bool skip_tick, verbose;
+extern bool skip_tick, verbose, quiet;
 
 extern void order_new_bearing(char id, int bearing);
 extern void order_new_altitude(char id, int alt);
