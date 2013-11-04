@@ -6,8 +6,10 @@ Can we handle "full speed"?  ("-d 0", no unneeded waiting at all):
            ** Hmm, got one hang when switching intervals, but haven't been
               able to repro.  --  Have encountered it several times, always
               when going down to delay_ms==0, though it happens rarely
-              when transitioning from positive delay to zero delay.  I'm
-              putting in a "check_update()" for that case, see if it helps.
+              when transitioning from positive delay to zero delay.
+           ** I'm putting in a "check_update()" for that case, see if it helps.
+           ** That seems to have fixed it, I've done lots of delay_ms
+              to/from 0 ms transitions, and no hangs or crashes.
 There's stuttering between even-odd ticks.  Maybe some kind of feedback
     to get that converged on a good timeout?  Or take the "last atc time"
     to use to get the deadline to be from when the display was last updated
@@ -26,7 +28,7 @@ There's stuttering between even-odd ticks.  Maybe some kind of feedback
             leaves it still stuttering.  :(
     I think I need to distinguish "waiting for atc to do something" from
             "waiting until time T at which I'll do something".
-        -- That was a bigger refactor than I expected, but it seems to
+        -- That was a bigger alteration than I expected, but it seems to
            have solved the stuttering problem.  Unfortunately, when crossing
            the "mark" threshold, it crashes.  --  Fixed that by having the
            timeout set to the typing_delay (not infinity) when pended while
@@ -44,8 +46,6 @@ Assert fails tend to leave behind hung 'atc' procs pretty frequently.
       -- Maybe the exec() resets the death sig, because "atc" is setgid games?
              But I can 'kill' the atc process, and deathsig preservation
              is supposed to exactly match authorization to send a signal to.
-License (AGPLv3, I'm thinking).  Author & copyright on all source code,
-        and in the usage message.
 Should have a 'g' stdin command, which halts the current game and shows a
     game board list, from calling "atc -l", numbered.  Then that number
     will start a game from that board.  This will require handling
@@ -176,6 +176,14 @@ New record long route: plane 'r' at time 292657 in 68 steps/42 moves.
                         handle plane re-routing to reorder the planes' arrival
                         to the exit to an order more natural than based on
                         best route to the first arrivals in the airspace.
+
+        1383591455 'Atlantis'
+New record long route: plane 'r' at time 5488925 in 48 steps/46 moves.
+        This is exit contention again.  'r' is headed to (16, 0, 9), but
+        so is D, K, M, N, P, and Q.  I probably should make a TODO item
+        to address exit (and airport) contention.  Maybe by blanking all
+        the routes headed to the same airport and re-doing them in a "closest
+        first" manner.
 
 
 The 1377644268 fuel exhaustion scenario:

@@ -1,3 +1,7 @@
+// Copyright 2013 Jacob L. Mandelson
+// This code may be distributed under the terms of the Affero General
+// Public License, ver. 3.  See the file "AGPLv3" for details.
+
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
@@ -497,7 +501,10 @@ static const char usage[] =
     "        -v|--verbose\n"
     "            Increase the verbosity in the log file.\n"
     "        -q|--quiet\n"
-    "            Decrease the verbosity in the log file.\n";
+    "            Decrease the verbosity in the log file.\n"
+    "\n"
+    "atc-ai was written by Jacob L. Mandelson, and may be distributed in\n"
+    "accordance with the Affero General Public License v. 3.\n";
 
 
 static bool do_self_test = false;

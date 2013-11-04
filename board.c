@@ -1,3 +1,7 @@
+// Copyright 2013 Jacob L. Mandelson
+// This code may be distributed under the terms of the Affero General
+// Public License, ver. 3.  See the file "AGPLv3" for details.
+
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
