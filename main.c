@@ -17,7 +17,7 @@
 
 #define BUFSIZE 1000
 #define DEF_LOGFILE "atc-ai.log"
-#define DEF_DELAY_MS 500
+#define DEF_DELAY_MS 400
 #define DEF_TYPING_DELAY_MS 150
 #define DEF_INTERVAL 50
 #define DEF_IMIN 0
@@ -239,6 +239,11 @@ static void write_queued_chars() {
     }
 }
 
+static inline void set_timeval_from_ms(struct timeval *tv, unsigned int ms) {
+    tv->tv_sec = ms / 1000;
+    tv->tv_usec = (ms % 1000) * 1000;
+}
+
 static void check_update(struct timeval *deadline, struct timeval *last_atc) {
     if (shutting_down)
         return;
@@ -290,8 +295,7 @@ static noreturn void mainloop(int pfd) {
             if (tqhead == tqtail)
                 ptv = NULL;
             else {
-                waittv.tv_sec = typing_delay_ms / 1000;
-                waittv.tv_usec = (typing_delay_ms % 1000) * 1000;
+                set_timeval_from_ms(&waittv, typing_delay_ms);
                 ptv = &waittv;
             }
         } else {
@@ -309,8 +313,7 @@ static noreturn void mainloop(int pfd) {
                     timeout_ms = typing_delay_ms;
             }
 
-            waittv.tv_sec = timeout_ms / 1000;
-            waittv.tv_usec = (timeout_ms % 1000) * 1000;
+            set_timeval_from_ms(&waittv, timeout_ms);
             ptv = &waittv;
         }
 

@@ -93,7 +93,7 @@ Handle rogue planes which were shrouded by other planes
         - turn plane in a direction compatible with all poss. bearings
         - guess based on proximity of exits
 Recalculate other planes' courses if they're interfering with a new plane's.
-"make dist"
+"make dist", "make distclean"
 A different "error log" for bugs.
 Planes can go for 50 moves (which is 100 ticks for props).  Re-calc some
         other planes' courses if the new plane requires > 50 moves.
@@ -156,6 +156,15 @@ New record long route: plane 'g' at time 11850 in 44 steps/42 moves.
                 which takes 10h24m at 10 fps [or 47m at 200 fps]).
 New record long route: plane 'r' at time 292657 in 68 steps/42 moves.
     -- That's a lot of backtracks!
+
+        1383537462 'Killer' (with -S [don't skip]) -- crashes with
+                "Found plane c at altitude 7=7 where expected to find it at
+                altitude 8." at tick 16.  atc-ai has typed "ca8" into atc's
+                terminal, but too late.  Works with -d 400, so I think the
+                -d 500 default just cuts things too tight when atc has an
+                update of 1 s, the way 'Killer' does.  (500 ms to wait for
+                atc's display to become stable, then 500 ms to type
+                everything.)
 
         1378445708 'airports'
             Useful for the 'v5' airport and the plane ID 'v' taking off
