@@ -3,11 +3,6 @@ Can we handle "full speed"?  ("-d 0", no unneeded waiting at all):
     -- Works with issuing mark/unmark on alternate turns, pending the
        scraping until we see the (un)mark echoed back, and then
        immediately backspacing over them after scraping the board.
-           ** There's all these silly "mark"/"unmark" messages
-              happening at the bottom of the screen.  Should make a flag
-              on whether to have them, or maybe have a delay_ms threshold.
-           ** Have the threshold done.  (Brings back the even/odd stutter
-              when delay_ms is pulled above the threshold, which makes sense.)
            ** Hmm, got one hang when switching intervals, but haven't been
               able to repro.  --  Have encountered it several times, always
               when going down to delay_ms==0, though it happens rarely
@@ -53,6 +48,8 @@ Assert fails tend to leave behind hung 'atc' procs pretty frequently.
              is supposed to exactly match authorization to send a signal to.
 License (AGPLv3, I'm thinking).  Author & copyright on all source code,
         and in the usage message.
+Maybe have '*' and '/' stdin commands, to double and halve the frame delay.
+Verify that imax > imin.  (Done by letting them be specified in either order.)
 Should have a 'g' stdin command, which halts the current game and shows a
     game board list, from calling "atc -l", numbered.  Then that number
     will start a game from that board.  This will require handling

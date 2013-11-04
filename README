@@ -1,8 +1,9 @@
 atc-ai:
 This is a bot which plays the old "atc" game (which is often found in the
 "bsdgames" package).  Run it as "atc-ai -h" to get a list of command-line
-options.  Press '+' to increase the delay interval between bot moves, and
-'-' to decrease the delay.  ^C ends the run, and ^L redraws the board.
+options.  Press '+' to increase the delay interval between bot moves by a
+fixed amount, and '-' to decrease the delay.  '*' doubles the delay, and
+'/' halves it.  ^C ends the run, and ^L redraws the board.
 
 atc-ai only parses vt100 escape sequences, so it sets the "TERM" environment
 variable to "vt100".  It passes the output of "atc" directly to stdout, so

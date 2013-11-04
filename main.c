@@ -38,8 +38,8 @@ static const char *game = NULL;
 static struct termios orig_termio;
 static int sigpipe;
 static int ptm;
-static int delay_ms = DEF_DELAY_MS;
-static int typing_delay_ms = DEF_TYPING_DELAY_MS;
+static unsigned int delay_ms = DEF_DELAY_MS;
+static unsigned int typing_delay_ms = DEF_TYPING_DELAY_MS;
 static const char *logfile_name = DEF_LOGFILE;
 static volatile sig_atomic_t cleanup_done = false;
 static bool shutting_down = false;
@@ -188,6 +188,18 @@ static void process_data(int src, int amt, void (*handler)(const char *, int)) {
     handler(buf, nchar);
 }
 
+static inline void newdelay(unsigned int nd) {
+    if (nd > imax)
+        delay_ms = imax;
+    else if (nd < imin)
+        delay_ms = imin;
+    else
+        delay_ms = nd;
+
+    if (!nd)
+        write_queued_chars();
+}
+
 #define CNTRL(x) (x-'A'+1)
 static void handle_input_char(char c) {
     switch (c) {
@@ -198,16 +210,16 @@ static void handle_input_char(char c) {
             write(ptm, &c, 1);
             break;
         case '+':
-            delay_ms += interval;
-            if (delay_ms > imax)
-                delay_ms = imax;
+            newdelay(delay_ms + interval);
             break;
         case '-':
-            delay_ms -= interval;
-            if (delay_ms < imin)
-                delay_ms = imin;
-            if (delay_ms == 0)
-                write_queued_chars();
+            newdelay(delay_ms - interval);
+            break;
+        case '*':
+            newdelay(delay_ms*2);
+            break;
+        case '/':
+            newdelay(delay_ms/2);
             break;
         default:
             write(1, "\a", 1);
@@ -544,6 +556,11 @@ static void process_cmd_args(int argc, char *const argv[]) {
                         imin = atoi(istr);
                     else
                         print_usage_message = true;
+                }
+                if (imin > imax) {
+                    int t = imin;
+                    imin = imax;
+                    imax = t;
                 }
                 break;
             case 'D':
