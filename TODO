@@ -128,14 +128,9 @@ Nothing to do with atc-ai per se, but atc in some conditions will stomp
            but not as resetting the console to "sane".  This is the case
            for SIGINT.  [Which I thought I'd fixed. :( ]
 Maybe make an inetd service of this to show it off?  :-)
+Threads?  Nah, doesn't seem worth the bother, it's running very well as a
+    singlethread event loop.
 
-Thread stuff:
-    Start of this on the branch "pthread".
-    * Get out of a busy loop on SIGINT/SIGTERM.  (Do calc in another thread?)
-    * Do I/O in its own thread?
-    * When getting data from ptm, -not- from a timeout, check to see if
-        the frame_no has changed.  If it has, move quickly to update_board.
-    * Do something with CSP maybe?
 
 Interesting seeds:
         1376515486 'default'
@@ -184,6 +179,12 @@ New record long route: plane 'r' at time 5488925 in 48 steps/46 moves.
         to address exit (and airport) contention.  Maybe by blanking all
         the routes headed to the same airport and re-doing them in a "closest
         first" manner.
+
+        1383635077 'OHare' - Many backtracks:
+New record long route: plane 'R' at time 17974745 in 99 steps/32 moves.
+New record long route: plane 'w' at time 11333832 in 56 steps/29 moves.
+New record long route: plane 'A' at time 5455725 in 93 steps/25 moves.
+New record long route: plane 'F' at time 3536554 in 88 steps/17 moves.
 
 
 The 1377644268 fuel exhaustion scenario:
