@@ -41,6 +41,6 @@ uninstall:
 	rm ${INSTALLDIR}/atc-ai
 
 wslint:
-	! grep -l ' $$' `<MANIFEST`
-	! grep -l -F --exclude 'Makefile*' $$'\t' `<MANIFEST`
+	! grep -l ' $$' `cat MANIFEST`
+	! grep -l -F --exclude 'Makefile*' $$'\t' `cat MANIFEST`
 	@echo PASS

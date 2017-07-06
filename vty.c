@@ -333,7 +333,7 @@ static void update_display_char(char c) {
 }
 
 void update_display(const char *buf, int nchar) {
-    write(1, buf, nchar);
+    vwrite(1, buf, nchar);
 
     for (int i = 0; i < nchar; i++)
         update_display_char(buf[i]);

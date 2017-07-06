@@ -329,7 +329,7 @@ static void check_pldt() {
     if (memcmp(base, pls1, sizeof(pls1)-1) &&
             memcmp(base, pls2, sizeof(pls2)-1)) {
         errexit('P', "Expected \"%s\" but found \"%.*s\"",
-                pls1, sizeof(pls1)-1, base);
+                pls1, (int) (sizeof(pls1)-1), base);
     }
 }
 

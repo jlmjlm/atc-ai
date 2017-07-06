@@ -86,6 +86,11 @@ void errexit(int exit_code, const char *fmt, ...) {
     exit(exit_code);
 }
 
+// Avoid compiler warning re unused return value from write()
+void vwrite(int fd, const char *data, int nbytes) {
+    int v = write(fd, data, nbytes); v = v;
+}
+
 static inline void msleep(int ms) {
     usleep(ms * 1000);
 }
@@ -97,7 +102,7 @@ static void shutdown_atc(int signo) {
     msleep(100);  // .1 s
     kill(atc_pid, signo);
     msleep(100);  // .1 s
-    write(ptm, "y", 1);
+    vwrite(ptm, "y", 1);
 }
 
 static void exit_hand() {
@@ -141,14 +146,14 @@ static void raw_mode() {
 
 static void handle_signal(int signo) {
     char c = signo;
-    write(sigpipe, &c, 1);
+    vwrite(sigpipe, &c, 1);
 }
 
 static void handle_abort(int signo) {
     static const char msg[] = "Caught abort signal.  Contents of the display:\n";
-    write(logfd, msg, (sizeof msg)-1);
-    write(logfd, display, screen_height*screen_width);
-    write(logfd, "\n", 1);
+    vwrite(logfd, msg, (sizeof msg)-1);
+    vwrite(logfd, display, screen_height*screen_width);
+    vwrite(logfd, "\n", 1);
     cleanup();
     handle_signal(signo);
 }
@@ -214,7 +219,7 @@ static void handle_input_char(char c) {
             raise(SIGINT);
             return;
         case CNTRL('L'):
-            write(ptm, &c, 1);
+            vwrite(ptm, &c, 1);
             break;
         case '+':
             newdelay(delay_ms + interval);
@@ -229,7 +234,7 @@ static void handle_input_char(char c) {
             newdelay(delay_ms/2);
             break;
         default:
-            write(1, "\a", 1);
+            vwrite(1, "\a", 1);
             break;
     }
 }
@@ -240,7 +245,7 @@ static void handle_input(const char *buf, int nchar) {
 }
 
 static inline void write_tqchar() {
-     write(ptm, tqueue+tqhead, 1);
+     vwrite(ptm, tqueue+tqhead, 1);
      tqhead = (tqhead+1)%TQ_SIZE;
 }
 
@@ -375,7 +380,7 @@ static noreturn void mainloop(int pfd) {
         }
         if (FD_ISSET(pfd, &fds)) {
             char signo;
-            read(pfd, &signo, 1);
+            int v = read(pfd, &signo, 1); v=v;
             switch(signo) {
                 case SIGWINCH:
                     errexit('w', "Can't handle window resize.");
@@ -642,7 +647,7 @@ int main(int argc, char **argv) {
         return testmain();
     }
 
-    pipe(pipefd);
+    int v = pipe(pipefd); v=v;
     sigpipe = pipefd[1];
     ptm = get_ptm();
     reg_sighandler();

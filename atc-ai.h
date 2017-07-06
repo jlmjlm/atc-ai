@@ -11,6 +11,7 @@ extern void update_display(const char *, int);
 extern bool update_board(bool do_mark);
 extern void cleanup(void);
 extern int testmain(void);
+extern void vwrite(int, const char *, int);
 
 __attribute__((noreturn, format(printf, 2, 3) ))
 void errexit(int exit_code, const char *fmt, ...);
